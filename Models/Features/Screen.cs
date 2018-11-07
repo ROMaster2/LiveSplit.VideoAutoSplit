@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Xml.Serialization;
 
-namespace LiveSplit.VFM.Models
+namespace LiveSplit.VAS.Models
 {
     public class Screen
     {

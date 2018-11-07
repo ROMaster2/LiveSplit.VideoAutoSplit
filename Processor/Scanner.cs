@@ -9,9 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
-using LiveSplit.VFM;
+using LiveSplit.VAS;
 using LiveSplit.VASL;
-using LiveSplit.VFM.Models;
+using LiveSplit.VAS.Models;
 using LiveSplit.UI.Components;
 using System.IO;
 using System.Linq;
@@ -19,7 +19,7 @@ using System.Diagnostics;
 
 using Size = System.Drawing.Size;
 
-namespace LiveSplit.VFM
+namespace LiveSplit.VAS
 {
     static class Scanner
     {
@@ -318,9 +318,9 @@ namespace LiveSplit.VFM
             }
             Scanning = false;
             deltas[19] = 456.789F;
-            //Interlocked.Exchange(ref VFMComponent.floatArray, deltas);
-            //Interlocked.Exchange(ref VFMComponent.timeDelta, scan.TimeDelta);
-            //Interlocked.Increment(ref VFMComponent.count);
+            //Interlocked.Exchange(ref VASComponent.floatArray, deltas);
+            //Interlocked.Exchange(ref VASComponent.timeDelta, scan.TimeDelta);
+            //Interlocked.Increment(ref VASComponent.count);
             scan.Clean();
         }
 

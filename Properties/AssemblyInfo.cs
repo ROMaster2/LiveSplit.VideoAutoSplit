@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LiveSplit.VideoFeatureMonitor")]
-[assembly: AssemblyDescription("Video feature detector for LiveSplit.")]
+[assembly: AssemblyTitle("LiveSplit.VideoAutoSplit")]
+[assembly: AssemblyDescription("Video Auto Splitter for LiveSplit.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LiveSplit.VideoFeatureMonitor")]
+[assembly: AssemblyProduct("LiveSplit.VideoAutoSplit")]
 [assembly: AssemblyCopyright("Copyright © ROMaster2 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

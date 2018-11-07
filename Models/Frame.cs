@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace LiveSplit.VFM.Models
+namespace LiveSplit.VAS.Models
 {
     public struct Frame // Bad name idea?
     {

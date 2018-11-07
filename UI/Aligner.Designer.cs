@@ -1,4 +1,4 @@
-﻿namespace LiveSplit.VFM.Forms
+﻿namespace LiveSplit.VAS.Forms
 {
     partial class Aligner
     {
@@ -417,7 +417,7 @@
             // ShrinkDPad9
             // 
             this.ShrinkDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad9.Image = global::LiveSplit.VFM.Properties.Resources.DPadN9;
+            this.ShrinkDPad9.Image = global::LiveSplit.VAS.Properties.Resources.DPadN9;
             this.ShrinkDPad9.Location = new System.Drawing.Point(64, 64);
             this.ShrinkDPad9.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad9.Name = "ShrinkDPad9";
@@ -430,7 +430,7 @@
             // ShrinkDPad8
             // 
             this.ShrinkDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad8.Image = global::LiveSplit.VFM.Properties.Resources.DPadN8;
+            this.ShrinkDPad8.Image = global::LiveSplit.VAS.Properties.Resources.DPadN8;
             this.ShrinkDPad8.Location = new System.Drawing.Point(32, 64);
             this.ShrinkDPad8.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad8.Name = "ShrinkDPad8";
@@ -443,7 +443,7 @@
             // ShrinkDPad7
             // 
             this.ShrinkDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad7.Image = global::LiveSplit.VFM.Properties.Resources.DPadN7;
+            this.ShrinkDPad7.Image = global::LiveSplit.VAS.Properties.Resources.DPadN7;
             this.ShrinkDPad7.Location = new System.Drawing.Point(0, 64);
             this.ShrinkDPad7.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad7.Name = "ShrinkDPad7";
@@ -456,7 +456,7 @@
             // ShrinkDPad6
             // 
             this.ShrinkDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad6.Image = global::LiveSplit.VFM.Properties.Resources.DPadN6;
+            this.ShrinkDPad6.Image = global::LiveSplit.VAS.Properties.Resources.DPadN6;
             this.ShrinkDPad6.Location = new System.Drawing.Point(64, 32);
             this.ShrinkDPad6.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad6.Name = "ShrinkDPad6";
@@ -469,7 +469,7 @@
             // ShrinkDPad5
             // 
             this.ShrinkDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad5.Image = global::LiveSplit.VFM.Properties.Resources.DPadN5;
+            this.ShrinkDPad5.Image = global::LiveSplit.VAS.Properties.Resources.DPadN5;
             this.ShrinkDPad5.Location = new System.Drawing.Point(32, 32);
             this.ShrinkDPad5.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad5.Name = "ShrinkDPad5";
@@ -480,7 +480,7 @@
             // ShrinkDPad4
             // 
             this.ShrinkDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad4.Image = global::LiveSplit.VFM.Properties.Resources.DPadN4;
+            this.ShrinkDPad4.Image = global::LiveSplit.VAS.Properties.Resources.DPadN4;
             this.ShrinkDPad4.Location = new System.Drawing.Point(0, 32);
             this.ShrinkDPad4.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad4.Name = "ShrinkDPad4";
@@ -493,7 +493,7 @@
             // ShrinkDPad3
             // 
             this.ShrinkDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad3.Image = global::LiveSplit.VFM.Properties.Resources.DPadN3;
+            this.ShrinkDPad3.Image = global::LiveSplit.VAS.Properties.Resources.DPadN3;
             this.ShrinkDPad3.Location = new System.Drawing.Point(64, 0);
             this.ShrinkDPad3.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad3.Name = "ShrinkDPad3";
@@ -506,7 +506,7 @@
             // ShrinkDPad2
             // 
             this.ShrinkDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad2.Image = global::LiveSplit.VFM.Properties.Resources.DPadN2;
+            this.ShrinkDPad2.Image = global::LiveSplit.VAS.Properties.Resources.DPadN2;
             this.ShrinkDPad2.Location = new System.Drawing.Point(32, 0);
             this.ShrinkDPad2.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad2.Name = "ShrinkDPad2";
@@ -519,7 +519,7 @@
             // ShrinkDPad1
             // 
             this.ShrinkDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad1.Image = global::LiveSplit.VFM.Properties.Resources.DPadN1;
+            this.ShrinkDPad1.Image = global::LiveSplit.VAS.Properties.Resources.DPadN1;
             this.ShrinkDPad1.Location = new System.Drawing.Point(0, 0);
             this.ShrinkDPad1.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad1.Name = "ShrinkDPad1";
@@ -567,7 +567,7 @@
             // GrowDPad9
             // 
             this.GrowDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad9.Image = global::LiveSplit.VFM.Properties.Resources.DPad9;
+            this.GrowDPad9.Image = global::LiveSplit.VAS.Properties.Resources.DPad9;
             this.GrowDPad9.Location = new System.Drawing.Point(64, 64);
             this.GrowDPad9.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad9.Name = "GrowDPad9";
@@ -580,7 +580,7 @@
             // GrowDPad8
             // 
             this.GrowDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad8.Image = global::LiveSplit.VFM.Properties.Resources.DPad8;
+            this.GrowDPad8.Image = global::LiveSplit.VAS.Properties.Resources.DPad8;
             this.GrowDPad8.Location = new System.Drawing.Point(32, 64);
             this.GrowDPad8.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad8.Name = "GrowDPad8";
@@ -593,7 +593,7 @@
             // GrowDPad7
             // 
             this.GrowDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad7.Image = global::LiveSplit.VFM.Properties.Resources.DPad7;
+            this.GrowDPad7.Image = global::LiveSplit.VAS.Properties.Resources.DPad7;
             this.GrowDPad7.Location = new System.Drawing.Point(0, 64);
             this.GrowDPad7.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad7.Name = "GrowDPad7";
@@ -606,7 +606,7 @@
             // GrowDPad6
             // 
             this.GrowDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad6.Image = global::LiveSplit.VFM.Properties.Resources.DPad6;
+            this.GrowDPad6.Image = global::LiveSplit.VAS.Properties.Resources.DPad6;
             this.GrowDPad6.Location = new System.Drawing.Point(64, 32);
             this.GrowDPad6.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad6.Name = "GrowDPad6";
@@ -619,7 +619,7 @@
             // GrowDPad5
             // 
             this.GrowDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad5.Image = global::LiveSplit.VFM.Properties.Resources.DPad5;
+            this.GrowDPad5.Image = global::LiveSplit.VAS.Properties.Resources.DPad5;
             this.GrowDPad5.Location = new System.Drawing.Point(32, 32);
             this.GrowDPad5.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad5.Name = "GrowDPad5";
@@ -630,7 +630,7 @@
             // GrowDPad4
             // 
             this.GrowDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad4.Image = global::LiveSplit.VFM.Properties.Resources.DPad4;
+            this.GrowDPad4.Image = global::LiveSplit.VAS.Properties.Resources.DPad4;
             this.GrowDPad4.Location = new System.Drawing.Point(0, 32);
             this.GrowDPad4.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad4.Name = "GrowDPad4";
@@ -643,7 +643,7 @@
             // GrowDPad3
             // 
             this.GrowDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad3.Image = global::LiveSplit.VFM.Properties.Resources.DPad3;
+            this.GrowDPad3.Image = global::LiveSplit.VAS.Properties.Resources.DPad3;
             this.GrowDPad3.Location = new System.Drawing.Point(64, 0);
             this.GrowDPad3.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad3.Name = "GrowDPad3";
@@ -656,7 +656,7 @@
             // GrowDPad2
             // 
             this.GrowDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad2.Image = global::LiveSplit.VFM.Properties.Resources.DPad2;
+            this.GrowDPad2.Image = global::LiveSplit.VAS.Properties.Resources.DPad2;
             this.GrowDPad2.Location = new System.Drawing.Point(32, 0);
             this.GrowDPad2.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad2.Name = "GrowDPad2";
@@ -669,7 +669,7 @@
             // GrowDPad1
             // 
             this.GrowDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad1.Image = global::LiveSplit.VFM.Properties.Resources.DPad1;
+            this.GrowDPad1.Image = global::LiveSplit.VAS.Properties.Resources.DPad1;
             this.GrowDPad1.Location = new System.Drawing.Point(0, 0);
             this.GrowDPad1.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad1.Name = "GrowDPad1";
@@ -728,7 +728,7 @@
             // MoveDPad9
             // 
             this.MoveDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad9.Image = global::LiveSplit.VFM.Properties.Resources.DPad9;
+            this.MoveDPad9.Image = global::LiveSplit.VAS.Properties.Resources.DPad9;
             this.MoveDPad9.Location = new System.Drawing.Point(64, 64);
             this.MoveDPad9.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad9.Name = "MoveDPad9";
@@ -741,7 +741,7 @@
             // MoveDPad8
             // 
             this.MoveDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad8.Image = global::LiveSplit.VFM.Properties.Resources.DPad8;
+            this.MoveDPad8.Image = global::LiveSplit.VAS.Properties.Resources.DPad8;
             this.MoveDPad8.Location = new System.Drawing.Point(32, 64);
             this.MoveDPad8.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad8.Name = "MoveDPad8";
@@ -754,7 +754,7 @@
             // MoveDPad7
             // 
             this.MoveDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad7.Image = global::LiveSplit.VFM.Properties.Resources.DPad7;
+            this.MoveDPad7.Image = global::LiveSplit.VAS.Properties.Resources.DPad7;
             this.MoveDPad7.Location = new System.Drawing.Point(0, 64);
             this.MoveDPad7.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad7.Name = "MoveDPad7";
@@ -767,7 +767,7 @@
             // MoveDPad6
             // 
             this.MoveDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad6.Image = global::LiveSplit.VFM.Properties.Resources.DPad6;
+            this.MoveDPad6.Image = global::LiveSplit.VAS.Properties.Resources.DPad6;
             this.MoveDPad6.Location = new System.Drawing.Point(64, 32);
             this.MoveDPad6.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad6.Name = "MoveDPad6";
@@ -780,7 +780,7 @@
             // MoveDPad5
             // 
             this.MoveDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad5.Image = global::LiveSplit.VFM.Properties.Resources.DPad5;
+            this.MoveDPad5.Image = global::LiveSplit.VAS.Properties.Resources.DPad5;
             this.MoveDPad5.Location = new System.Drawing.Point(32, 32);
             this.MoveDPad5.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad5.Name = "MoveDPad5";
@@ -791,7 +791,7 @@
             // MoveDPad4
             // 
             this.MoveDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad4.Image = global::LiveSplit.VFM.Properties.Resources.DPad4;
+            this.MoveDPad4.Image = global::LiveSplit.VAS.Properties.Resources.DPad4;
             this.MoveDPad4.Location = new System.Drawing.Point(0, 32);
             this.MoveDPad4.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad4.Name = "MoveDPad4";
@@ -804,7 +804,7 @@
             // MoveDPad3
             // 
             this.MoveDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad3.Image = global::LiveSplit.VFM.Properties.Resources.DPad3;
+            this.MoveDPad3.Image = global::LiveSplit.VAS.Properties.Resources.DPad3;
             this.MoveDPad3.Location = new System.Drawing.Point(64, 0);
             this.MoveDPad3.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad3.Name = "MoveDPad3";
@@ -817,7 +817,7 @@
             // MoveDPad2
             // 
             this.MoveDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad2.Image = global::LiveSplit.VFM.Properties.Resources.DPad2;
+            this.MoveDPad2.Image = global::LiveSplit.VAS.Properties.Resources.DPad2;
             this.MoveDPad2.Location = new System.Drawing.Point(32, 0);
             this.MoveDPad2.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad2.Name = "MoveDPad2";
@@ -830,7 +830,7 @@
             // MoveDPad1
             // 
             this.MoveDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad1.Image = global::LiveSplit.VFM.Properties.Resources.DPad1;
+            this.MoveDPad1.Image = global::LiveSplit.VAS.Properties.Resources.DPad1;
             this.MoveDPad1.Location = new System.Drawing.Point(0, 0);
             this.MoveDPad1.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad1.Name = "MoveDPad1";

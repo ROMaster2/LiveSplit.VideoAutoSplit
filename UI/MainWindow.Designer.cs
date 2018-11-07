@@ -1,4 +1,4 @@
-﻿namespace LiveSplit.VFM.Forms
+﻿namespace LiveSplit.VAS.Forms
 {
     partial class MainWindow
     {

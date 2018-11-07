@@ -14,13 +14,13 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using LiveSplit.VFM;
-using LiveSplit.VFM.Models;
+using LiveSplit.VAS;
+using LiveSplit.VAS.Models;
 
 
-using Screen = LiveSplit.VFM.Models.Screen;
+using Screen = LiveSplit.VAS.Models.Screen;
 
-namespace LiveSplit.VFM.Forms
+namespace LiveSplit.VAS.Forms
 {
     public partial class Aligner : Form
     {

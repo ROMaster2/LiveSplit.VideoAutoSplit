@@ -9,7 +9,7 @@ using System;
 using System.Windows;
 using System.Xml.Serialization;
 
-namespace LiveSplit.VFM.Models
+namespace LiveSplit.VAS.Models
 {
     /// <summary>
     /// Geometry - The primitive which represents a rectangle.  Geometry are stored as

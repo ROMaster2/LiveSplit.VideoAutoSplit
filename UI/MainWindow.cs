@@ -11,9 +11,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using LiveSplit.VFM.Models;
+using LiveSplit.VAS.Models;
 
-namespace LiveSplit.VFM.Forms
+namespace LiveSplit.VAS.Forms
 {
     public partial class MainWindow : Form
     {

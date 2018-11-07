@@ -31,8 +31,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using LiveSplit.VFM;
-using LiveSplit.VFM.Models;
+using LiveSplit.VAS;
+using LiveSplit.VAS.Models;
 
 using Accord;
 using Accord.Video;
@@ -48,11 +48,11 @@ using System.IO.Compression;
 using System.Xml;
 using System.Xml.Serialization;
 
-using Screen = LiveSplit.VFM.Models.Screen;
+using Screen = LiveSplit.VAS.Models.Screen;
 using Blend = Accord.Imaging.Filters.Blend;
 using Point = System.Windows.Point;
 
-namespace LiveSplit.VFM
+namespace LiveSplit.VAS
 {
     class Test6
     {

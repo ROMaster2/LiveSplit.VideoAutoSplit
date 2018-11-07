@@ -8,7 +8,7 @@ using System.Linq;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace LiveSplit.VFM.Models
+namespace LiveSplit.VAS.Models
 {
     public class WatchImage
     {

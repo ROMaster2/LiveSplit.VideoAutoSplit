@@ -1,4 +1,4 @@
-﻿namespace LiveSplit.VFM.Models
+﻿namespace LiveSplit.VAS.Models
 {
     public struct Scan
     {

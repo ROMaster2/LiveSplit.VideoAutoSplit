@@ -7,15 +7,15 @@ using System.Xml;
 using LiveSplit.Model;
 using LiveSplit.Options;
 using LiveSplit.VASL;
-using LiveSplit.VFM;
-using LiveSplit.VFM.Forms;
-using LiveSplit.VFM.Models;
+using LiveSplit.VAS;
+using LiveSplit.VAS.Forms;
+using LiveSplit.VAS.Models;
 
 namespace LiveSplit.UI.Components
 {
-    public class VFMComponent : LogicComponent
+    public class VASComponent : LogicComponent
     {
-        public override string ComponentName => "Video Feature Monitor";
+        public override string ComponentName => "Video Auto Splitter";
 
         // public so other components (VASLVarViewer) can access
         public VASLScript Script { get; private set; }
@@ -32,7 +32,7 @@ namespace LiveSplit.UI.Components
 
         private LiveSplitState _state;
 
-        public VFMComponent(LiveSplitState state)
+        public VASComponent(LiveSplitState state)
         {
             _state = state;
 
@@ -52,7 +52,7 @@ namespace LiveSplit.UI.Components
             _update_timer.Enabled = true;
         }
 
-        public VFMComponent(LiveSplitState state, string script_path)
+        public VASComponent(LiveSplitState state, string script_path)
             : this(state)
         {
             _settings = new ComponentSettings(script_path);

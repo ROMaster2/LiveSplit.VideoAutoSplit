@@ -12,7 +12,7 @@ using LiveSplit.UI;
 using System.IO;
 using LiveSplit.VASL;
 
-namespace LiveSplit.VFM
+namespace LiveSplit.VAS
 {
     public partial class ComponentSettings : UserControl
     {

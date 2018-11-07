@@ -6,7 +6,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using System.IO.Compression;
 
-namespace LiveSplit.VFM.Models
+namespace LiveSplit.VAS.Models
 {
     public class GameProfile
     {

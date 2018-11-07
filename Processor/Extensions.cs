@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace LiveSplit.VFM
+namespace LiveSplit.VAS
 {
     public static partial class Extensions
     {

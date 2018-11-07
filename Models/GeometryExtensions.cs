@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LiveSplit.VFM.Models
+namespace LiveSplit.VAS.Models
 {
     public partial struct Geometry
     {

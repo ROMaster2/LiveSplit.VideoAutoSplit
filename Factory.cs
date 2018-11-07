@@ -8,17 +8,16 @@ namespace LiveSplit.UI.Components
 {
     public class Factory : IComponentFactory
     {
-        public string ComponentName => "Video Feature Monitor";
-        public string Description =>
-            "Monitors a video feed for features and returns a comparison rate. Best used with Scriptable Auto Splitter.";
+        public string ComponentName => "Video Auto Splitter";
+        public string Description => "Allows scripting of splitting behavior based on events from a video feed.";
         public ComponentCategory Category => ComponentCategory.Control;
-        public Version Version => Version.Parse("1.7.5");
+        public Version Version => Version.Parse("0.1.0");
 
         public string UpdateName => ComponentName;
         public string UpdateURL => "http://livesplit.org/update/";
-        public string XMLURL => "http://livesplit.org/update/Components/update.LiveSplit.VideoFeatureMonitor.xml";
+        public string XMLURL => "http://livesplit.org/update/Components/update.LiveSplit.VideoAutoSplitter.xml";
 
-        public IComponent Create(LiveSplitState state) => new VFMComponent(state);
-        public IComponent Create(LiveSplitState state, string script) => new VFMComponent(state, script);
+        public IComponent Create(LiveSplitState state) => new VASComponent(state);
+        public IComponent Create(LiveSplitState state, string script) => new VASComponent(state, script);
     }
 }

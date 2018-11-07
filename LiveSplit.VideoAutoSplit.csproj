@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LiveSplit.VFM</RootNamespace>
-    <AssemblyName>LiveSplit.VideoFeatureMonitor</AssemblyName>
+    <AssemblyName>LiveSplit.VideoAutoSplit</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

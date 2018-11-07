@@ -1,7 +1,7 @@
 ﻿using ImageMagick;
 using System;
 
-namespace LiveSplit.VFM.Models
+namespace LiveSplit.VAS.Models
 {
     [Flags]
     public enum Anchor

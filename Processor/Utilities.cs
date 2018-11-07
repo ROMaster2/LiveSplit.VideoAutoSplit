@@ -21,11 +21,11 @@ using System.Timers;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
-using LiveSplit.VFM;
-using LiveSplit.VFM.Models;
+using LiveSplit.VAS;
+using LiveSplit.VAS.Models;
 using System.Runtime.InteropServices;
 
-namespace LiveSplit.VFM
+namespace LiveSplit.VAS
 {
     public static class Utilities
     {

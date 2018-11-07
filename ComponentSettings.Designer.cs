@@ -1,4 +1,4 @@
-﻿namespace LiveSplit.VFM
+﻿namespace LiveSplit.VAS
 {
     partial class ComponentSettings
     {
