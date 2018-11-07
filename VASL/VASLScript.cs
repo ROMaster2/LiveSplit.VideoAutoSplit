@@ -7,7 +7,7 @@ using System.Linq;
 using LiveSplit.Model;
 using LiveSplit.Options;
 
-namespace LiveSplit.VASL
+namespace LiveSplit.VAS.VASL
 {
     public class VASLScript
     {

@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.UI;
 using System.IO;
-using LiveSplit.VASL;
+using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.VAS
 {

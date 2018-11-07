@@ -7,7 +7,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 
-namespace LiveSplit.VASL
+namespace LiveSplit.VAS.VASL
 {
     public class VASLMethod
     {

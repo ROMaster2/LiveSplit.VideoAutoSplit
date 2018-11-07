@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Irony.Parsing;
 
-namespace LiveSplit.VASL
+namespace LiveSplit.VAS.VASL
 {
     [Language("VASL", "0.1", "Video Auto Split Language grammar")]
     public class VASLGrammar : Grammar

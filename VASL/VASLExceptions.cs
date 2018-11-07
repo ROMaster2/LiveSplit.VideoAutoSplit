@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-namespace LiveSplit.VASL
+namespace LiveSplit.VAS.VASL
 {
     public class VASLCompilerException : Exception
     {

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using LiveSplit.ComponentUtil;
 
-namespace LiveSplit.VASL
+namespace LiveSplit.VAS.VASL
 {
     public class VASLValueDefinition
     {

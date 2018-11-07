@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using LiveSplit.VAS;
-using LiveSplit.VASL;
+using LiveSplit.VAS.VASL;
 using LiveSplit.VAS.Models;
 using LiveSplit.UI.Components;
 using System.IO;

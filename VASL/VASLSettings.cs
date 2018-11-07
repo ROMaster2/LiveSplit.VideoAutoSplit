@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using LiveSplit.Options;
 
-namespace LiveSplit.VASL
+namespace LiveSplit.VAS.VASL
 {
     public class VASLSetting
     {

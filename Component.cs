@@ -6,7 +6,7 @@ using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.Model;
 using LiveSplit.Options;
-using LiveSplit.VASL;
+using LiveSplit.VAS.VASL;
 using LiveSplit.VAS;
 using LiveSplit.VAS.Forms;
 using LiveSplit.VAS.Models;
