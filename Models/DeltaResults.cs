@@ -12,25 +12,38 @@ namespace LiveSplit.VAS.Models
 
     public class DeltaResults : EventArgs
     {
-        public TimeStamp FrameStart;
-        public TimeStamp FrameEnd;
-        public TimeStamp ScanEnd;
-        public double[] Deltas;
+        public readonly int Index;
+        public readonly TimeStamp FrameStart;
+        public readonly TimeStamp FrameEnd;
+        public readonly TimeStamp ScanEnd;
+        public readonly TimeStamp WaitEnd;
+        public readonly double[] Deltas;
 
-        public DeltaResults(TimeStamp frameStart, TimeStamp frameEnd, TimeStamp scanEnd, double[] deltas)
+        public DeltaResults(int index, TimeStamp frameStart, TimeStamp frameEnd, TimeStamp scanEnd, TimeStamp waitEnd, double[] deltas)
         {
+            Index = index;
             FrameStart = frameStart;
             FrameEnd = frameEnd;
             ScanEnd = scanEnd;
+            WaitEnd = waitEnd;
             Deltas = deltas;
         }
 
-        public DeltaResults(Scan scan, TimeStamp scanEnd, double[] deltas)
+        public DeltaResults(int index, Scan scan, TimeStamp scanEnd, TimeStamp waitEnd, double[] deltas)
         {
+            Index = index;
             FrameStart = scan.PreviousFrame.TimeStamp;
             FrameEnd = scan.CurrentFrame.TimeStamp;
             ScanEnd = scanEnd;
+            WaitEnd = waitEnd;
             Deltas = deltas;
+        }
+
+        public DeltaResults()
+        {
+            Index = -1;
+            FrameStart = FrameEnd = ScanEnd = WaitEnd = TimeStamp.Now;
+            Deltas = new double[Scanner.FEATURE_COUNT_LIMIT];
         }
 
         public TimeSpan FrameDuration()
@@ -41,6 +54,16 @@ namespace LiveSplit.VAS.Models
         public TimeSpan ScanDuration()
         {
             return ScanEnd - FrameEnd;
+        }
+
+        public TimeSpan WaitDuration()
+        {
+            return WaitEnd - ScanEnd;
+        }
+
+        public TimeSpan ProcessDuration()
+        {
+            return WaitEnd - FrameEnd;
         }
     }
 }

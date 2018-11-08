@@ -17,7 +17,6 @@ namespace LiveSplit.UI.Components
     {
         public override string ComponentName => "Video Auto Splitter";
 
-        // public so other components (VASLVarViewer) can access
         public VASLScript Script { get; private set; }
 
         public event EventHandler ScriptChanged;
@@ -25,7 +24,6 @@ namespace LiveSplit.UI.Components
         private bool _do_reload;
         private string _old_script_path;
 
-        private Timer _update_timer;
         private FileSystemWatcher _fs_watcher;
 
         private ComponentSettings _settings;
@@ -44,12 +42,8 @@ namespace LiveSplit.UI.Components
                 _do_reload = true;
             };
 
-            // -try- to run a little faster than 60hz
-            // note: Timer isn't very reliable and quite often takes ~30ms
-            // we need to switch to threading
-            _update_timer = new Timer() { Interval = 15 };
-            _update_timer.Tick += (sender, args) => UpdateScript();
-            _update_timer.Enabled = true;
+            Scanner.NewResult += (dr) => UpdateScript(dr);
+            Scanner.Start(); // Where else should this go?
         }
 
         public VASComponent(LiveSplitState state, string script_path)
@@ -60,6 +54,7 @@ namespace LiveSplit.UI.Components
 
         public override void Dispose()
         {
+            Scanner.Stop();
             ScriptCleanup();
 
             try
@@ -72,7 +67,6 @@ namespace LiveSplit.UI.Components
             }
 
             _fs_watcher?.Dispose();
-            _update_timer?.Dispose();
         }
 
         public override Control GetSettingsControl(LayoutMode mode)
@@ -94,15 +88,8 @@ namespace LiveSplit.UI.Components
             LayoutMode mode)
         { }
 
-
-        private void UpdateScript()
+        private void UpdateScript(DeltaResults e)
         {
-            // Disable timer, to wait for execution of this iteration to
-            // finish. This can be useful if blocking operations like
-            // showing a message window are used.
-            _update_timer.Enabled = false;
-
-            // this is ugly, fix eventually!
             if (_settings.ScriptPath != _old_script_path || _do_reload)
             {
                 try
@@ -114,8 +101,6 @@ namespace LiveSplit.UI.Components
 
                     if (string.IsNullOrEmpty(_settings.ScriptPath))
                     {
-                        // Only disable file watcher if script path changed to empty
-                        // (otherwise detecting file changes may still be wanted)
                         _fs_watcher.EnableRaisingEvents = false;
                     }
                     else
@@ -142,8 +127,6 @@ namespace LiveSplit.UI.Components
                     Log.Error(ex);
                 }
             }
-
-            _update_timer.Enabled = true;
         }
 
         private void LoadScript()
@@ -156,9 +139,6 @@ namespace LiveSplit.UI.Components
 
             // New script
             Script = VASLParser.Parse(File.ReadAllText(_settings.ScriptPath));
-
-            Script.RefreshRateChanged += (sender, rate) => _update_timer.Interval = (int)Math.Round(1000 / rate);
-            _update_timer.Interval = (int)Math.Round(1000 / Script.RefreshRate);
 
             Script.GameVersionChanged += (sender, version) => _settings.SetGameVersion(version);
             _settings.SetGameVersion(null);

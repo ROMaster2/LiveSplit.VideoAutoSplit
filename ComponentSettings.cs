@@ -10,7 +10,9 @@ using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.UI;
 using System.IO;
+using LiveSplit.VAS.Models;
 using LiveSplit.VAS.VASL;
+using Accord.Video.DirectShow;
 
 namespace LiveSplit.VAS
 {
@@ -46,15 +48,16 @@ namespace LiveSplit.VAS
         public ComponentSettings()
         {
             InitializeComponent();
+            FillboxCaptureDevice();
 
             ScriptPath = string.Empty;
 
-            this.txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false,
+            this.txtGameProfile.DataBindings.Add("Text", this, "ScriptPath", false,
                 DataSourceUpdateMode.OnPropertyChanged);
 
             SetGameVersion(null);
             UpdateCustomSettingsVisibility();
-
+            
             _basic_settings = new Dictionary<string, CheckBox>
             {
                 // Capitalized names for saving it in XML.
@@ -62,7 +65,7 @@ namespace LiveSplit.VAS
                 ["Reset"] = checkboxReset,
                 ["Split"] = checkboxSplit
             };
-
+            
             _basic_settings_state = new Dictionary<string, bool>();
             _custom_settings_state = new Dictionary<string, bool>();
         }
@@ -78,7 +81,7 @@ namespace LiveSplit.VAS
         {
             XmlElement settings_node = document.CreateElement("Settings");
 
-            settings_node.AppendChild(SettingsHelper.ToElement(document, "Version", "1.5"));
+            settings_node.AppendChild(SettingsHelper.ToElement(document, "Version", "0.1"));
             settings_node.AppendChild(SettingsHelper.ToElement(document, "ScriptPath", ScriptPath));
             AppendBasicSettingsToXml(document, settings_node);
             AppendCustomSettingsToXml(document, settings_node);
@@ -103,7 +106,7 @@ namespace LiveSplit.VAS
 
         public void SetGameVersion(string version)
         {
-            this.lblGameVersion.Text = string.IsNullOrEmpty(version) ? "" : "Game Version: " + version;
+            //this.lblGameVersion.Text = string.IsNullOrEmpty(version) ? "" : "Game Version: " + version;
         }
 
         /// <summary>
@@ -130,7 +133,7 @@ namespace LiveSplit.VAS
                 _basic_settings_state.Clear();
                 _custom_settings_state.Clear();
             }
-
+            /*
             this.treeCustomSettings.BeginUpdate();
             this.treeCustomSettings.Nodes.Clear();
 
@@ -190,7 +193,7 @@ namespace LiveSplit.VAS
             // Scroll up to the top
             if (this.treeCustomSettings.Nodes.Count > 0)
                 this.treeCustomSettings.Nodes[0].EnsureVisible();
-
+            */
             UpdateCustomSettingsVisibility();
             InitBasicSettings(settings);
         }
@@ -198,6 +201,7 @@ namespace LiveSplit.VAS
 
         private void AppendBasicSettingsToXml(XmlDocument document, XmlNode settings_node)
         {
+            if (_basic_settings != null && _basic_settings.Count > 0)
             foreach (var item in _basic_settings)
             {
                 if (_basic_settings_state.ContainsKey(item.Key.ToLower()))
@@ -304,13 +308,13 @@ namespace LiveSplit.VAS
         }
 
         private void UpdateCustomSettingsVisibility()
-        {
+        {/*
             bool show = this.treeCustomSettings.GetNodeCount(false) > 0;
             this.treeCustomSettings.Visible = show;
             this.btnResetToDefault.Visible = show;
             this.btnCheckAll.Visible = show;
             this.btnUncheckAll.Visible = show;
-            this.labelCustomSettings.Visible = show;
+            this.labelCustomSettings.Visible = show;*/
         }
 
         /// <summary>
@@ -335,7 +339,7 @@ namespace LiveSplit.VAS
         /// <param name="nodes">If nodes is null, all nodes of the custom settings tree are affected.</param>
         /// 
         private void UpdateNodesCheckedState(Func<VASLSetting, bool> func, TreeNodeCollection nodes = null)
-        {
+        {/*
             if (nodes == null)
                 nodes = this.treeCustomSettings.Nodes;
 
@@ -347,7 +351,7 @@ namespace LiveSplit.VAS
                     node.Checked = check;
 
                 return true;
-            }, nodes);
+            }, nodes);*/
         }
 
         /// <summary>
@@ -410,7 +414,7 @@ namespace LiveSplit.VAS
             }
 
             if (dialog.ShowDialog() == DialogResult.OK)
-                ScriptPath = this.txtScriptPath.Text = dialog.FileName;
+                ScriptPath = this.txtGameProfile.Text = dialog.FileName;
         }
 
         // Basic Setting checked/unchecked
@@ -419,14 +423,7 @@ namespace LiveSplit.VAS
         // change the state in _basic_settings_state fine as well.
         private void methodCheckbox_CheckedChanged(object sender, EventArgs e)
         {
-            var checkbox = (CheckBox)sender;
-            var setting = (VASLSetting)checkbox.Tag;
 
-            if (setting != null)
-            {
-                setting.Value = checkbox.Checked;
-                _basic_settings_state[setting.Id] = setting.Value;
-            }
         }
 
         // Custom Setting checked/unchecked (only after initially building the tree)
@@ -468,61 +465,194 @@ namespace LiveSplit.VAS
         private void settingsTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             // Select clicked node (not only with left-click) for use with context menu
-            this.treeCustomSettings.SelectedNode = e.Node;
+            //this.treeCustomSettings.SelectedNode = e.Node;
         }
 
         private void cmiCheckBranch_Click(object sender, EventArgs e)
-        {
+        {/*
             UpdateNodesCheckedState(s => true, this.treeCustomSettings.SelectedNode.Nodes);
-            UpdateNodeCheckedState(s => true, this.treeCustomSettings.SelectedNode);
+            UpdateNodeCheckedState(s => true, this.treeCustomSettings.SelectedNode);*/
         }
 
         private void cmiUncheckBranch_Click(object sender, EventArgs e)
-        {
+        {/*
             UpdateNodesCheckedState(s => false, this.treeCustomSettings.SelectedNode.Nodes);
-            UpdateNodeCheckedState(s => false, this.treeCustomSettings.SelectedNode);
+            UpdateNodeCheckedState(s => false, this.treeCustomSettings.SelectedNode);*/
         }
 
         private void cmiResetBranchToDefault_Click(object sender, EventArgs e)
-        {
+        {/*
             UpdateNodesCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode.Nodes);
-            UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);
+            UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);*/
         }
 
         private void cmiExpandBranch_Click(object sender, EventArgs e)
-        {
+        {/*
             this.treeCustomSettings.SelectedNode.ExpandAll();
-            this.treeCustomSettings.SelectedNode.EnsureVisible();
+            this.treeCustomSettings.SelectedNode.EnsureVisible();*/
         }
 
         private void cmiCollapseBranch_Click(object sender, EventArgs e)
-        {
+        {/*
             this.treeCustomSettings.SelectedNode.Collapse();
-            this.treeCustomSettings.SelectedNode.EnsureVisible();
+            this.treeCustomSettings.SelectedNode.EnsureVisible();*/
         }
 
         private void cmiCollapseTreeToSelection_Click(object sender, EventArgs e)
-        {
+        {/*
             TreeNode selected = this.treeCustomSettings.SelectedNode;
             this.treeCustomSettings.CollapseAll();
             this.treeCustomSettings.SelectedNode = selected;
-            selected.EnsureVisible();
+            selected.EnsureVisible();*/
         }
 
         private void cmiExpandTree_Click(object sender, EventArgs e)
-        {
+        {/*
             this.treeCustomSettings.ExpandAll();
-            this.treeCustomSettings.SelectedNode.EnsureVisible();
+            this.treeCustomSettings.SelectedNode.EnsureVisible();*/
         }
 
         private void cmiCollapseTree_Click(object sender, EventArgs e)
-        {
-            this.treeCustomSettings.CollapseAll();
+        {/*
+            this.treeCustomSettings.CollapseAll();*/
         }
 
         private void cmiResetSettingToDefault_Click(object sender, EventArgs e)
-        {
-            UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);
+        {/*
+            UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);*/
         }
+
+        private void BtnGameProfile_Click(object sender, EventArgs e)
+        {
+            using (var ofd = new OpenFileDialog() { Filter = "Zip Files|*.zip", Title = "Load a Game Profile" })
+            {
+                if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists == true)
+                {
+                retry:
+                    var gp = GameProfile.FromZip(ofd.FileName);
+
+                    if (gp == null)
+                    {
+                        DialogResult dr = MessageBox.Show(
+                            "Failed to load Game Profile.",
+                            "Error",
+                            MessageBoxButtons.RetryCancel,
+                            MessageBoxIcon.Error
+                            );
+
+                        if (dr == DialogResult.Retry)
+                        {
+                            goto retry;
+                        }
+                    }
+                    else
+                    {
+                        Scanner.GameProfile = gp;
+                        txtGameProfile.Text = ofd.FileName;
+                        Scanner.Start();
+                        //Properties.Settings.Default.GameProfile = ofd.FileName;
+                        //Properties.Settings.Default.Save();
+                    }
+                }
+            }
+        }
+
+        private void BtnCaptureDevice_Click(object sender, EventArgs e)
+        {
+        retry:
+            var success = FillboxCaptureDevice();
+            if (!success)
+            {
+                DialogResult dr = MessageBox.Show(
+                    "No video capture devices detected.",
+                    "Error",
+                    MessageBoxButtons.RetryCancel,
+                    MessageBoxIcon.Error
+                    );
+
+                if (dr == DialogResult.Retry)
+                {
+                    goto retry;
+                }
+            }
+        }
+
+        private bool FillboxCaptureDevice()
+        {
+            var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+
+            if (videoDevices.Count > 0)
+            {
+                boxCaptureDevice.Enabled = true;
+                string selectedItem = null;
+                int selectedIndex = 0;
+                if (boxCaptureDevice.SelectedIndex > -1)
+                {
+                    selectedItem = (string)boxCaptureDevice.SelectedItem;
+                }
+
+                boxCaptureDevice.Items.Clear();
+                for (var i = 0; i < videoDevices.Count; i++)
+                {
+                    boxCaptureDevice.Items.Add(videoDevices[i].Name);
+                    if (videoDevices[i].Name == selectedItem)
+                    {
+                        selectedIndex = i;
+                    }
+                }
+                boxCaptureDevice.SelectedIndex = selectedIndex;
+                return true;
+            }
+            else
+            {
+                boxCaptureDevice.Items.Clear();
+                boxCaptureDevice.Enabled = false;
+                return false;
+            }
+        }
+
+        private void boxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Scanner.Stop();
+        retry:
+            var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            var matches = videoDevices.Where(v => v.Name == boxCaptureDevice.Text);
+            if (matches.Count() > 0)
+            {
+                var match = matches.First();
+                Scanner.SetVideoSource(match.MonikerString);
+                lblCaptureDevice.Text = "Capture Device - " + Scanner.VideoGeometry.ToString();
+                //Properties.Settings.Default.VideoDevice = boxCaptureDevice.Text;
+                //Properties.Settings.Default.Save();
+            }
+            else
+            {
+                lblCaptureDevice.Text = "Capture Device";
+                DialogResult dr = MessageBox.Show(
+                    "Selected video capture device cannont be found. Has it been unplugged?",
+                    "Error",
+                    MessageBoxButtons.RetryCancel,
+                    MessageBoxIcon.Error
+                    );
+
+                if (dr == DialogResult.Retry)
+                {
+                    goto retry;
+                }
+                else
+                {
+                    FillboxCaptureDevice();
+                }
+            }
+            Scanner.Start();
+        }
+
+        private void BtnSetCaptureRegion_Click(object sender, EventArgs e)
+        {
+            LiveSplit.VAS.Forms.Aligner w = new LiveSplit.VAS.Forms.Aligner();
+            w.Show();
+        }
+
+
     }
 }

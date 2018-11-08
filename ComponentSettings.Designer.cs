@@ -51,12 +51,18 @@
             this.tlpCaptureDevice = new System.Windows.Forms.TableLayoutPanel();
             this.tlpGameProfile = new System.Windows.Forms.TableLayoutPanel();
             this.lblTodo = new System.Windows.Forms.Label();
+            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.checkboxStart = new System.Windows.Forms.CheckBox();
+            this.checkboxSplit = new System.Windows.Forms.CheckBox();
+            this.checkboxReset = new System.Windows.Forms.CheckBox();
+            this.lblGameVersion = new System.Windows.Forms.Label();
             this.tlpCore.SuspendLayout();
             this.tlpDetectors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numSetThreshold01)).BeginInit();
             this.tlpTodo.SuspendLayout();
             this.tlpCaptureDevice.SuspendLayout();
             this.tlpGameProfile.SuspendLayout();
+            this.flowLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCaptureDevice
@@ -67,6 +73,7 @@
             this.btnCaptureDevice.TabIndex = 19;
             this.btnCaptureDevice.Text = "Refresh";
             this.btnCaptureDevice.UseVisualStyleBackColor = true;
+            this.btnCaptureDevice.Click += new System.EventHandler(this.BtnCaptureDevice_Click);
             // 
             // lblCaptureDevice
             // 
@@ -88,6 +95,7 @@
             this.boxCaptureDevice.Name = "boxCaptureDevice";
             this.boxCaptureDevice.Size = new System.Drawing.Size(300, 21);
             this.boxCaptureDevice.TabIndex = 17;
+            this.boxCaptureDevice.SelectedIndexChanged += new System.EventHandler(this.boxCaptureDevice_SelectedIndexChanged);
             // 
             // txtGameProfile
             // 
@@ -118,6 +126,7 @@
             this.btnSetCaptureRegion.TabIndex = 21;
             this.btnSetCaptureRegion.Text = "Set Capture Region";
             this.btnSetCaptureRegion.UseVisualStyleBackColor = true;
+            this.btnSetCaptureRegion.Click += new System.EventHandler(this.BtnSetCaptureRegion_Click);
             // 
             // btnGameProfile
             // 
@@ -128,12 +137,14 @@
             this.btnGameProfile.TabIndex = 13;
             this.btnGameProfile.Text = "Browse...";
             this.btnGameProfile.UseVisualStyleBackColor = true;
+            this.btnGameProfile.Click += new System.EventHandler(this.BtnGameProfile_Click);
             // 
             // tlpCore
             // 
             this.tlpCore.ColumnCount = 2;
             this.tlpCore.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 76F));
             this.tlpCore.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tlpCore.Controls.Add(this.flowLayoutPanel2, 1, 4);
             this.tlpCore.Controls.Add(this.tlpDetectors, 1, 3);
             this.tlpCore.Controls.Add(this.lblDetectors, 0, 3);
             this.tlpCore.Controls.Add(this.tlpTodo, 1, 2);
@@ -374,6 +385,60 @@
             this.lblTodo.TabIndex = 24;
             this.lblTodo.Text = "Todo";
             // 
+            // flowLayoutPanel2
+            // 
+            this.flowLayoutPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.flowLayoutPanel2.AutoSize = true;
+            this.flowLayoutPanel2.Controls.Add(this.checkboxStart);
+            this.flowLayoutPanel2.Controls.Add(this.checkboxSplit);
+            this.flowLayoutPanel2.Controls.Add(this.checkboxReset);
+            this.flowLayoutPanel2.Controls.Add(this.lblGameVersion);
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(79, 472);
+            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(380, 23);
+            this.flowLayoutPanel2.TabIndex = 23;
+            // 
+            // checkboxStart
+            // 
+            this.checkboxStart.Enabled = false;
+            this.checkboxStart.Location = new System.Drawing.Point(3, 3);
+            this.checkboxStart.Name = "checkboxStart";
+            this.checkboxStart.Size = new System.Drawing.Size(48, 17);
+            this.checkboxStart.TabIndex = 11;
+            this.checkboxStart.Text = "Start";
+            this.checkboxStart.UseVisualStyleBackColor = true;
+            // 
+            // checkboxSplit
+            // 
+            this.checkboxSplit.Enabled = false;
+            this.checkboxSplit.Location = new System.Drawing.Point(57, 3);
+            this.checkboxSplit.Name = "checkboxSplit";
+            this.checkboxSplit.Size = new System.Drawing.Size(46, 17);
+            this.checkboxSplit.TabIndex = 0;
+            this.checkboxSplit.Text = "Split";
+            this.checkboxSplit.UseVisualStyleBackColor = true;
+            // 
+            // checkboxReset
+            // 
+            this.checkboxReset.Enabled = false;
+            this.checkboxReset.Location = new System.Drawing.Point(109, 3);
+            this.checkboxReset.Name = "checkboxReset";
+            this.checkboxReset.Size = new System.Drawing.Size(54, 17);
+            this.checkboxReset.TabIndex = 0;
+            this.checkboxReset.Text = "Reset";
+            this.checkboxReset.UseVisualStyleBackColor = true;
+            // 
+            // lblGameVersion
+            // 
+            this.lblGameVersion.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.lblGameVersion.AutoEllipsis = true;
+            this.lblGameVersion.Location = new System.Drawing.Point(169, 5);
+            this.lblGameVersion.Name = "lblGameVersion";
+            this.lblGameVersion.Size = new System.Drawing.Size(208, 13);
+            this.lblGameVersion.TabIndex = 10;
+            this.lblGameVersion.Text = "Game Version: 1.0";
+            this.lblGameVersion.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // ComponentSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -391,6 +456,7 @@
             this.tlpCaptureDevice.ResumeLayout(false);
             this.tlpGameProfile.ResumeLayout(false);
             this.tlpGameProfile.PerformLayout();
+            this.flowLayoutPanel2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -419,5 +485,10 @@
         private System.Windows.Forms.Label lblSetThreshold;
         private System.Windows.Forms.Label lblTimeActive;
         private System.Windows.Forms.Label lblAbove01;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.CheckBox checkboxStart;
+        private System.Windows.Forms.CheckBox checkboxSplit;
+        private System.Windows.Forms.CheckBox checkboxReset;
+        private System.Windows.Forms.Label lblGameVersion;
     }
 }

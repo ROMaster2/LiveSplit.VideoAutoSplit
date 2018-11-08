@@ -24,7 +24,8 @@ namespace LiveSplit.VAS
 {
     static class Scanner
     {
-        public const int FEATURE_COUNT_LIMIT = 64; // Arbitrary number tbh
+        public const int FEATURE_COUNT_LIMIT = 64; // Arbitrary numbers tbh
+        public const int DELTA_RESULTS_COUNT_LIMIT = 256;
 
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
@@ -33,15 +34,17 @@ namespace LiveSplit.VAS
         public static int CurrentIndex = 0; // Used only for debugging. Remove on release.
         public static bool IsScanning = false;
 
+        public static DeltaResults[] DeltaResultsStorage = new DeltaResults[DELTA_RESULTS_COUNT_LIMIT];
+
         public static event DeltaResultsHandler NewResult;
 
         // Parallelism is used when a single thread isn't fast enough to scan with.
         // Reduces a bit of overhead by not making it all parallel.
-        public static bool parallelWatchZones = false;
-        public static bool parallelWatches = false;
-        public static bool parallelWatchImages = false;
+        public static bool ParallelWatchZones = false;
+        public static bool ParallelWatches = false;
+        public static bool ParallelWatchImages = false;
         // Todo: Add something for downscaling before comparing for large images.
-        public static bool parallelScanning = false; // Last resort as it can desynchronize scripts from AtomicTime.
+        public static bool ParallelScanning = false; // Last resort as it can desynchronize scripts from AtomicTime.
 
         private static Geometry _VideoGeometry = Geometry.Blank;
         public static Geometry VideoGeometry
@@ -128,7 +131,7 @@ namespace LiveSplit.VAS
             }
         }
 
-        public static bool IsVideoSourceValid()
+        public static bool IsVideoSourceValid() // Not really but good enough.
         {
             return !string.IsNullOrEmpty(VideoSource.Source);
         }
@@ -163,15 +166,16 @@ namespace LiveSplit.VAS
 
         public static void Stop()
         {
+            VideoSource.SignalToStop();
             CurrentIndex = 0;
             UnsubscribeFromFrameHandler(new NewFrameEventHandler(HandleNewFrame));
-            VideoSource.Stop();
+            VideoSource.WaitForStop();
         }
 
         public static void Start()
         {
             UpdateCropGeometry();
-            if (GameProfile != null)
+            if (GameProfile != null && IsVideoSourceValid())
             {
                 CurrentIndex = 0;
                 SubscribeToFrameHandler(new NewFrameEventHandler(HandleNewFrame));
@@ -246,7 +250,7 @@ namespace LiveSplit.VAS
                 var newScan = new Scan(new Frame(now, (Bitmap)e.Frame.Clone()), CurrentFrame.Clone());
                 CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
                 CurrentIndex++;
-                Task.Run(() => NewRun(newScan));
+                Task.Run(() => NewRun(newScan, CurrentIndex));
             }
         }
 
@@ -254,7 +258,7 @@ namespace LiveSplit.VAS
         // That can cause sync problems so it needs to be investigated.
         //
         // Also, unsafe is used as ref can't be passed through lambda.
-        unsafe private static void NewRun(Scan scan)
+        unsafe private static void NewRun(Scan scan, int index)
         {
             IsScanning = true;
             var deltas = new double[FEATURE_COUNT_LIMIT];
@@ -268,13 +272,31 @@ namespace LiveSplit.VAS
             }
             IsScanning = false;
             deltas[FEATURE_COUNT_LIMIT - 1] = 12345.6789d; // DEBUGGING
-            NewResult(new DeltaResults(scan, TimeStamp.Now, deltas));
+            AddResult(index, scan, TimeStamp.Now, deltas);
             scan.Dispose();
+        }
+
+        private static void AddResult(int index, Scan scan, TimeStamp scanEnd, double[] deltas)
+        {
+            var currIndex =  index      % DELTA_RESULTS_COUNT_LIMIT;
+            var prevIndex = (index - 1) % DELTA_RESULTS_COUNT_LIMIT;
+
+            if (index > 30) // Safety measure
+            {
+                while (DeltaResultsStorage[prevIndex] == null || DeltaResultsStorage[prevIndex].Index != index - 1)
+                {
+                    Thread.Sleep(1);
+                }
+            }
+
+            var dr = new DeltaResults(index, scan, scanEnd, TimeStamp.Now, deltas);
+            DeltaResultsStorage[currIndex] = dr;
+            Task.Run(() => NewResult(dr));
         }
 
         unsafe private static void EnumerateWatchZones(double* deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase)
         {
-            if (parallelWatchZones)
+            if (ParallelWatchZones)
             {
                 Parallel.ForEach(CompiledFeatures.CWatchZones, (cWatchZone) => CropScan(deltas, fileImageBase, prevFileImageBase, cWatchZone));
             }
@@ -295,7 +317,7 @@ namespace LiveSplit.VAS
 
         unsafe private static void EnumerateWatches(double* deltas, IMagickImage fileImageCropped, IMagickImage prevFileImageCropped, CWatchZone cWatchZone)
         {
-            if (parallelWatches)
+            if (ParallelWatches)
             {
                 Parallel.ForEach(cWatchZone.CWatches, (cWatcher) => ComposeScan(deltas, fileImageCropped, prevFileImageCropped, cWatcher));
             }
@@ -325,7 +347,7 @@ namespace LiveSplit.VAS
 
         unsafe private static void EnumerateWatchImages(double* deltas, IMagickImage fileImageComposed, CWatcher cWatcher)
         {
-            if (parallelWatchImages)
+            if (ParallelWatchImages)
             {
                 Parallel.ForEach(cWatcher.CWatchImages, (cWatchImage) => CompareAgainstFeature(deltas, fileImageComposed, cWatcher, cWatchImage));
             }

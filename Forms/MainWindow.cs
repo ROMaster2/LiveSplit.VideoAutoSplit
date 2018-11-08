@@ -86,7 +86,7 @@ namespace LiveSplit.VAS.Forms
                     {
                         Scanner.GameProfile = gp;
                         txtGameProfile.Text = ofd.FileName;
-                        TryStart();
+                        Scanner.Start();
                         //Properties.Settings.Default.GameProfile = ofd.FileName;
                         //Properties.Settings.Default.Save();
                     }
@@ -181,15 +181,7 @@ namespace LiveSplit.VAS.Forms
                     FillBoxCaptureDevice();
                 }
             }
-            TryStart();
-        }
-
-        private void TryStart()
-        {
-            if (Scanner.GameProfile != null && Scanner.IsVideoSourceValid())
-            {
-                Scanner.Start();
-            }
+            Scanner.Start();
         }
 
         private void BtnSetCaptureRegion_Click(object sender, EventArgs e)
