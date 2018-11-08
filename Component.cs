@@ -10,6 +10,8 @@ using LiveSplit.VAS.VASL;
 using LiveSplit.VAS;
 using LiveSplit.VAS.Forms;
 using LiveSplit.VAS.Models;
+using System.IO.Compression;
+using System.Linq;
 
 namespace LiveSplit.UI.Components
 {
@@ -137,8 +139,13 @@ namespace LiveSplit.UI.Components
             _fs_watcher.Filter = Path.GetFileName(_settings.ScriptPath);
             _fs_watcher.EnableRaisingEvents = true;
 
+            var archive = ZipFile.OpenRead(_settings.ScriptPath);
+            var entries = archive.Entries;
+            var stream = entries.Where(z => z.Name == "script.vasl").First().Open();
+            var script = new StreamReader(stream).ReadToEnd();
+
             // New script
-            Script = VASLParser.Parse(File.ReadAllText(_settings.ScriptPath));
+            Script = VASLParser.Parse(script);
 
             Script.GameVersionChanged += (sender, version) => _settings.SetGameVersion(version);
             _settings.SetGameVersion(null);

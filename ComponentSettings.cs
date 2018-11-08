@@ -526,6 +526,12 @@ namespace LiveSplit.VAS
         {
             using (var ofd = new OpenFileDialog() { Filter = "Zip Files|*.zip", Title = "Load a Game Profile" })
             {
+                if (File.Exists(ScriptPath))
+                {
+                    ofd.InitialDirectory = Path.GetDirectoryName(ScriptPath);
+                    ofd.FileName = Path.GetFileName(ScriptPath);
+                }
+
                 if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists == true)
                 {
                 retry:
@@ -548,7 +554,7 @@ namespace LiveSplit.VAS
                     else
                     {
                         Scanner.GameProfile = gp;
-                        txtGameProfile.Text = ofd.FileName;
+                        ScriptPath = this.txtGameProfile.Text = ofd.FileName;
                         Scanner.Start();
                         //Properties.Settings.Default.GameProfile = ofd.FileName;
                         //Properties.Settings.Default.Save();

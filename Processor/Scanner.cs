@@ -271,7 +271,7 @@ namespace LiveSplit.VAS
                 }
             }
             IsScanning = false;
-            deltas[FEATURE_COUNT_LIMIT - 1] = 12345.6789d; // DEBUGGING
+            //deltas[FEATURE_COUNT_LIMIT - 1] = 12345.6789d; // DEBUGGING
             AddResult(index, scan, TimeStamp.Now, deltas);
             scan.Dispose();
         }
