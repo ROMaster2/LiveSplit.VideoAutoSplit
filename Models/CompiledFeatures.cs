@@ -181,9 +181,9 @@ namespace LiveSplit.VAS.Models
             ErrorMetric = errorMetric;
             CWatchImages = cWatchImages;
 
-            IsStandardCheck = WatcherType.Equals(WatcherType.Standard);
-            IsDuplicateFrameCheck = WatcherType.Equals(WatcherType.DuplicateFrame);
-            IsBestMatchCheck = WatcherType.Equals(WatcherType.BestMatch);
+            IsStandard = WatcherType.Equals(WatcherType.Standard);
+            IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
+            IsBestMatch = WatcherType.Equals(WatcherType.BestMatch);
         }
         public CWatcher(CWatchImage[] cWatchImages, Watcher watcher)
         {
@@ -195,9 +195,9 @@ namespace LiveSplit.VAS.Models
             ErrorMetric = watcher.ErrorMetric;
             CWatchImages = cWatchImages;
 
-            IsStandardCheck = WatcherType.Equals(WatcherType.Standard);
-            IsDuplicateFrameCheck = WatcherType.Equals(WatcherType.DuplicateFrame);
-            IsBestMatchCheck = WatcherType.Equals(WatcherType.BestMatch);
+            IsStandard = WatcherType.Equals(WatcherType.Standard);
+            IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
+            IsBestMatch = WatcherType.Equals(WatcherType.BestMatch);
         }
 
         public string Name;
@@ -208,9 +208,9 @@ namespace LiveSplit.VAS.Models
         public ErrorMetric ErrorMetric;
         public CWatchImage[] CWatchImages;
 
-        public bool IsStandardCheck;
-        public bool IsDuplicateFrameCheck;
-        public bool IsBestMatchCheck;
+        public bool IsStandard;
+        public bool IsDuplicateFrame;
+        public bool IsBestMatch;
 
         public void Dispose()
         {
@@ -231,6 +231,7 @@ namespace LiveSplit.VAS.Models
             MagickImage = null;
             MagickImageCollection = null;
             HasAlpha = false;
+            TransparencyRate = 0;
         }
         public CWatchImage(string name, int index, IMagickImage magickImage)
         {
@@ -239,6 +240,7 @@ namespace LiveSplit.VAS.Models
             MagickImage = magickImage;
             MagickImageCollection = null;
             HasAlpha = MagickImage.HasAlpha;
+            TransparencyRate = MagickImage.TransparencyRate();
         }
         public CWatchImage(string name, int index, IMagickImageCollection magickImageCollection)
         {
@@ -246,13 +248,15 @@ namespace LiveSplit.VAS.Models
             Index = index;
             MagickImage = null;
             MagickImageCollection = magickImageCollection;
-            HasAlpha = false;
+            HasAlpha = false; // ???
+            TransparencyRate = 0; // ???
         }
         public string Name;
         public int Index;
         public IMagickImage MagickImage;
-        public bool HasAlpha;
         public IMagickImageCollection MagickImageCollection;
+        public bool HasAlpha;
+        public double TransparencyRate;
         public void Dispose()
         {
             if (MagickImage != null) MagickImage.Dispose();

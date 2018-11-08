@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -103,6 +104,7 @@
     <Compile Include="Models\Scan.cs" />
     <Compile Include="Processor\Extensions.cs" />
     <Compile Include="Processor\Scanner.cs" />
+    <Compile Include="Models\DeltaResults.cs" />
     <Compile Include="Processor\Test.cs" />
     <Compile Include="Processor\Utilities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -111,16 +113,16 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="UI\Aligner.cs">
+    <Compile Include="Forms\Aligner.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Aligner.Designer.cs">
+    <Compile Include="Forms\Aligner.Designer.cs">
       <DependentUpon>Aligner.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\MainWindow.cs">
+    <Compile Include="Forms\MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\MainWindow.Designer.cs">
+    <Compile Include="Forms\MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="VASL\VASLExceptions.cs" />

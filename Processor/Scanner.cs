@@ -16,6 +16,7 @@ using LiveSplit.UI.Components;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
+using LiveSplit.Model;
 
 using Size = System.Drawing.Size;
 
@@ -23,24 +24,30 @@ namespace LiveSplit.VAS
 {
     static class Scanner
     {
-        private const int FEATURE_COUNT_LIMIT = 32;
-
-        private static readonly Stopwatch Timer = new Stopwatch();
-        public static bool Scanning = false;
+        public const int FEATURE_COUNT_LIMIT = 64; // Arbitrary number tbh
 
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
 
         public static Frame CurrentFrame = Frame.Blank;
         public static int CurrentIndex = 0; // Used only for debugging. Remove on release.
+        public static bool IsScanning = false;
 
+        public static event DeltaResultsHandler NewResult;
+
+        // Parallelism is used when a single thread isn't fast enough to scan with.
+        // Reduces a bit of overhead by not making it all parallel.
+        public static bool parallelWatchZones = false;
+        public static bool parallelWatches = false;
+        public static bool parallelWatchImages = false;
+        // Todo: Add something for downscaling before comparing for large images.
+        public static bool parallelScanning = false; // Last resort as it can desynchronize scripts from AtomicTime.
 
         private static Geometry _VideoGeometry = Geometry.Blank;
         public static Geometry VideoGeometry
         {
             get
             {
-                // Hack method because async sucks
                 if (!_VideoGeometry.HasSize && IsVideoSourceValid())
                 {
                     VideoSource.Start();
@@ -157,7 +164,6 @@ namespace LiveSplit.VAS
         public static void Stop()
         {
             CurrentIndex = 0;
-            Timer.Reset();
             UnsubscribeFromFrameHandler(new NewFrameEventHandler(HandleNewFrame));
             VideoSource.Stop();
         }
@@ -168,7 +174,6 @@ namespace LiveSplit.VAS
             if (GameProfile != null)
             {
                 CurrentIndex = 0;
-                Timer.Start();
                 SubscribeToFrameHandler(new NewFrameEventHandler(HandleNewFrame));
                 VideoSource.Start();
             }
@@ -209,17 +214,6 @@ namespace LiveSplit.VAS
             }
         }
 
-        // May need to update to support multiple channels.
-        private static IMagickImage GetComposedImage(IMagickImage input, int channelIndex)
-        {
-            IMagickImage mi = input.Clone();
-            if (channelIndex > -1)
-            {
-                mi = mi.Separate().ToArray()[channelIndex];
-            }
-            return mi;
-        }
-
         // Hacky but it saves on CPU for the scanner.
         public static void SetFrameSize(object sender, NewFrameEventArgs e)
         {
@@ -230,413 +224,136 @@ namespace LiveSplit.VAS
             }
         }
 
+        // Does this dispose properly?
+        private static IMagickImage GetComposedImage(IMagickImage input, int channelIndex, ColorSpace colorSpace)
+        {
+            IMagickImage mi = input.Clone();
+            mi.ColorSpace = colorSpace;
+            if (channelIndex > -1)
+            {
+                mi = input.Separate().ElementAt(channelIndex);
+            }
+            return mi;
+        }
+
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
-            var now = Timer.ElapsedTicks; // Would use Milliseconds but those are truncated.
-            if (!Scanning)
+            var now = TimeStamp.Now;
+            if (!IsScanning)
             {
+                // We should NOT be cloning, but then the previous frame gets disposed.
+                // I'll figure it out at some point...hopefully.
                 var newScan = new Scan(new Frame(now, (Bitmap)e.Frame.Clone()), CurrentFrame.Clone());
                 CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
                 CurrentIndex++;
-                //Run3(newScan);
-                Task.Run(() => Run3(newScan));
+                Task.Run(() => NewRun(newScan));
             }
         }
 
-        // Todo: Make into array returning task
-        public static void Run3(Scan scan)
+        // Todo: prevFile isn't necessary. Instead store the features of the current scan to be used on the next.
+        // That can cause sync problems so it needs to be investigated.
+        //
+        // Also, unsafe is used as ref can't be passed through lambda.
+        unsafe private static void NewRun(Scan scan)
         {
-            //Scanning = true;
-            var deltas = new float[FEATURE_COUNT_LIMIT];
-            using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
+            IsScanning = true;
+            var deltas = new double[FEATURE_COUNT_LIMIT];
+            fixed (double* deltasPointer = deltas)
             {
-                Parallel.ForEach(CompiledFeatures.CWatchZones, (CWatchZone) =>
+                using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
+                using (var prevFileImageBase = CompiledFeatures.HasDupeCheck ? new MagickImage(scan.PreviousFrame.Bitmap) : null)
                 {
-                    var thumbGeo = CWatchZone.MagickGeometry;
-                    using (var fileImageCropped = fileImageBase.Clone(CWatchZone.MagickGeometry))
-                    {
-                        Parallel.ForEach(CWatchZone.CWatches, (CWatcher) =>
-                        {
-                            fileImageCropped.ColorSpace = CWatcher.ColorSpace; // Can safely change since it doesn't directly affect pixel data.
-                            using (var fileImageComposed = GetComposedImage(fileImageCropped, CWatcher.Channel))
-                            {
-                                if (CWatcher.Equalize) fileImageComposed.Equalize();
-                                if (CWatcher.IsStandardCheck)
-                                {
-                                    Parallel.ForEach(CWatcher.CWatchImages, (CWatchImage) =>
-                                    {
-                                        using (var deltaImage = CWatchImage.MagickImage.Clone())
-                                        using (var fileImageCompare = fileImageComposed.Clone())
-                                        {
-                                            if (CWatchImage.HasAlpha) fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
-
-                                            var imageDelta = (float)deltaImage.Compare(fileImageCompare, CWatcher.ErrorMetric);
-                                            deltas[CWatchImage.Index] = imageDelta;
-                                            /*
-                                            if (CurrentIndex % 300 == 0 && CWatchImage.Index == 0)
-                                            {
-                                                fileImageCompare.Write(@"E:\test2.png");
-                                                deltaImage.Write(@"E:\test3.png");
-                                                fileImageComposed.Write(@"E:\test4.png");
-                                                fileImageCropped.Write(@"E:\test5.png");
-                                                fileImageBase.Write(@"E:\test6.png");
-                                            }
-                                            */
-                                        }
-                                    });
-                                }
-                                else if (CWatcher.IsDuplicateFrameCheck)
-                                {
-                                    using (var deltaImagePre = new MagickImage((Bitmap)scan.PreviousFrame.Bitmap.Clone()))
-                                    using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
-                                    {
-                                        if (NeedExtent)
-                                        {
-                                            deltaImagePre.Extent(TrueCropGeometry.ToMagick(), Gravity.Northwest, MagickColor.FromRgba(0, 0, 0, 0));
-                                        }
-                                        else
-                                        {
-                                            deltaImagePre.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
-                                        }
-                                        deltaImagePre.RePage();
-                                        deltaImagePre.Crop(thumbGeo, Gravity.Northwest);
-                                        deltaImagePre.ColorSpace = CWatcher.ColorSpace;
-                                        using (var deltaImage = GetComposedImage(deltaImagePre, CWatcher.Channel))
-                                        {
-                                            if (CWatcher.Equalize) fileImageCompare.Equalize();
-
-                                            var imageDelta = (float)deltaImage.Compare(fileImageCompare, CWatcher.ErrorMetric);
-                                            deltas[31] = imageDelta;
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                });
-            }
-            Scanning = false;
-            deltas[19] = 456.789F;
-            //Interlocked.Exchange(ref VASComponent.floatArray, deltas);
-            //Interlocked.Exchange(ref VASComponent.timeDelta, scan.TimeDelta);
-            //Interlocked.Increment(ref VASComponent.count);
-            scan.Clean();
-        }
-
-        /*
-        // Todo: Make into array returning task
-        public static void Run2(Scan scan)
-        {
-            using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
-            {
-                Parallel.ForEach(GameProfile.Screens[0].WatchZones, (wz) =>
-                //foreach (var wz in GameProfile.Screens[0].WatchZones)
-                {
-                    var thumbGeo = wz.CropGeometry.ToMagick();
-                    using (var fileImageCropped = (MagickImage)fileImageBase.Clone(thumbGeo))
-                    {
-                        foreach (var w in wz.Watches)
-                        {
-                            fileImageCropped.ColorSpace = w.ColorSpace; // Can safely change since it doesn't directly affect pixel data.
-                            using (var fileImageComposed = Untitled(fileImageCropped, w.Channel))
-                            {
-                                if (!w.DupeFrameCheck)
-                                {
-                                    foreach (var wi in w.WatchImages)
-                                    {
-                                        using (var deltaImage = wi.MagickImage.Clone())
-                                        using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
-                                        {
-                                            if (w.Equalize) fileImageCompare.Equalize();
-
-                                            var imageDelta = (float)deltaImage.Compare(fileImageCompare, w.ErrorMetric);
-
-                                            Interlocked.Exchange(ref Program.floatArray[wi.Index], imageDelta);
-                                            //var debug = Program.floatArray[wi.Index];
-
-                                            if (CurrentIndex % 300 == 0 && imageDelta > 0 && (imageDelta < 0.001 || imageDelta > 10000))
-                                            {
-                                                fileImageCompare.Write(@"E:\test2.png");
-                                                deltaImage.Write(@"E:\test3.png");
-                                            }
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // Put PreviousFrame clones in proper spots.
-                                    // it's just kind of unoptimial for non-dupe checkers
-                                    using (var deltaImagePre = new MagickImage((Bitmap)scan.PreviousFrame.Bitmap.Clone()))
-                                    using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
-                                    {
-                                        if (NeedExtent)
-                                        {
-                                            deltaImagePre.Extent(TrueCropGeometry.ToMagick(), Gravity.Northwest, MagickColor.FromRgba(0, 0, 0, 0));
-                                        }
-                                        else
-                                        {
-                                            deltaImagePre.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
-                                        }
-                                        deltaImagePre.RePage();
-                                        deltaImagePre.Crop(thumbGeo, wz.CropGeometry.Anchor.ToGravity());
-                                        deltaImagePre.ColorSpace = w.ColorSpace;
-                                        using (var deltaImage = Untitled(deltaImagePre, w.Channel))
-                                        {
-                                            if (w.Equalize) fileImageCompare.Equalize();
-
-                                            var imageDelta = (float)deltaImage.Compare(fileImageCompare, w.ErrorMetric);
-                                            Interlocked.Exchange(ref Program.floatArray[18], imageDelta);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-                //}
-            }
-            Interlocked.Exchange(ref Program.timeDelta, scan.TimeDelta);
-            scan.Clean();
-        }
-        */
-        /*
-        // Todo: Make into array returning task
-        public static void Run(Scan scan)
-        {
-            using (var fileImageBase = new MagickImage((Bitmap)scan.CurrentFrame.Bitmap.Clone()))
-            {
-                if (NeedExtent)
-                {
-                    fileImageBase.Extent(TrueCropGeometry.ToMagick(), Gravity.Northwest, MagickColor.FromRgba(0, 0, 0, 0));
+                    EnumerateWatchZones(deltasPointer, fileImageBase, prevFileImageBase);
                 }
+            }
+            IsScanning = false;
+            deltas[FEATURE_COUNT_LIMIT - 1] = 12345.6789d; // DEBUGGING
+            NewResult(new DeltaResults(scan, TimeStamp.Now, deltas));
+            scan.Dispose();
+        }
+
+        unsafe private static void EnumerateWatchZones(double* deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase)
+        {
+            if (parallelWatchZones)
+            {
+                Parallel.ForEach(CompiledFeatures.CWatchZones, (cWatchZone) => CropScan(deltas, fileImageBase, prevFileImageBase, cWatchZone));
+            }
+            else
+            {
+                foreach (var cWatchZone in CompiledFeatures.CWatchZones) CropScan(deltas, fileImageBase, prevFileImageBase, cWatchZone);
+            }
+        }
+
+        unsafe private static void CropScan(double* deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase, CWatchZone cWatchZone)
+        {
+            using (var fileImageCropped = fileImageBase.Clone(cWatchZone.MagickGeometry))
+            using (var prevFileImageCropped = CompiledFeatures.HasDupeCheck ? prevFileImageBase.Clone(cWatchZone.MagickGeometry) : null)
+            {
+                EnumerateWatches(deltas, fileImageCropped, prevFileImageCropped, cWatchZone);
+            }
+        }
+
+        unsafe private static void EnumerateWatches(double* deltas, IMagickImage fileImageCropped, IMagickImage prevFileImageCropped, CWatchZone cWatchZone)
+        {
+            if (parallelWatches)
+            {
+                Parallel.ForEach(cWatchZone.CWatches, (cWatcher) => ComposeScan(deltas, fileImageCropped, prevFileImageCropped, cWatcher));
+            }
+            else
+            {
+                foreach (var cWatcher in cWatchZone.CWatches) ComposeScan(deltas, fileImageCropped, prevFileImageCropped, cWatcher);
+            }
+        }
+
+        unsafe private static void ComposeScan(double* deltas, IMagickImage fileImageCropped, IMagickImage prevFileImageCropped, CWatcher cWatcher)
+        {
+            using (var fileImageComposed = GetComposedImage(fileImageCropped, cWatcher.Channel, cWatcher.ColorSpace))
+            using (var prevFileImageComposed = CompiledFeatures.HasDupeCheck ? GetComposedImage(prevFileImageCropped, cWatcher.Channel, cWatcher.ColorSpace) : null)
+            {
+                if (cWatcher.Equalize)
+                {
+                    fileImageComposed.Equalize();
+                    if (CompiledFeatures.HasDupeCheck) prevFileImageComposed.Equalize();
+                }
+
+                if (cWatcher.IsStandard)
+                    EnumerateWatchImages(deltas, fileImageCropped, cWatcher);
                 else
-                {
-                    fileImageBase.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
-                }
-                fileImageBase.RePage();
-                if (CurrentIndex % 300 == 0) fileImageBase.Write(@"E:\test6.png");
-                foreach (var wz in GameProfile.Screens[0].WatchZones)
-                {
-                    var tmp = wz.CropGeometry;
-                    tmp.Update(-TrueCropGeometry.X, -TrueCropGeometry.Y);
-                    var mg = tmp.ToMagick();
-                    using (var fileImageCropped = (MagickImage)fileImageBase.Clone())
-                    {
-                        fileImageCropped.Crop(mg, wz.CropGeometry.Anchor.ToGravity());
-                        if (CurrentIndex % 300 == 0) fileImageCropped.Write(@"E:\test5.png");
-                        foreach (var w in wz.Watches)
-                        {
-                            fileImageCropped.ColorSpace = w.ColorSpace; // Can safely change since it doesn't affect pixel data.
-                            // May need to update to support multiple channels.
-                            using (var fileImageComposed = Untitled(fileImageCropped, w.Channel))
-                            {
-                                if (CurrentIndex % 300 == 0) fileImageComposed.Write(@"E:\test4.png");
-                                if (!w.DupeFrameCheck)
-                                {
-                                    foreach (var wi in w.WatchImages)
-                                    {
-                                        using (var deltaImage = wi.MagickImage.Clone())
-                                        using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
-                                        {
-                                            //if (deltaImage.HasAlpha)
-                                            //{
-                                            //    fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
-                                            //}
-                                            deltaImage.ColorSpace = w.ColorSpace;
-                                            var a = (float)deltaImage.Compare(fileImageCompare,
-                                                ErrorMetric.PeakSignalToNoiseRatio);
-                                            Interlocked.Exchange(ref Program.floatArray[wi.Index], a);
-
-                                            if (CurrentIndex % 300 == 0)
-                                            {
-                                                fileImageCompare.Write(@"E:\test2.png");
-                                                deltaImage.Write(@"E:\test3.png");
-                                            }
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // Put PreviousFrame clones in proper spots.
-                                    // it's just kind of unoptimial for non-dupe checkers
-                                    using (var deltaImagePre = new MagickImage((Bitmap)scan.PreviousFrame.Bitmap.Clone()))
-                                    using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
-                                    {
-                                        if (NeedExtent)
-                                        {
-                                            deltaImagePre.Extent(TrueCropGeometry.ToMagick(), Gravity.Northwest, MagickColor.FromRgba(0, 0, 0, 0));
-                                        }
-                                        else
-                                        {
-                                            deltaImagePre.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
-                                        }
-                                        deltaImagePre.RePage();
-                                        deltaImagePre.Crop(mg, wz.CropGeometry.Anchor.ToGravity());
-                                        deltaImagePre.ColorSpace = w.ColorSpace;
-                                        using (var deltaImage = (w.Channel > -1) ? (MagickImage)deltaImagePre.Clone() :
-                                            (MagickImage)deltaImagePre.Clone().Separate().ToArray()[w.Channel])
-                                        {
-                                            if (CurrentIndex % 300 == 0)
-                                            {
-                                                deltaImagePre.Write(@"E:\test9.png");
-                                            }
-
-                                            var a = (float)deltaImagePre.Compare(fileImageCompare,
-                                                ErrorMetric.PeakSignalToNoiseRatio);
-                                            Interlocked.Exchange(ref Program.floatArray[18], a);
-
-
-                                            if (CurrentIndex % 300 == 0)
-                                            {
-                                                fileImageCompare.Write(@"E:\test2.png");
-                                                deltaImagePre.Write(@"E:\test3.png");
-                                                fileImageComposed.Write(@"E:\test4.png");
-                                                fileImageCropped.Write(@"E:\test5.png");
-                                                fileImageBase.Write(@"E:\test6.png");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                    throw new NotImplementedException("todo lol");
             }
-            scan.Clean();
         }
-        */
-        /*
-        public static void RunOld()
+
+        unsafe private static void EnumerateWatchImages(double* deltas, IMagickImage fileImageComposed, CWatcher cWatcher)
         {
-            while (true)
+            if (parallelWatchImages)
             {
-                if (GameProfile != null && VideoSource.IsRunning) // Can't really become unset, so only check once.
-                {
-                    UpdateCropGeometry();
-                    while (VideoSource.IsRunning)
-                    {
-                        var scanCount = ScanBag.Count;
-                        Parallel.For(CurrentIndex, scanCount, (i) =>
-                        //for (int i = currentIndex; i < scanCount; i++)
-                        {
-                            var scan = ScanBag[i];
-                            try
-                            {
-                                using (var fileImageBase = new MagickImage((Bitmap)scan.CurrentFrame.Bitmap.Clone()))
-                                {
-                                    //fileImageBase.Extent(CropGeometry.ToMagick(), Gravity.Northwest, MagickColor.FromRgba(0, 0, 0, 0));
-                                    fileImageBase.Crop(CropGeometry.ToMagick(), Gravity.Northwest);
-                                    fileImageBase.RePage();
-                                    foreach (var wz in GameProfile.Screens[0].WatchZones)
-                                    {
-                                        var mg = wz.CropGeometry.ToMagick();
-
-                                        using (var fileImageCropped = (MagickImage)fileImageBase.Clone())
-                                        {
-                                            fileImageCropped.Extent(mg, wz.CropGeometry.Anchor.ToGravity(), MagickColor.FromRgba(0, 0, 0, 0));
-                                            foreach (var w in wz.Watches)
-                                            {
-                                                var fileImageComposed = (MagickImage)fileImageCropped.Clone();
-                                                fileImageComposed.ColorSpace = w.ColorSpace;
-                                                if (w.Channel > -1)
-                                                {
-                                                    fileImageComposed = (MagickImage)fileImageComposed.Separate().ToArray()[w.Channel].Clone();
-                                                }
-
-                                                if (!w.DupeFrameCheck)
-                                                {
-                                                    foreach (var wi in w.WatchImages)
-                                                    {
-                                                        using (var deltaImage = wi.MagickImage.Clone())
-                                                        using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
-                                                        {
-                                                            //if (deltaImage.HasAlpha)
-                                                            //{
-                                                            //    fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
-                                                            //}
-                                                            deltaImage.ColorSpace = w.ColorSpace;
-                                                            var a = (float)deltaImage.Compare(fileImageCompare,
-                                                                ErrorMetric.NormalizedCrossCorrelation);
-                                                            Interlocked.Exchange(ref Program.floatArray[wi.Index], a);
-
-                                                            
-                                                            //if (i % 300 == 0 && wi.index == 1)
-                                                            //{
-                                                            //    fileImageCompare.Write(@"E:\test2.png");
-                                                            //    deltaImage.Write(@"E:\test3.png");
-                                                            //    fileImageComposed.Write(@"E:\test4.png");
-                                                            //    fileImageCropped.Write(@"E:\test5.png");
-                                                            //    fileImageBase.Write(@"E:\test6.png");
-                                                            //}
-
-                                                            //int id = (int)Math.Round(thumbID * timeIndexMultiplier);
-                                                            //wi.DeltaBag.Add(new Bag(id, delta));
-                                                        }
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    // Put PreviousFrame clones in proper spots.
-                                                    // it's just kind of unoptimial for non-dupe checkers
-                                                    var deltaImage = new MagickImage((Bitmap)scan.PreviousFrame.Bitmap.Clone());
-                                                    using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
-                                                    {
-                                                        deltaImage.Crop(CropGeometry.ToMagick(), Gravity.Northwest);
-                                                        deltaImage.RePage();
-                                                        deltaImage.Extent(mg, wz.CropGeometry.Anchor.ToGravity(), MagickColor.FromRgba(0, 0, 0, 0));
-                                                        deltaImage.ColorSpace = w.ColorSpace;
-                                                        if (w.Channel > -1)
-                                                        {
-                                                            deltaImage = (MagickImage)deltaImage.Separate().ToList()[w.Channel].Clone();
-                                                        }
-                                                        if (i % 300 == 0)
-                                                        {
-                                                            deltaImage.Write(@"E:\test9.png");
-                                                        }
-
-                                                        var a = (float)deltaImage.Compare(fileImageCompare,
-                                                            ErrorMetric.PeakSignalToNoiseRatio);
-                                                        Interlocked.Exchange(ref Program.floatArray[18], a);
-
-
-                                                        if (i % 300 == 0)
-                                                        {
-                                                            fileImageCompare.Write(@"E:\test2.png");
-                                                            deltaImage.Write(@"E:\test3.png");
-                                                            fileImageComposed.Write(@"E:\test4.png");
-                                                            fileImageCropped.Write(@"E:\test5.png");
-                                                            fileImageBase.Write(@"E:\test6.png");
-                                                        }
-
-                                                        //int id = (int)Math.Round(thumbID * timeIndexMultiplier);
-                                                        //wi.DeltaBag.Add(new Bag(id, delta));
-                                                    }
-                                                    deltaImage.Dispose();
-                                                }
-                                                fileImageComposed.Dispose();
-                                            }
-                                        }
-                                    }
-
-                                    //if (i % 300 == 0)
-                                    //{
-                                    //    fileImageBase.Write(@"E:\test.png");
-                                    //}
-
-                                }
-                            }
-                            catch (Exception) { }
-                            scan.Clean();
-                        //}
-                        });
-                        CurrentIndex = scanCount;
-                        // So that it doesn't hog a whole core when waiting for more frames.
-                        Thread.Sleep(1);
-                    }
-                }
-                Thread.Sleep(500);
+                Parallel.ForEach(cWatcher.CWatchImages, (cWatchImage) => CompareAgainstFeature(deltas, fileImageComposed, cWatcher, cWatchImage));
+            }
+            else
+            {
+                foreach (var cWatchImage in cWatcher.CWatchImages) CompareAgainstFeature(deltas, fileImageComposed, cWatcher, cWatchImage);
             }
         }
-        */
+
+        unsafe private static void CompareAgainstFeature(double* deltas, IMagickImage fileImageComposed, CWatcher cWatcher, CWatchImage cWatchImage)
+        {
+            using (var fileImageCompare = fileImageComposed.Clone())
+            using (var deltaImage = cWatchImage.MagickImage.Clone())
+            {
+                if (cWatchImage.HasAlpha) fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
+
+                SetDelta(deltas, fileImageCompare, deltaImage, cWatcher, cWatchImage);
+            }
+        }
+
+        unsafe private static void SetDelta(
+            double* deltas,
+            IMagickImage fileImageCompare,
+            IMagickImage deltaImage,
+            CWatcher cWatcher,
+            CWatchImage cWatchImage)
+        {
+            deltas[cWatchImage.Index] = fileImageCompare.Compare(deltaImage, cWatcher.ErrorMetric);
+        }
     }
 }

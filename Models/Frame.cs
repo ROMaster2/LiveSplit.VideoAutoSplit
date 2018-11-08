@@ -1,24 +1,25 @@
 ﻿using System;
 using System.Drawing;
+using LiveSplit.Model;
 
 namespace LiveSplit.VAS.Models
 {
     public struct Frame // Bad name idea?
     {
-        public readonly long Timestamp;
-        public Bitmap Bitmap;
+        public readonly TimeStamp TimeStamp;
+        public readonly Bitmap Bitmap;
 
-        public Frame(long timestamp, Bitmap bitmap)
+        public Frame(TimeStamp timeStamp, Bitmap bitmap)
         {
-            Timestamp = timestamp;
+            TimeStamp = timeStamp;
             Bitmap = bitmap;
         }
 
-        public static readonly Frame Blank = new Frame(0, new Bitmap(1, 1));
+        public static readonly Frame Blank = new Frame(TimeStamp.Now, new Bitmap(1, 1));
 
         public Frame Clone()
         {
-            return new Frame(Timestamp, (Bitmap)Bitmap.Clone());
+            return new Frame(TimeStamp, (Bitmap)Bitmap.Clone());
         }
     }
 }

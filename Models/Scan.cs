@@ -1,32 +1,30 @@
-﻿namespace LiveSplit.VAS.Models
+﻿using System;
+
+namespace LiveSplit.VAS.Models
 {
     public struct Scan
     {
-        public Frame CurrentFrame;
-        public Frame PreviousFrame;
-        public bool IsCleaned;
-        public long TimeDelta;
+        public readonly Frame CurrentFrame;
+        public readonly Frame PreviousFrame;
+        public bool IsDisposed;
 
         public Scan(Frame currentFrame, Frame previousFrame)
         {
             CurrentFrame = currentFrame;
             PreviousFrame = previousFrame;
-            IsCleaned = false;
-            TimeDelta = CurrentFrame.Timestamp - PreviousFrame.Timestamp;
+            IsDisposed = false;
         }
 
         public static readonly Scan Blank = new Scan(Frame.Blank, Frame.Blank);
 
-        public void Update(Frame newFrame)
+        public TimeSpan TimeDelta()
         {
-            PreviousFrame.Bitmap.Dispose();
-            PreviousFrame = CurrentFrame;
-            CurrentFrame = newFrame;
+            return CurrentFrame.TimeStamp - PreviousFrame.TimeStamp;
         }
 
-        public void Clean()
+        public void Dispose()
         {
-            IsCleaned = true;
+            IsDisposed = true;
             CurrentFrame.Bitmap.Dispose();
             PreviousFrame.Bitmap.Dispose();
         }
