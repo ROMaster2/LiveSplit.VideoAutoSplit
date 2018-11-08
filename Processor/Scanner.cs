@@ -34,7 +34,6 @@ namespace LiveSplit.VAS
         public static Frame CurrentFrame = Frame.Blank;
         public static int CurrentIndex = 0; // Used only for debugging. Remove on release.
 
-        public static bool ExtremePrecision = false;
 
         private static Geometry _VideoGeometry = Geometry.Blank;
         public static Geometry VideoGeometry
@@ -194,7 +193,7 @@ namespace LiveSplit.VAS
 
                     foreach (var wi in wz.WatchImages)
                     {
-                        wi.SetMagickImage(ExtremePrecision);
+                        wi.SetMagickImage(false);
                         wi.Index = i;
                         i++;
                     }

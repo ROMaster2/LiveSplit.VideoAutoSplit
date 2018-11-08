@@ -376,7 +376,6 @@ namespace LiveSplit.VAS.Forms
 
         private void CkbUseExtraPrecision_CheckedChanged(object sender, EventArgs e)
         {
-            Scanner.ExtremePrecision = CkbUseExtraPrecision.Checked;
             RefreshThumbnail();
         }
 
