@@ -5,11 +5,11 @@ namespace LiveSplit.VAS
 {
     public static partial class Extensions
     {
-        public static double TransparencyRate(this ImageMagick.MagickImage mi)
+        public static double TransparencyRate(this ImageMagick.IMagickImage mi)
         {
             if (!mi.HasAlpha) return 0;
             var bytes = mi.Separate(ImageMagick.Channels.Alpha).First().GetPixels().GetValues();
-            return (255 - bytes.Average(x => (double)x)) / 255;
+            return (255d - bytes.Average(x => (double)x)) / 255d;
         }
 
         public static System.Windows.Point ToWindows(this System.Drawing.Point point)
