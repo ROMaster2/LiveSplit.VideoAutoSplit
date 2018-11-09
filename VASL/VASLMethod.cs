@@ -54,6 +54,7 @@ using System.Windows.Forms;
 using LiveSplit.ComponentUtil;
 using LiveSplit.Model;
 using LiveSplit.Options;
+using LiveSplit.VAS;
 public class CompiledScript
 {{
     public string version;
@@ -64,8 +65,8 @@ public class CompiledScript
     }}
     public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, Process game, dynamic settings)
     {{
-        var memory = game;
-        var modules = game != null ? game.ModulesWow64Safe() : null;
+        // var memory = game;
+        // var modules = game != null ? game.ModulesWow64Safe() : null;
         { user_code_start_marker }
 	    { code }
 	    return null;

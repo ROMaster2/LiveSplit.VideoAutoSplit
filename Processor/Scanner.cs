@@ -25,7 +25,7 @@ namespace LiveSplit.VAS
     static class Scanner
     {
         public const int FEATURE_COUNT_LIMIT = 64; // Arbitrary numbers tbh
-        public const int DELTA_RESULTS_COUNT_LIMIT = 256;
+        public const int DELTA_RESULTS_SIZE = 256;
 
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
@@ -33,8 +33,9 @@ namespace LiveSplit.VAS
         public static Frame CurrentFrame = Frame.Blank;
         public static int CurrentIndex = 0; // Used only for debugging. Remove on release.
         public static bool IsScanning = false;
+        public static bool IsScannerLocked = false;
 
-        public static DeltaResults[] DeltaResultsStorage = new DeltaResults[DELTA_RESULTS_COUNT_LIMIT];
+        public static DeltaResults[] DeltaResultsStorage = new DeltaResults[DELTA_RESULTS_SIZE];
 
         public static event DeltaResultsHandler NewResult;
 
@@ -44,7 +45,7 @@ namespace LiveSplit.VAS
         public static bool ParallelWatches = false;
         public static bool ParallelWatchImages = false;
         // Todo: Add something for downscaling before comparing for large images.
-        public static bool ParallelScanning = false; // Last resort as it can desynchronize scripts from AtomicTime.
+        public static int OverloadedCount = 0;
 
         private static Geometry _VideoGeometry = Geometry.Blank;
         public static Geometry VideoGeometry
@@ -58,6 +59,16 @@ namespace LiveSplit.VAS
                     while (!_VideoGeometry.HasSize) Thread.Sleep(1);
                 }
                 return _VideoGeometry;
+            }
+        }
+
+        // Hacky but it saves on CPU for the scanner.
+        private static void SetFrameSize(object sender, NewFrameEventArgs e)
+        {
+            if (!_VideoGeometry.HasSize)
+            {
+                _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
+                UnsubscribeFromFrameHandler(SetFrameSize);
             }
         }
 
@@ -118,18 +129,16 @@ namespace LiveSplit.VAS
             }
         }
 
-        private static bool? _NeedExtent;
-        public static bool NeedExtent
-        {
-            get
-            {
-                if (_NeedExtent == null)
-                {
-                    _NeedExtent = !VideoGeometry.Contains(TrueCropGeometry);
-                }
-                return (bool)_NeedExtent;
-            }
-        }
+        // Good/bad idea?
+        public static double AverageFPS      { get; internal set; } = 60;
+        public static double MinFPS          { get; internal set; } = 60;
+        public static double MaxFPS          { get; internal set; } = 60;
+        public static double AverageScanTime { get; internal set; } =  0;
+        public static double MinScanTime     { get; internal set; } =  0;
+        public static double MaxScanTime     { get; internal set; } =  0;
+        public static double AverageWaitTime { get; internal set; } =  0;
+        public static double MinWaitTime     { get; internal set; } =  0;
+        public static double MaxWaitTime     { get; internal set; } =  0;
 
         public static bool IsVideoSourceValid() // Not really but good enough.
         {
@@ -183,9 +192,14 @@ namespace LiveSplit.VAS
             }
         }
 
+        public static void Restart()
+        {
+            Stop();
+            Start();
+        }
+
         public static void UpdateCropGeometry()
         {
-            _NeedExtent = null;
             _TrueCropGeometry = Geometry.Blank;
             if (GameProfile != null)
             {
@@ -207,24 +221,19 @@ namespace LiveSplit.VAS
                         i++;
                     }
                 }
-
+                // Using this until implementation of multiple screens in the aligner form.
                 foreach (var s in GameProfile.Screens)
                 {
-                    s.CropGeometry = Scanner.CropGeometry;
+                    s.CropGeometry = CropGeometry;
                 }
+
+                IsScannerLocked = true; // Scanner.Stop()+Start() would cause a loop, so this is used instead.
+                while (IsScanning) { }
 
                 CompiledFeatures.Compile(GameProfile);
 
-            }
-        }
+                IsScannerLocked = false;
 
-        // Hacky but it saves on CPU for the scanner.
-        public static void SetFrameSize(object sender, NewFrameEventArgs e)
-        {
-            if (_VideoGeometry.IsBlank)
-            {
-                _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
-                UnsubscribeFromFrameHandler(SetFrameSize);
             }
         }
 
@@ -243,9 +252,10 @@ namespace LiveSplit.VAS
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             var now = TimeStamp.Now;
-            if (!IsScanning)
+            if (!IsScannerLocked)
             {
-                // We should NOT be cloning, but then the previous frame gets disposed.
+                IsScanning = true;
+                // We should NOT be cloning this much, but then the previous frame gets disposed.
                 // I'll figure it out at some point...hopefully.
                 var newScan = new Scan(new Frame(now, (Bitmap)e.Frame.Clone()), CurrentFrame.Clone());
                 CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
@@ -260,7 +270,6 @@ namespace LiveSplit.VAS
         // Also, unsafe is used as ref can't be passed through lambda.
         unsafe private static void NewRun(Scan scan, int index)
         {
-            IsScanning = true;
             var deltas = new double[FEATURE_COUNT_LIMIT];
             fixed (double* deltasPointer = deltas)
             {
@@ -271,27 +280,76 @@ namespace LiveSplit.VAS
                 }
             }
             IsScanning = false;
-            //deltas[FEATURE_COUNT_LIMIT - 1] = 12345.6789d; // DEBUGGING
-            AddResult(index, scan, TimeStamp.Now, deltas);
+            var scanEnd = TimeStamp.Now;
+            AddResult(index, scan, scanEnd, deltas);
             scan.Dispose();
         }
 
         private static void AddResult(int index, Scan scan, TimeStamp scanEnd, double[] deltas)
         {
-            var currIndex =  index      % DELTA_RESULTS_COUNT_LIMIT;
-            var prevIndex = (index - 1) % DELTA_RESULTS_COUNT_LIMIT;
+            const int BREAK_POINT = 3000;
+            const int SAFETY_THRESHOLD = 30;
+            var currIndex =  index      % DELTA_RESULTS_SIZE;
+            var prevIndex = (index - 1) % DELTA_RESULTS_SIZE;
 
-            if (index > 30) // Safety measure
+            var dr = new DeltaResults(index, scan, scanEnd, deltas);
+            DeltaResultsStorage[currIndex] = dr;
+
+            if (index > SAFETY_THRESHOLD)
             {
+                int i = 0;
                 while (DeltaResultsStorage[prevIndex] == null || DeltaResultsStorage[prevIndex].Index != index - 1)
                 {
+                    if (i >= BREAK_POINT)
+                    {
+                        // Maybe instead just skip the frame and log it as an error?
+                        //throw new Exception("Previous frame could not be processed or is taking too long to process.");
+                        break;
+                    }
+                    i++;
                     Thread.Sleep(1);
                 }
             }
 
-            var dr = new DeltaResults(index, scan, scanEnd, TimeStamp.Now, deltas);
-            DeltaResultsStorage[currIndex] = dr;
-            Task.Run(() => NewResult(dr));
+            dr.WaitEnd = TimeStamp.Now;
+            NewResult(null, dr);
+
+            // It's on its own thread so running it here should be okay.
+            if (index % 30 == 0)
+            {
+                int count = 0;
+                double sumFPS   = 0d, minFPS      = 9999d, maxFPS      = 0d,
+                    sumScanTime = 0d, minScanTime = 9999d, maxScanTime = 0d,
+                    sumWaitTime = 0d, minWaitTime = 9999d, maxWaitTime = 0d;
+                foreach (var d in DeltaResultsStorage)
+                {
+                    if (d != null)
+                    {
+                        count++;
+                        var fd = d.FrameDuration.TotalSeconds;
+                        sumFPS += fd;
+                        minFPS = Math.Min(minFPS, fd);
+                        maxFPS = Math.Max(maxFPS, fd);
+                        var sd = d.ScanDuration.TotalSeconds;
+                        sumScanTime += sd;
+                        minScanTime = Math.Min(minScanTime, sd);
+                        maxScanTime = Math.Max(maxScanTime, sd);
+                        var wd = d.WaitEnd != null ? d.WaitDuration.TotalSeconds : AverageWaitTime;
+                        sumWaitTime += wd;
+                        minWaitTime = Math.Min(minWaitTime, wd);
+                        maxWaitTime = Math.Max(maxWaitTime, wd);
+                    }
+                }
+                AverageFPS = count / sumFPS;
+                MaxFPS = 1d / minFPS;
+                MinFPS = 1d / maxFPS;
+                AverageScanTime = sumScanTime / count;
+                MinScanTime = minScanTime;
+                MaxScanTime = maxScanTime;
+                AverageWaitTime = sumWaitTime / count;
+                MinWaitTime = minWaitTime;
+                MaxWaitTime = maxWaitTime;
+            }
         }
 
         unsafe private static void EnumerateWatchZones(double* deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase)

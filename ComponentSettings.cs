@@ -590,7 +590,7 @@ namespace LiveSplit.VAS
             if (videoDevices.Count > 0)
             {
                 boxCaptureDevice.Enabled = true;
-                string selectedItem = null;
+                string selectedItem = string.Empty;
                 int selectedIndex = 0;
                 if (boxCaptureDevice.SelectedIndex > -1)
                 {
@@ -627,7 +627,6 @@ namespace LiveSplit.VAS
             {
                 var match = matches.First();
                 Scanner.SetVideoSource(match.MonikerString);
-                lblCaptureDevice.Text = "Capture Device - " + Scanner.VideoGeometry.ToString();
                 //Properties.Settings.Default.VideoDevice = boxCaptureDevice.Text;
                 //Properties.Settings.Default.Save();
             }

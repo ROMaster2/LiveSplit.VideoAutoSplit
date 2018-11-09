@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using LiveSplit.VAS.Models;
 
 namespace LiveSplit.VAS.VASL
 {
@@ -51,8 +52,8 @@ namespace LiveSplit.VAS.VASL
                     var module =
                         child_nodes[3].ChildNodes.Take(1).Select(x => (string)x.Token.Value).FirstOrDefault() ??
                         string.Empty;
-                    var module_base = child_nodes[4].ChildNodes.Select(x => (long)x.Token.Value).First();
-                    var offsets = child_nodes[4].ChildNodes.Skip(1).Select(x => (long)x.Token.Value).ToArray();
+                    var module_base = child_nodes[4].ChildNodes.Select(x => (int)x.Token.Value).First();
+                    var offsets = child_nodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
                     var value_definition = new VASLValueDefinition()
                     {
                         Identifier = identifier,

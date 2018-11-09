@@ -1,10 +1,6 @@
 ﻿using ImageMagick;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace LiveSplit.VAS.Models
 {
@@ -13,6 +9,7 @@ namespace LiveSplit.VAS.Models
         private const int INIT_PIXEL_LIMIT = 16777216;
 
         public static CWatchZone[] CWatchZones { get; internal set; }
+        public static int FeatureCount { get; internal set; }
         public static bool HasDupeCheck { get; internal set; }
         public static int PixelLimit { get; internal set; }
         public static int PixelCount { get; internal set; }
@@ -71,15 +68,10 @@ namespace LiveSplit.VAS.Models
 
                         CWatches[i2] = new CWatcher(CWatchImages, watcher);
                     }
-                    else if (watcher.WatcherType == WatcherType.BestMatch)
-                    {
-                        var mic = new MagickImageCollection();
-                        // Todo
-                    }
                     else if (watcher.WatcherType == WatcherType.DuplicateFrame)
                     {
                         HasDupeCheck = true;
-                        // Todo
+                        throw new NotImplementedException("todo lol");
                     }
                 }
 
@@ -183,7 +175,6 @@ namespace LiveSplit.VAS.Models
 
             IsStandard = WatcherType.Equals(WatcherType.Standard);
             IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
-            IsBestMatch = WatcherType.Equals(WatcherType.BestMatch);
         }
         public CWatcher(CWatchImage[] cWatchImages, Watcher watcher)
         {
@@ -197,7 +188,6 @@ namespace LiveSplit.VAS.Models
 
             IsStandard = WatcherType.Equals(WatcherType.Standard);
             IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
-            IsBestMatch = WatcherType.Equals(WatcherType.BestMatch);
         }
 
         public string Name;
@@ -210,8 +200,6 @@ namespace LiveSplit.VAS.Models
 
         public bool IsStandard;
         public bool IsDuplicateFrame;
-        public bool IsBestMatch;
-
         public void Dispose()
         {
             foreach (var x in CWatchImages)
@@ -224,43 +212,34 @@ namespace LiveSplit.VAS.Models
 
     public struct CWatchImage
     {
-        public CWatchImage(string name, int index)
-        {
-            Name = name;
-            Index = index;
-            MagickImage = null;
-            MagickImageCollection = null;
-            HasAlpha = false;
-            TransparencyRate = 0;
-        }
+        // Standard
         public CWatchImage(string name, int index, IMagickImage magickImage)
         {
             Name = name;
             Index = index;
             MagickImage = magickImage;
-            MagickImageCollection = null;
             HasAlpha = MagickImage.HasAlpha;
             TransparencyRate = MagickImage.TransparencyRate();
         }
-        public CWatchImage(string name, int index, IMagickImageCollection magickImageCollection)
+
+        // Duplicate dummy
+        public CWatchImage(string name, int index)
         {
             Name = name;
             Index = index;
             MagickImage = null;
-            MagickImageCollection = magickImageCollection;
-            HasAlpha = false; // ???
-            TransparencyRate = 0; // ???
+            HasAlpha = false;
+            TransparencyRate = 0;
         }
+
         public string Name;
         public int Index;
         public IMagickImage MagickImage;
-        public IMagickImageCollection MagickImageCollection;
         public bool HasAlpha;
         public double TransparencyRate;
         public void Dispose()
         {
-            if (MagickImage != null) MagickImage.Dispose();
-            if (MagickImageCollection != null) MagickImageCollection.Dispose();
+            MagickImage?.Dispose();
         }
     }
 }

@@ -65,6 +65,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
+        // TO REMOVE
         [XmlIgnore]
         public MagickImage MagickImage { get; internal set; }
 
@@ -91,6 +92,7 @@ namespace LiveSplit.VAS.Models
             _Name = screen.Name + "/" + watchZone.Name + "/" + watcher.Name + " - " + FileName;
         }
 
+        // TO REMOVE
         public void SetMagickImage(bool extremePrecision)
         {
             var mi = new MagickImage((Bitmap)Image)

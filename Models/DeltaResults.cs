@@ -8,7 +8,7 @@ using LiveSplit.VAS.Models;
 
 namespace LiveSplit.VAS.Models
 {
-    public delegate void DeltaResultsHandler(DeltaResults e);
+    public delegate void DeltaResultsHandler(object sender, DeltaResults e);
 
     public class DeltaResults : EventArgs
     {
@@ -16,54 +16,68 @@ namespace LiveSplit.VAS.Models
         public readonly TimeStamp FrameStart;
         public readonly TimeStamp FrameEnd;
         public readonly TimeStamp ScanEnd;
-        public readonly TimeStamp WaitEnd;
+        public TimeStamp WaitEnd;
         public readonly double[] Deltas;
 
-        public DeltaResults(int index, TimeStamp frameStart, TimeStamp frameEnd, TimeStamp scanEnd, TimeStamp waitEnd, double[] deltas)
+        public DeltaResults(int index, TimeStamp frameStart, TimeStamp frameEnd, TimeStamp scanEnd, double[] deltas)
         {
             Index = index;
             FrameStart = frameStart;
             FrameEnd = frameEnd;
             ScanEnd = scanEnd;
-            WaitEnd = waitEnd;
+            WaitEnd = null;
             Deltas = deltas;
         }
 
-        public DeltaResults(int index, Scan scan, TimeStamp scanEnd, TimeStamp waitEnd, double[] deltas)
+        public DeltaResults(int index, Scan scan, TimeStamp scanEnd, double[] deltas)
         {
             Index = index;
             FrameStart = scan.PreviousFrame.TimeStamp;
             FrameEnd = scan.CurrentFrame.TimeStamp;
             ScanEnd = scanEnd;
-            WaitEnd = waitEnd;
+            WaitEnd = null;
             Deltas = deltas;
         }
 
         public DeltaResults()
         {
             Index = -1;
-            FrameStart = FrameEnd = ScanEnd = WaitEnd = TimeStamp.Now;
+            FrameStart = FrameEnd = ScanEnd = TimeStamp.Now;
+            WaitEnd = null;
             Deltas = new double[Scanner.FEATURE_COUNT_LIMIT];
         }
 
-        public TimeSpan FrameDuration()
+        public TimeSpan FrameDuration
         {
-            return FrameEnd - FrameStart;
+            get
+            {
+                return FrameEnd - FrameStart;
+            }
         }
 
-        public TimeSpan ScanDuration()
+        public TimeSpan ScanDuration
         {
-            return ScanEnd - FrameEnd;
+            get
+            {
+                return ScanEnd - FrameEnd;
+            }
         }
 
-        public TimeSpan WaitDuration()
+        public TimeSpan WaitDuration
         {
-            return WaitEnd - ScanEnd;
+            get
+            {
+                return WaitEnd - ScanEnd;
+            }
         }
 
-        public TimeSpan ProcessDuration()
+        public TimeSpan ProcessDuration
         {
-            return WaitEnd - FrameEnd;
+            get
+            {
+                return WaitEnd - FrameEnd;
+            }
         }
+
     }
 }

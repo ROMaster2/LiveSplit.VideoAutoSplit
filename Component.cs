@@ -44,7 +44,7 @@ namespace LiveSplit.UI.Components
                 _do_reload = true;
             };
 
-            Scanner.NewResult += (dr) => UpdateScript(dr);
+            Scanner.NewResult += (sender, dr) => UpdateScript(dr);
             Scanner.Start(); // Where else should this go?
         }
 
@@ -90,7 +90,7 @@ namespace LiveSplit.UI.Components
             LayoutMode mode)
         { }
 
-        private void UpdateScript(DeltaResults e)
+        private void UpdateScript(DeltaResults dr)
         {
             if (_settings.ScriptPath != _old_script_path || _do_reload)
             {
@@ -122,7 +122,7 @@ namespace LiveSplit.UI.Components
             {
                 try
                 {
-                    Script.Update(_state);
+                    Script.Update(_state, dr);
                 }
                 catch (Exception ex)
                 {
@@ -141,7 +141,7 @@ namespace LiveSplit.UI.Components
 
             var archive = ZipFile.OpenRead(_settings.ScriptPath);
             var entries = archive.Entries;
-            var stream = entries.Where(z => z.Name == "script.vasl").First().Open();
+            var stream = entries.Where(z => z.Name == "script.asl").First().Open();
             var script = new StreamReader(stream).ReadToEnd();
 
             // New script
