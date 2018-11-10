@@ -7,7 +7,7 @@
     <ProjectGuid>{5ABF1470-516E-484E-A87B-207DE9DCC831}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LiveSplit.VFM</RootNamespace>
+    <RootNamespace>LiveSplit.VAS</RootNamespace>
     <AssemblyName>LiveSplit.VideoAutoSplit</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
