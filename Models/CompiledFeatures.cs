@@ -26,6 +26,7 @@ namespace LiveSplit.VAS.Models
                 name1 + "/" + name2 + "/" + name3,
                 name1 + "/" + name3,
                 name2 + "/" + name3,
+                name3
             };
             foreach (var s in strings)
             {

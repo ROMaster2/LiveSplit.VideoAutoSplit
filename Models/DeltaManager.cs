@@ -28,8 +28,6 @@ namespace LiveSplit.VAS.Models
 
         internal DeltaManager(int index, double frameRate)
         {
-            if (index >= HISTORY_SIZE || index < 0)
-                throw new ArgumentOutOfRangeException("Frame Index is out of range");
             OriginalIndex = index;
             FrameIndex = index % HISTORY_SIZE;
             FrameRate = frameRate;
@@ -81,13 +79,24 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
+                if (i >= FEATURE_COUNT_LIMIT || i < 0)
+                    throw new ArgumentOutOfRangeException();
+                FeatureIndex = i;
                 return this;
             }
-            set
+        }
+
+        public DeltaManager this[string str]
+        {
+            get
             {
-                if (i >= FEATURE_COUNT_LIMIT || i < 0)
-                    throw new ArgumentNullException("Feature index has not been set. Declare such with [n] first.");
+
+                if (!CompiledFeatures.IndexName.TryGetValue(str, out int i))
+                    throw new ArgumentNullException();
+                if (i < 0)
+                    throw new ArgumentException("This name is shared between more than one feature. Identify it more specifically.");
                 FeatureIndex = i;
+                return this;
             }
         }
 

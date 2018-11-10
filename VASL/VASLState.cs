@@ -26,24 +26,6 @@ namespace LiveSplit.VAS.VASL
             GameVersion = string.Empty;
         }
 
-        public VASLState RefreshValues(Process p)
-        {
-            var clone = (VASLState)Clone();
-            var dict = ((IDictionary<string, object>)Data);
-
-            foreach (var value_definition in ValueDefinitions)
-            {
-                var value = GetValue(p, value_definition.Type, value_definition.Pointer);
-
-                if (dict.ContainsKey(value_definition.Identifier))
-                    dict[value_definition.Identifier] = value;
-                else
-                    dict.Add(value_definition.Identifier, value);
-            }
-
-            return clone;
-        }
-
         private static dynamic GetValue(Process p, string type, DeepPointer pointer)
         {
             switch (type)

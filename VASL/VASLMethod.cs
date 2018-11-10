@@ -7,6 +7,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using LiveSplit.VAS.Models;
 
 namespace LiveSplit.VAS.VASL
 {
@@ -56,7 +57,6 @@ using System.Windows.Forms;
 using LiveSplit.ComponentUtil;
 using LiveSplit.Model;
 using LiveSplit.Options;
-using LiveSplit.VAS;
 public class CompiledScript
 {{
     public string version;
@@ -65,10 +65,8 @@ public class CompiledScript
     {{
         Log.Info(s);
     }}
-    public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, Process game, dynamic settings)
+    public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, dynamic features, dynamic settings)
     {{
-        // var memory = game;
-        // var modules = game != null ? game.ModulesWow64Safe() : null;
         { user_code_start_marker }
 	    { code }
 	    return null;
@@ -108,7 +106,7 @@ public class CompiledScript
         }
 
         public dynamic Call(LiveSplitState timer, ExpandoObject vars, ref string version, ref double refreshRate,
-            dynamic settings, ExpandoObject old = null, ExpandoObject current = null, Process game = null)
+            dynamic settings, ExpandoObject old = null, ExpandoObject current = null, DeltaManager features = null)
         {
             // dynamic args can't be ref or out, this is a workaround
             _compiled_code.version = version;
@@ -116,7 +114,7 @@ public class CompiledScript
             dynamic ret;
             try
             {
-                ret = _compiled_code.Execute(timer, old, current, vars, game, settings);
+                ret = _compiled_code.Execute(timer, old, current, vars, features, settings);
             }
             catch (Exception ex)
             {

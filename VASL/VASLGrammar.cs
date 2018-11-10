@@ -9,61 +9,50 @@ namespace LiveSplit.VAS.VASL
         public VASLGrammar()
             : base(true)
         {
+            var code       = new CustomTerminal("code", MatchCodeTerminal);
             var string_lit = TerminalFactory.CreateCSharpString("string");
-            var number = TerminalFactory.CreateCSharpNumber("number");
-            number.Options |= NumberOptions.AllowSign;
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
-            var code = new CustomTerminal("code", MatchCodeTerminal);
+            var number     = TerminalFactory.CreateCSharpNumber("number");
+            number.Options |= NumberOptions.AllowSign;
 
             var single_line_comment = new CommentTerminal("SingleLineComment", "//", "\r", "\n", "\u2085", "\u2028", "\u2029");
-            var delimited_comment = new CommentTerminal("DelimitedComment", "/*", "*/");
+            var delimited_comment   = new CommentTerminal("DelimitedComment", "/*", "*/");
             NonGrammarTerminals.Add(single_line_comment);
             NonGrammarTerminals.Add(delimited_comment);
 
-            //var state = new KeyTerm("state", "state");
-            var state = new KeyTerm("state", "state");
-            var init = new KeyTerm("init", "init");
-            var exit = new KeyTerm("exit", "exit");
-            var update = new KeyTerm("update", "update");
-            var start = new KeyTerm("start", "start");
-            var split = new KeyTerm("split", "split");
-            var reset = new KeyTerm("reset", "reset");
-            var startup = new KeyTerm("startup", "startup");
-            var shutdown = new KeyTerm("shutdown", "shutdown");
-            var isLoading = new KeyTerm("isLoading", "isLoading");
-            var gameTime = new KeyTerm("gameTime", "gameTime");
-            var comma = ToTerm(",", "comma");
-            var semi = ToTerm(";", "semi");
+            // Todo: Aliases
 
-            var root = new NonTerminal("root");
-            var state_def = new NonTerminal("stateDef");
-            var version = new NonTerminal("version");
-            var state_list = new NonTerminal("stateList");
+            var init      = new KeyTerm("init",      "init");
+            var exit      = new KeyTerm("exit",      "exit");
+            var update    = new KeyTerm("update",    "update");
+            var start     = new KeyTerm("start",     "start");
+            var split     = new KeyTerm("split",     "split");
+            var reset     = new KeyTerm("reset",     "reset");
+            var startup   = new KeyTerm("startup",   "startup");
+            var shutdown  = new KeyTerm("shutdown",  "shutdown");
+            var isLoading = new KeyTerm("isLoading", "isLoading");
+            var gameTime  = new KeyTerm("gameTime",  "gameTime");
+            var comma     = ToTerm(",", "comma");
+            var semi      = ToTerm(";", "semi");
+
+            var root        = new NonTerminal("root");
+            var version     = new NonTerminal("version");
             var method_list = new NonTerminal("methodList");
-            var var_list = new NonTerminal("varList");
-            var var = new NonTerminal("var");
-            var module = new NonTerminal("module");
-            var method = new NonTerminal("method");
-            var offset_list = new NonTerminal("offsetList");
-            var offset = new NonTerminal("offset");
+            var var_list    = new NonTerminal("varList");
+            var var         = new NonTerminal("var");
+            var method      = new NonTerminal("method");
             var method_type = new NonTerminal("methodType");
 
-            root.Rule = state_list + method_list;
-            version.Rule = (comma + string_lit) | Empty;
-            state_def.Rule = state + "(" + string_lit + version + ")" + "{" + var_list + "}";
-            state_list.Rule = MakeStarRule(state_list, state_def);
+            root.Rule        = method_list;
+            version.Rule     = (comma + string_lit) | Empty;
             method_list.Rule = MakeStarRule(method_list, method);
-            var_list.Rule = MakeStarRule(var_list, semi, var);
-            module.Rule = (string_lit + comma) | Empty;
-            var.Rule = (identifier + identifier + ":" + module + offset_list) | Empty;
-            method.Rule = (method_type + "{" + code + "}") | Empty;
-            offset_list.Rule = MakePlusRule(offset_list, comma, offset);
-            offset.Rule = number;
+            var_list.Rule    = MakeStarRule(var_list, semi, var);
+            method.Rule      = (method_type + "{" + code + "}") | Empty;
             method_type.Rule = init | exit | update | start | split | isLoading | gameTime | reset | startup | shutdown;
 
             Root = root;
 
-            MarkTransient(var_list, method_list, offset, method_type);
+            MarkTransient(var_list, method_list, method_type);
 
             LanguageFlags = LanguageFlags.NewLineBeforeEOF;
         }

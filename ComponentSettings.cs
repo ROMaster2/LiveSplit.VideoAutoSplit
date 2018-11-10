@@ -101,6 +101,17 @@ namespace LiveSplit.VAS
                 _ignore_next_path_setting = false;
                 ParseBasicSettingsFromXml(element);
                 ParseCustomSettingsFromXml(element);
+
+                try
+                {
+                    var gp = GameProfile.FromZip(ScriptPath);
+                    Scanner.GameProfile = gp;
+                    Scanner.Start();
+                }
+                catch (Exception e)
+                {
+                    LiveSplit.Options.Log.Error(e);
+                }
             }
         }
 
@@ -126,6 +137,7 @@ namespace LiveSplit.VAS
             InitVASLSettings(new VASLSettings(), false);
         }
 
+        // Todo: Later
         private void InitVASLSettings(VASLSettings settings, bool script_loaded)
         {
             if (string.IsNullOrWhiteSpace(ScriptPath))
@@ -133,67 +145,7 @@ namespace LiveSplit.VAS
                 _basic_settings_state.Clear();
                 _custom_settings_state.Clear();
             }
-            /*
-            this.treeCustomSettings.BeginUpdate();
-            this.treeCustomSettings.Nodes.Clear();
 
-            var values = new Dictionary<string, bool>();
-
-            // Store temporary for easier lookup of parent nodes
-            var flat = new Dictionary<string, TreeNode>();
-
-            foreach (VASLSetting setting in settings.OrderedSettings)
-            {
-                var value = setting.Value;
-                if (_custom_settings_state.ContainsKey(setting.Id))
-                    value = _custom_settings_state[setting.Id];
-
-                var node = new TreeNode(setting.Label)
-                {
-                    Tag = setting,
-                    Checked = value,
-                    ContextMenuStrip = this.treeContextMenu2,
-                    ToolTipText = setting.ToolTip
-                };
-                setting.Value = value;
-
-                if (setting.Parent == null)
-                {
-                    this.treeCustomSettings.Nodes.Add(node);
-                }
-                else if (flat.ContainsKey(setting.Parent))
-                {
-                    flat[setting.Parent].Nodes.Add(node);
-                    flat[setting.Parent].ContextMenuStrip = this.treeContextMenu;
-                }
-
-                flat.Add(setting.Id, node);
-                values.Add(setting.Id, value);
-            }
-
-            // Gray out deactivated nodes after all have been added
-            foreach (var item in flat)
-            {
-                if (!item.Value.Checked)
-                {
-                    UpdateGrayedOut(item.Value);
-                }
-            }
-
-            // Only if a script was actually loaded, update current state with current VASL settings
-            // (which may be empty if the successfully loaded script has no settings, but shouldn't
-            // be empty because the script failed to load, which can happen frequently when working
-            // on VASL scripts)
-            if (script_loaded)
-                _custom_settings_state = values;
-
-            treeCustomSettings.ExpandAll();
-            treeCustomSettings.EndUpdate();
-
-            // Scroll up to the top
-            if (this.treeCustomSettings.Nodes.Count > 0)
-                this.treeCustomSettings.Nodes[0].EnsureVisible();
-            */
             UpdateCustomSettingsVisibility();
             InitBasicSettings(settings);
         }
