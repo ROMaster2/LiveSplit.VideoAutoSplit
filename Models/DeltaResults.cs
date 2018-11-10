@@ -37,14 +37,6 @@ namespace LiveSplit.VAS.Models
             Deltas = deltas;
         }
 
-        public DeltaResults()
-        {
-            Index = -1;
-            FrameStart = FrameEnd = ScanEnd = TimeStamp.Now;
-            WaitEnd = null;
-            Deltas = new double[Scanner.FEATURE_COUNT_LIMIT];
-        }
-
         public TimeSpan FrameDuration
         {
             get
@@ -61,6 +53,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
+        // No handling WaitEnd != null for now.
         public TimeSpan WaitDuration
         {
             get
@@ -76,6 +69,5 @@ namespace LiveSplit.VAS.Models
                 return WaitEnd - FrameEnd;
             }
         }
-
     }
 }
