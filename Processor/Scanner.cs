@@ -24,8 +24,7 @@ namespace LiveSplit.VAS
 {
     static class Scanner
     {
-        public const int FEATURE_COUNT_LIMIT = 64; // Arbitrary numbers tbh
-        public const int DELTA_RESULTS_SIZE = 256;
+        public const int FEATURE_COUNT_LIMIT = DeltaManager.FEATURE_COUNT_LIMIT; // Temporary reference. TO REMOVE.
 
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
@@ -34,8 +33,6 @@ namespace LiveSplit.VAS
         public static int CurrentIndex = 0; // Used only for debugging. Remove on release.
         public static bool IsScanning = false;
         public static bool IsScannerLocked = false;
-
-        public static DeltaResults[] DeltaResultsStorage = new DeltaResults[DELTA_RESULTS_SIZE];
 
         public static event DeltaResultsHandler NewResult;
 
@@ -130,15 +127,15 @@ namespace LiveSplit.VAS
         }
 
         // Good/bad idea?
-        public static double AverageFPS      { get; internal set; } = 60;
-        public static double MinFPS          { get; internal set; } = 60;
-        public static double MaxFPS          { get; internal set; } = 60;
-        public static double AverageScanTime { get; internal set; } =  0;
-        public static double MinScanTime     { get; internal set; } =  0;
-        public static double MaxScanTime     { get; internal set; } =  0;
-        public static double AverageWaitTime { get; internal set; } =  0;
-        public static double MinWaitTime     { get; internal set; } =  0;
-        public static double MaxWaitTime     { get; internal set; } =  0;
+        public static double AverageFPS      { get; internal set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
+        public static double MinFPS          { get; internal set; } = double.NaN;
+        public static double MaxFPS          { get; internal set; } = double.NaN;
+        public static double AverageScanTime { get; internal set; } = double.NaN;
+        public static double MinScanTime     { get; internal set; } = double.NaN;
+        public static double MaxScanTime     { get; internal set; } = double.NaN;
+        public static double AverageWaitTime { get; internal set; } = double.NaN;
+        public static double MinWaitTime     { get; internal set; } = double.NaN;
+        public static double MaxWaitTime     { get; internal set; } = double.NaN;
 
         public static bool IsVideoSourceValid() // Not really but good enough.
         {
@@ -281,68 +278,39 @@ namespace LiveSplit.VAS
             }
             IsScanning = false;
             var scanEnd = TimeStamp.Now;
-            AddResult(index, scan, scanEnd, deltas);
+            DeltaManager.AddResult(index, scan, scanEnd, deltas);
+            NewResult(null, new DeltaManager(index, AverageFPS)); // Testing AverageFPS part
             scan.Dispose();
-        }
-
-        private static void AddResult(int index, Scan scan, TimeStamp scanEnd, double[] deltas)
-        {
-            const int BREAK_POINT = 3000;
-            const int SAFETY_THRESHOLD = 30;
-            var currIndex =  index      % DELTA_RESULTS_SIZE;
-            var prevIndex = (index - 1) % DELTA_RESULTS_SIZE;
-
-            var dr = new DeltaResults(index, scan, scanEnd, deltas);
-            DeltaResultsStorage[currIndex] = dr;
-
-            if (index > SAFETY_THRESHOLD)
-            {
-                int i = 0;
-                while (DeltaResultsStorage[prevIndex] == null || DeltaResultsStorage[prevIndex].Index != index - 1)
-                {
-                    if (i >= BREAK_POINT)
-                    {
-                        // Maybe instead just skip the frame and log it as an error?
-                        //throw new Exception("Previous frame could not be processed or is taking too long to process.");
-                        break;
-                    }
-                    i++;
-                    Thread.Sleep(1);
-                }
-            }
-
-            dr.WaitEnd = TimeStamp.Now;
-            NewResult(null, dr);
 
             // It's on its own thread so running it here should be okay.
             if (index % 30 == 0)
             {
                 int count = 0;
-                double sumFPS   = 0d, minFPS      = 9999d, maxFPS      = 0d,
+                double sumFPS = 0d, minFPS = 9999d, maxFPS = 0d,
                     sumScanTime = 0d, minScanTime = 9999d, maxScanTime = 0d,
                     sumWaitTime = 0d, minWaitTime = 9999d, maxWaitTime = 0d;
-                foreach (var d in DeltaResultsStorage)
+                foreach (var d in DeltaManager.History)
                 {
                     if (d != null)
                     {
                         count++;
-                        var fd = d.FrameDuration.TotalSeconds;
+                        var fd = d.FrameDuration.TotalSeconds; // Not handling div by 0. I'll be impressed if it actually happens.
                         sumFPS += fd;
                         minFPS = Math.Min(minFPS, fd);
                         maxFPS = Math.Max(maxFPS, fd);
-                        var sd = d.ScanDuration.TotalSeconds;
+                        var sd = d.ScanDuration.TotalMilliseconds;
                         sumScanTime += sd;
                         minScanTime = Math.Min(minScanTime, sd);
                         maxScanTime = Math.Max(maxScanTime, sd);
-                        var wd = d.WaitEnd != null ? d.WaitDuration.TotalSeconds : AverageWaitTime;
+                        var wd = d.WaitEnd != null ? d.WaitDuration.TotalMilliseconds : AverageWaitTime;
                         sumWaitTime += wd;
                         minWaitTime = Math.Min(minWaitTime, wd);
                         maxWaitTime = Math.Max(maxWaitTime, wd);
                     }
                 }
-                AverageFPS = count / sumFPS;
-                MaxFPS = 1d / minFPS;
-                MinFPS = 1d / maxFPS;
+                AverageFPS = 3000d / Math.Round(sumFPS / count * 3000d);
+                MaxFPS = 1 / minFPS;
+                MinFPS = 1 / maxFPS;
                 AverageScanTime = sumScanTime / count;
                 MinScanTime = minScanTime;
                 MaxScanTime = maxScanTime;

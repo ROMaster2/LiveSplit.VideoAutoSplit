@@ -111,7 +111,7 @@ namespace LiveSplit.VAS.VASL
         }
 
         // Update the script
-        public void Update(LiveSplitState state, DeltaResults dr)
+        public void Update(LiveSplitState state, DeltaManager dm)
         {
             // Change _game to video capture
             if (_game == null)
@@ -129,7 +129,7 @@ namespace LiveSplit.VAS.VASL
                 if (!_init_completed)
                     DoInit(state);
                 else
-                    DoUpdate(state, dr);
+                    DoUpdate(state, dm);
             }
         }
 
@@ -232,11 +232,11 @@ namespace LiveSplit.VAS.VASL
         }
 
         // This is executed repeatedly as long as the game is connected and initialized.
-        private void DoUpdate(LiveSplitState state, DeltaResults dr)
+        private void DoUpdate(LiveSplitState state, DeltaManager dm)
         {
             OldState = State.RefreshValues(_game);
 
-            if (!(RunMethod(_methods.update, state, dr) ?? true))
+            if (!(RunMethod(_methods.update, state, dm) ?? true))
             {
                 // If Update explicitly returns false, don't run anything else
                 return;
@@ -247,20 +247,20 @@ namespace LiveSplit.VAS.VASL
                 if (_uses_game_time && !state.IsGameTimeInitialized)
                     _timer.InitializeGameTime();
 
-                var is_paused = RunMethod(_methods.isLoading, state, dr);
+                var is_paused = RunMethod(_methods.isLoading, state, dm);
                 if (is_paused != null)
                     state.IsGameTimePaused = is_paused;
 
-                var game_time = RunMethod(_methods.gameTime, state, dr);
+                var game_time = RunMethod(_methods.gameTime, state, dm);
                 if (game_time != null)
                     state.SetGameTime(game_time);
 
-                if (RunMethod(_methods.reset, state, dr) ?? false)
+                if (RunMethod(_methods.reset, state, dm) ?? false)
                 {
                     if (_settings.GetBasicSettingValue("reset"))
                         _timer.Reset();
                 }
-                else if (RunMethod(_methods.split, state, dr) ?? false)
+                else if (RunMethod(_methods.split, state, dm) ?? false)
                 {
                     if (_settings.GetBasicSettingValue("split"))
                         _timer.Split();
@@ -269,7 +269,7 @@ namespace LiveSplit.VAS.VASL
 
             if (state.CurrentPhase == TimerPhase.NotRunning)
             {
-                if (RunMethod(_methods.start, state, dr) ?? false)
+                if (RunMethod(_methods.start, state, dm) ?? false)
                 {
                     if (_settings.GetBasicSettingValue("start"))
                         _timer.Start();
@@ -277,7 +277,7 @@ namespace LiveSplit.VAS.VASL
             }
         }
 
-        private dynamic RunMethod(VASLMethod method, LiveSplitState state, DeltaResults dr, ref string version)
+        private dynamic RunMethod(VASLMethod method, LiveSplitState state, DeltaManager dm, ref string version)
         {
             var refresh_rate = RefreshRate;
             var result = method.Call(state, Vars, ref version, ref refresh_rate, _settings.Reader,
@@ -286,10 +286,10 @@ namespace LiveSplit.VAS.VASL
             return result;
         }
 
-        private dynamic RunMethod(VASLMethod method, LiveSplitState state, DeltaResults dr)
+        private dynamic RunMethod(VASLMethod method, LiveSplitState state, DeltaManager dm)
         {
             var version = GameVersion;
-            return RunMethod(method, state, dr, ref version);
+            return RunMethod(method, state, dm, ref version);
         }
 
         // Run method without counting on being connected to the game (startup/shutdown).

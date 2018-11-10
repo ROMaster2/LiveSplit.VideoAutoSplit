@@ -90,6 +90,7 @@
     </Compile>
     <Compile Include="Factory.cs" />
     <Compile Include="Models\CompiledFeatures.cs" />
+    <Compile Include="Models\DeltaManager.cs" />
     <Compile Include="Models\Features\Anchor.cs" />
     <Compile Include="Models\Features\GameProfile.cs" />
     <Compile Include="Models\Features\ScaleType.cs" />

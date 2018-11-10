@@ -44,7 +44,7 @@ namespace LiveSplit.UI.Components
                 _do_reload = true;
             };
 
-            Scanner.NewResult += (sender, dr) => UpdateScript(dr);
+            Scanner.NewResult += (sender, dm) => UpdateScript(sender, dm);
             Scanner.Start(); // Where else should this go?
         }
 
@@ -90,7 +90,7 @@ namespace LiveSplit.UI.Components
             LayoutMode mode)
         { }
 
-        private void UpdateScript(DeltaResults dr)
+        private void UpdateScript(object sender, DeltaManager dm)
         {
             if (_settings.ScriptPath != _old_script_path || _do_reload)
             {
@@ -122,7 +122,7 @@ namespace LiveSplit.UI.Components
             {
                 try
                 {
-                    Script.Update(_state, dr);
+                    Script.Update(_state, dm);
                 }
                 catch (Exception ex)
                 {

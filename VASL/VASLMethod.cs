@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace LiveSplit.VAS.VASL
 {
@@ -31,6 +32,7 @@ namespace LiveSplit.VAS.VASL
             Name = name;
             IsEmpty = string.IsNullOrWhiteSpace(code);
             code = code.Replace("return;", "return null;"); // hack
+            code = Regex.Replace(code, @"\.old[^\w\(]", ".old()", RegexOptions.IgnoreCase); // Testing
 
             var options = new Dictionary<string, string> {
                 { "CompilerVersion", "v4.0" }

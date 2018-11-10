@@ -8,8 +8,6 @@ using LiveSplit.VAS.Models;
 
 namespace LiveSplit.VAS.Models
 {
-    public delegate void DeltaResultsHandler(object sender, DeltaResults e);
-
     public class DeltaResults : EventArgs
     {
         public readonly int Index;
