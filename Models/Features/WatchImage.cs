@@ -82,8 +82,9 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                var i = FilePath.LastIndexOf('\\');
-                return FilePath.Substring(i + 1, FilePath.Length - i - 1);
+                var s = FilePath.LastIndexOf('\\');
+                var d = FilePath.LastIndexOf('.');
+                return FilePath.Substring(s + 1, FilePath.Length - s - d - 1);
             }
         }
 
