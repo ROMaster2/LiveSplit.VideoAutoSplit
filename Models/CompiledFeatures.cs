@@ -1,5 +1,6 @@
 ﻿using ImageMagick;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace LiveSplit.VAS.Models
@@ -13,6 +14,31 @@ namespace LiveSplit.VAS.Models
         public static bool HasDupeCheck { get; internal set; }
         public static int PixelLimit { get; internal set; }
         public static int PixelCount { get; internal set; }
+        public static IDictionary<string, int> IndexName { get; internal set; }
+
+        private static void AddIndexName(int index, string name1, string name2, string name3)
+        {
+            var strings = new List<string>
+            {
+                name1,
+                name1 + "/" + name2,
+                name2,
+                name1 + "/" + name2 + "/" + name3,
+                name1 + "/" + name3,
+                name2 + "/" + name3,
+            };
+            foreach (var s in strings)
+            {
+                if (IndexName.ContainsKey(s))
+                {
+                    IndexName[s] = -1;
+                }
+                else
+                {
+                    IndexName.Add(new KeyValuePair<string, int>(s, index));
+                }
+            }
+        }
 
         public static void Compile(GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
         {
@@ -27,6 +53,7 @@ namespace LiveSplit.VAS.Models
             HasDupeCheck = false;
             PixelLimit = pixelLimit; // Todo
             PixelCount = 0;
+            IndexName = new Dictionary<string, int>();
 
             var cWatchZones = new CWatchZone[gameProfile.WatchZones.Count];
             var indexCount = 0;
@@ -63,6 +90,7 @@ namespace LiveSplit.VAS.Models
                             if (watcher.Equalize) mi.Equalize();
 
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
+                            AddIndexName(indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
                             indexCount++;
                         }
 
