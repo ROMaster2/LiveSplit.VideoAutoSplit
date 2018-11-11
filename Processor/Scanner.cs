@@ -36,11 +36,6 @@ namespace LiveSplit.VAS
 
         public static event DeltaResultsHandler NewResult;
 
-        // Parallelism is used when a single thread isn't fast enough to scan with.
-        // Reduces a bit of overhead by not making it all parallel.
-        public static bool ParallelWatchZones = false;
-        public static bool ParallelWatches = false;
-        public static bool ParallelWatchImages = false;
         // Todo: Add something for downscaling before comparing for large images.
         public static int OverloadedCount = 0;
 
@@ -265,16 +260,14 @@ namespace LiveSplit.VAS
         // That can cause sync problems so it needs to be investigated.
         //
         // Also, unsafe is used as ref can't be passed through lambda.
-        unsafe private static void NewRun(Scan scan, int index)
+        private static void NewRun(Scan scan, int index)
         {
             var deltas = new double[FEATURE_COUNT_LIMIT];
-            fixed (double* deltasPointer = deltas)
+            using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
+            using (var prevFileImageBase = CompiledFeatures.HasDupeCheck ? new MagickImage(scan.PreviousFrame.Bitmap) : null)
             {
-                using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
-                using (var prevFileImageBase = CompiledFeatures.HasDupeCheck ? new MagickImage(scan.PreviousFrame.Bitmap) : null)
-                {
-                    EnumerateWatchZones(deltasPointer, fileImageBase, prevFileImageBase);
-                }
+                foreach (var cWatchZone in CompiledFeatures.CWatchZones)
+                    CropScan(ref deltas, fileImageBase, prevFileImageBase, cWatchZone);
             }
             IsScanning = false;
             var scanEnd = TimeStamp.Now;
@@ -320,40 +313,21 @@ namespace LiveSplit.VAS
             }
         }
 
-        unsafe private static void EnumerateWatchZones(double* deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase)
+        private static void EnumerateWatchZones(ref double[] deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase)
         {
-            if (ParallelWatchZones)
-            {
-                Parallel.ForEach(CompiledFeatures.CWatchZones, (cWatchZone) => CropScan(deltas, fileImageBase, prevFileImageBase, cWatchZone));
-            }
-            else
-            {
-                foreach (var cWatchZone in CompiledFeatures.CWatchZones) CropScan(deltas, fileImageBase, prevFileImageBase, cWatchZone);
-            }
+            foreach (var cWatchZone in CompiledFeatures.CWatchZones) CropScan(ref deltas, fileImageBase, prevFileImageBase, cWatchZone);
         }
 
-        unsafe private static void CropScan(double* deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase, CWatchZone cWatchZone)
+        private static void CropScan(ref double[] deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase, CWatchZone cWatchZone)
         {
             using (var fileImageCropped = fileImageBase.Clone(cWatchZone.MagickGeometry))
             using (var prevFileImageCropped = CompiledFeatures.HasDupeCheck ? prevFileImageBase.Clone(cWatchZone.MagickGeometry) : null)
             {
-                EnumerateWatches(deltas, fileImageCropped, prevFileImageCropped, cWatchZone);
+                foreach (var cWatcher in cWatchZone.CWatches) ComposeScan(ref deltas, fileImageCropped, prevFileImageCropped, cWatcher);
             }
         }
 
-        unsafe private static void EnumerateWatches(double* deltas, IMagickImage fileImageCropped, IMagickImage prevFileImageCropped, CWatchZone cWatchZone)
-        {
-            if (ParallelWatches)
-            {
-                Parallel.ForEach(cWatchZone.CWatches, (cWatcher) => ComposeScan(deltas, fileImageCropped, prevFileImageCropped, cWatcher));
-            }
-            else
-            {
-                foreach (var cWatcher in cWatchZone.CWatches) ComposeScan(deltas, fileImageCropped, prevFileImageCropped, cWatcher);
-            }
-        }
-
-        unsafe private static void ComposeScan(double* deltas, IMagickImage fileImageCropped, IMagickImage prevFileImageCropped, CWatcher cWatcher)
+        private static void ComposeScan(ref double[] deltas, IMagickImage fileImageCropped, IMagickImage prevFileImageCropped, CWatcher cWatcher)
         {
             using (var fileImageComposed = GetComposedImage(fileImageCropped, cWatcher.Channel, cWatcher.ColorSpace))
             using (var prevFileImageComposed = CompiledFeatures.HasDupeCheck ? GetComposedImage(prevFileImageCropped, cWatcher.Channel, cWatcher.ColorSpace) : null)
@@ -365,37 +339,25 @@ namespace LiveSplit.VAS
                 }
 
                 if (cWatcher.IsStandard)
-                    EnumerateWatchImages(deltas, fileImageCropped, cWatcher);
+                    foreach (var cWatchImage in cWatcher.CWatchImages) CompareAgainstFeature(ref deltas, fileImageComposed, cWatcher, cWatchImage);
                 else
                     throw new NotImplementedException("todo lol");
             }
         }
 
-        unsafe private static void EnumerateWatchImages(double* deltas, IMagickImage fileImageComposed, CWatcher cWatcher)
-        {
-            if (ParallelWatchImages)
-            {
-                Parallel.ForEach(cWatcher.CWatchImages, (cWatchImage) => CompareAgainstFeature(deltas, fileImageComposed, cWatcher, cWatchImage));
-            }
-            else
-            {
-                foreach (var cWatchImage in cWatcher.CWatchImages) CompareAgainstFeature(deltas, fileImageComposed, cWatcher, cWatchImage);
-            }
-        }
-
-        unsafe private static void CompareAgainstFeature(double* deltas, IMagickImage fileImageComposed, CWatcher cWatcher, CWatchImage cWatchImage)
+        private static void CompareAgainstFeature(ref double[] deltas, IMagickImage fileImageComposed, CWatcher cWatcher, CWatchImage cWatchImage)
         {
             using (var fileImageCompare = fileImageComposed.Clone())
             using (var deltaImage = cWatchImage.MagickImage.Clone())
             {
                 if (cWatchImage.HasAlpha) fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
 
-                SetDelta(deltas, fileImageCompare, deltaImage, cWatcher, cWatchImage);
+                SetDelta(ref deltas, fileImageCompare, deltaImage, cWatcher, cWatchImage);
             }
         }
 
-        unsafe private static void SetDelta(
-            double* deltas,
+        private static void SetDelta(
+            ref double[] deltas,
             IMagickImage fileImageCompare,
             IMagickImage deltaImage,
             CWatcher cWatcher,
