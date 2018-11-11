@@ -91,7 +91,7 @@ namespace LiveSplit.VAS.Models
             get
             {
 
-                if (!CompiledFeatures.IndexName.TryGetValue(str, out int i))
+                if (!CompiledFeatures.IndexNames.TryGetValue(str, out int i))
                     throw new ArgumentNullException();
                 if (i < 0)
                     throw new ArgumentException("This name is shared between more than one feature. Identify it more specifically.");

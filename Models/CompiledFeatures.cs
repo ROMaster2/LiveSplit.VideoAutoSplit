@@ -1,7 +1,7 @@
 ﻿using ImageMagick;
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 
 namespace LiveSplit.VAS.Models
 {
@@ -9,37 +9,12 @@ namespace LiveSplit.VAS.Models
     {
         private const int INIT_PIXEL_LIMIT = 16777216;
 
-        public static CWatchZone[] CWatchZones { get; internal set; }
-        public static int FeatureCount { get; internal set; }
-        public static bool HasDupeCheck { get; internal set; }
-        public static int PixelLimit { get; internal set; }
-        public static int PixelCount { get; internal set; }
-        public static IDictionary<string, int> IndexName { get; internal set; }
-
-        private static void AddIndexName(int index, string name1, string name2, string name3)
-        {
-            var strings = new List<string>
-            {
-                name1,
-                name1 + "/" + name2,
-                name2,
-                name1 + "/" + name2 + "/" + name3,
-                name1 + "/" + name3,
-                name2 + "/" + name3,
-                name3
-            };
-            foreach (var s in strings)
-            {
-                if (IndexName.ContainsKey(s))
-                {
-                    IndexName[s] = -1;
-                }
-                else
-                {
-                    IndexName.Add(new KeyValuePair<string, int>(s, index));
-                }
-            }
-        }
+        public static CWatchZone[] CWatchZones { get; private set; }
+        public static int FeatureCount { get; private set; }
+        public static bool HasDupeCheck { get; private set; }
+        public static int PixelLimit { get; private set; }
+        public static int PixelCount { get; private set; }
+        public static IReadOnlyDictionary<string, int> IndexNames { get; private set; }
 
         public static void Compile(GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
         {
@@ -52,9 +27,10 @@ namespace LiveSplit.VAS.Models
                 Array.Clear(CWatchZones, 0, CWatchZones.Length);
             }
             HasDupeCheck = false;
-            PixelLimit = pixelLimit; // Todo
+            PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. This won't be easy.
             PixelCount = 0;
-            IndexName = new Dictionary<string, int>();
+
+            var tmpDictionary = new Dictionary<string, int>();
 
             var cWatchZones = new CWatchZone[gameProfile.WatchZones.Count];
             var indexCount = 0;
@@ -91,7 +67,8 @@ namespace LiveSplit.VAS.Models
                             if (watcher.Equalize) mi.Equalize();
 
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
-                            AddIndexName(indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
+                            AddIndexName(tmpDictionary, indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
+                            PixelCount += mi.Width * mi.Height;
                             indexCount++;
                         }
 
@@ -102,12 +79,54 @@ namespace LiveSplit.VAS.Models
                         HasDupeCheck = true;
                         throw new NotImplementedException("todo lol");
                     }
+                    else
+                    {
+                        throw new NotImplementedException("WatcherType is not set or does not exist. This really shouldn't happen.");
+                    }
                 }
 
                 cWatchZones[i1] = new CWatchZone(watchZone.Name, wzCropGeo, CWatches);
             }
 
+            IndexNames = tmpDictionary;
+            FeatureCount = indexCount;
+            ValidateIndexNames();
             CWatchZones = cWatchZones;
+        }
+
+        private static void AddIndexName(IDictionary<string, int> dictionary, int index, string name1, string name2, string name3)
+        {
+            var strings = new List<string>
+            {
+                name1,
+                name1 + "/" + name2,
+                name2,
+                name1 + "/" + name2 + "/" + name3,
+                name1 + "/" + name3,
+                name2 + "/" + name3,
+                name3
+            };
+            foreach (var s in strings)
+            {
+                if (dictionary.ContainsKey(s))
+                {
+                    dictionary[s] = -1;
+                }
+                else
+                {
+                    dictionary.Add(new KeyValuePair<string, int>(s, index));
+                }
+            }
+        }
+
+        private static void ValidateIndexNames()
+        {
+            var indexes = IndexNames.Values;
+            for (int i = 0; i < FeatureCount; i++)
+            {
+                if (!indexes.Contains(i))
+                    LiveSplit.Options.Log.Warning("Feature #" + i.ToString() + "'s name was not indexed.");
+            }
         }
 
         public static void StandardResize(ref MagickImage mi, MagickGeometry geo)
@@ -168,15 +187,15 @@ namespace LiveSplit.VAS.Models
             MagickGeometry = geometry.ToMagick();
             CWatches = cWatches;
         }
-        public string Name;
-        public Geometry TrueGeometry;
-        public MagickGeometry MagickGeometry;
-        public CWatcher[] CWatches;
+        public string Name { get; }
+        public Geometry TrueGeometry { get; }
+        public MagickGeometry MagickGeometry { get; }
+        public CWatcher[] CWatches { get; }
         public void Dispose()
         {
-            foreach (var x in CWatches)
+            foreach (var cWatcher in CWatches)
             {
-                x.Dispose();
+                cWatcher.Dispose();
             }
             Array.Clear(CWatches, 0, CWatches.Length);
         }
@@ -219,21 +238,21 @@ namespace LiveSplit.VAS.Models
             IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
         }
 
-        public string Name;
-        public WatcherType WatcherType;
-        public ColorSpace ColorSpace;
-        public int Channel;
-        public bool Equalize;
-        public ErrorMetric ErrorMetric;
-        public CWatchImage[] CWatchImages;
+        public string Name { get; }
+        public WatcherType WatcherType { get; }
+        public ColorSpace ColorSpace { get; }
+        public int Channel { get; }
+        public bool Equalize { get; }
+        public ErrorMetric ErrorMetric { get; }
+        public CWatchImage[] CWatchImages { get; }
 
         public bool IsStandard;
         public bool IsDuplicateFrame;
         public void Dispose()
         {
-            foreach (var x in CWatchImages)
+            foreach (var cWatchImage in CWatchImages)
             {
-                x.Dispose();
+                cWatchImage.Dispose();
             }
             Array.Clear(CWatchImages, 0, CWatchImages.Length);
         }
@@ -261,11 +280,11 @@ namespace LiveSplit.VAS.Models
             TransparencyRate = 0;
         }
 
-        public string Name;
-        public int Index;
-        public IMagickImage MagickImage;
-        public bool HasAlpha;
-        public double TransparencyRate;
+        public string Name { get; }
+        public int Index { get; }
+        public IMagickImage MagickImage { get; }
+        public bool HasAlpha { get; }
+        public double TransparencyRate { get; }
         public void Dispose()
         {
             MagickImage?.Dispose();
