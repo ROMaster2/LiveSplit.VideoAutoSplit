@@ -30,7 +30,7 @@ namespace LiveSplit.VAS
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
 
         public static Frame CurrentFrame = Frame.Blank;
-        public static int CurrentIndex = 0; // Used only for debugging. Remove on release.
+        public static int CurrentIndex = 0;
         public static bool IsScanning = false;
         public static bool IsScannerLocked = false;
 
@@ -310,6 +310,9 @@ namespace LiveSplit.VAS
                 AverageWaitTime = sumWaitTime / count;
                 MinWaitTime = minWaitTime;
                 MaxWaitTime = maxWaitTime;
+
+                // Todo: If AverageWaitTime is too high, shrink some of the large images before comparing.
+                //       Maybe benchmark individual features though? Some ErrorMetrics are more intense than others.
             }
         }
 
