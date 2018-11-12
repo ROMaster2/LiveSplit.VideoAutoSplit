@@ -80,14 +80,12 @@ namespace LiveSplit.VAS.VASL
         public VASLState OldState { get; private set; }
         public ExpandoObject Vars { get; }
 
-        private bool _uses_game_time;
+        private readonly bool _uses_game_time;
         private bool _init_completed;
 
         private VASLSettings _settings;
 
         private TimerModel _timer;
-
-        private Dictionary<string, List<VASLState>> _states;
 
         private Methods _methods;
 
@@ -175,30 +173,41 @@ namespace LiveSplit.VAS.VASL
 
             if (state.CurrentPhase == TimerPhase.Running || state.CurrentPhase == TimerPhase.Paused)
             {
-                if (_uses_game_time && !state.IsGameTimeInitialized)
-                    _timer.InitializeGameTime();
-
                 var is_paused = RunMethod(_methods.isLoading, state, dm);
                 if (is_paused != null)
+                {
+                    var prevPauseState = state.IsGameTimePaused;
+
                     state.IsGameTimePaused = is_paused;
+
+                    if (prevPauseState != is_paused)
+                    {
+                        var offsetTime = DeltaManager.History[dm.FrameIndex].ProcessDuration;
+
+                        if (is_paused)
+                            state.GameTimePauseTime -= offsetTime;
+                        else
+                            state.GameTimePauseTime += offsetTime;
+                    }
+                }
+
+                if (_uses_game_time && !state.IsGameTimeInitialized)
+                    _timer.InitializeGameTime();
 
                 var game_time = RunMethod(_methods.gameTime, state, dm);
                 if (game_time != null)
                     state.SetGameTime(game_time);
 
-                if (RunMethod(_methods.reset, state, dm) ?? false)
+                if (RunMethod(_methods.reset, state, dm) ?? false && _settings.GetBasicSettingValue("reset"))
                 {
-                    if (_settings.GetBasicSettingValue("reset"))
-                        _timer.Reset();
+                    _timer.Reset();
                 }
-                else if (RunMethod(_methods.split, state, dm) ?? false)
+                else if (RunMethod(_methods.split, state, dm) ?? false && _settings.GetBasicSettingValue("split"))
                 {
-                    if (_settings.GetBasicSettingValue("split"))
-                        _timer.Split();
+                    _timer.Split(); // Todo: Add offsetting for splits.
                 }
             }
-
-            if (state.CurrentPhase == TimerPhase.NotRunning)
+            else if (state.CurrentPhase == TimerPhase.NotRunning)
             {
                 if (RunMethod(_methods.start, state, dm) ?? false)
                 {
