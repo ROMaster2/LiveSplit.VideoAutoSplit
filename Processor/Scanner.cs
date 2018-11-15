@@ -239,20 +239,11 @@ namespace LiveSplit.VAS
         {
             IMagickImage mi = input.Clone();
             mi.ColorSpace = colorSpace;
-            if (mi.ChannelCount != 3)
-            {
-                FuckingStop();
-            }
             if (channelIndex > -1)
             {
                 mi = input.Separate().ElementAt(channelIndex);
             }
             return mi;
-        }
-
-        private static void FuckingStop()
-        {
-            throw new Exception("Fuck");
         }
 
         internal static int initCount = 0; // To stop wasting CPU when first starting.
