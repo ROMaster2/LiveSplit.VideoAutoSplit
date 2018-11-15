@@ -192,34 +192,17 @@ namespace LiveSplit.VAS.Models
         public static void PauseFeature(int index, DateTime untilTime)
         {
             PauseIndex[index] = untilTime.Ticks;
-            //EvaluatePauses(untilTime);
         }
 
         public static void ResumeFeature(int index, DateTime untilTime)
         {
             PauseIndex[index] = -untilTime.Ticks;
-            //EvaluatePauses(untilTime);
         }
 
         public static bool IsPaused(DateTime dateTime)
         {
             return CWatchZones.All(wz => wz.IsPaused(dateTime));
         }
-
-        /*
-        public static void EvaluatePauses(DateTime untilTime)
-        {
-            for (int i = 0; i < CWatchZones.Length; i++)
-            {
-                for (int n = 0; n < CWatchZones[i].CWatches.Length; n++)
-                {
-                    CWatchZones[i].CWatches[n]._IsPaused = CWatchZones[i].CWatches[n].CWatchImages.All(wi => wi.IsPaused(untilTime));
-                }
-                CWatchZones[i]._IsPaused = CWatchZones[i].CWatches.All(w => w._IsPaused);
-            }
-            HasDupeCheck = CWatchZones.All(wz => wz.CWatches.All(w => w.IsDuplicateFrame && !w._IsPaused));
-        }
-        */
     }
 
     public struct CWatchZone
