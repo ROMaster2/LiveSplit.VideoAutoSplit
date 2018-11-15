@@ -17,7 +17,7 @@ namespace LiveSplit.VAS.Models
         public static int PixelLimit { get; private set; }
         public static int PixelCount { get; private set; }
         public static IReadOnlyDictionary<string, int> IndexNames { get; private set; }
-        internal static IDictionary<int, long> PauseIndex { get; set; }
+        internal static IDictionary<int, long> PauseIndex { get; private set; }
 
         public static void Compile(GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
         {
