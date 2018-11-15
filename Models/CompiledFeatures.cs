@@ -68,9 +68,7 @@ namespace LiveSplit.VAS.Models
                             var mi = new MagickImage(watchImage.Image) { ColorSpace = watcher.ColorSpace };
 
                             GetComposedImage(ref mi, watcher.Channel);
-                            if (indexCount == 0 ) mi.Write(@"E:\memes0.png"); // DEBUGGING
                             StandardResize(ref mi, wzCropGeo);
-                            if (indexCount == 0) mi.Write(@"E:\memes1.png"); // DEBUGGING
                             //PreciseResize(ref mi, watchZone.Geometry, gameGeo, screen.CropGeometry, watcher.ColorSpace);
                             if (watcher.Equalize) mi.Equalize();
 
