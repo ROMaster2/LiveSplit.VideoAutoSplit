@@ -19,7 +19,7 @@ namespace LiveSplit.VAS.Models
 
         public TimeSpan TimeDelta()
         {
-            return CurrentFrame.TimeStamp - PreviousFrame.TimeStamp;
+            return CurrentFrame.DateTime - PreviousFrame.DateTime;
         }
 
         public void Dispose()

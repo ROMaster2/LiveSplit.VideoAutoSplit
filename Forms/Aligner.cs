@@ -24,9 +24,6 @@ namespace LiveSplit.VAS.Forms
 {
     public partial class Aligner : Form
     {
-        // Tried to add event handling to Scanner, but it refused all attempts.
-        // Asynchronous programming has to be the LEAST intuitive thing I've ever encountered.
-
         private const double DEFAULT_MOVE_DISTANCE = 1;
         private const double ALT_DISTANCE_MODIFIER = 10;
         private const double SHIFT_DISTANCE_MODIFIER = 10;
@@ -45,7 +42,12 @@ namespace LiveSplit.VAS.Forms
 
         private static Bitmap CurrentFrame = new Bitmap(1, 1);
         private static DateTime LastUpdate = DateTime.UtcNow;
-
+        /*
+        public double CropX { get; set; }      = Scanner.CropGeometry.X;
+        public double CropY { get; set; }      = Scanner.CropGeometry.Y;
+        public double CropWidth { get; set; }  = Scanner.CropGeometry.Width;
+        public double CropHeight { get; set; } = Scanner.CropGeometry.Height;
+        */
         public Aligner()
         {
             InitializeComponent();
@@ -57,12 +59,11 @@ namespace LiveSplit.VAS.Forms
 
         private void Aligner_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);
-            /*Properties.Settings.Default.CropX = Scanner.CropGeometry.X;
-            Properties.Settings.Default.CropY = Scanner.CropGeometry.Y;
-            Properties.Settings.Default.CropWidth = Scanner.CropGeometry.Width;
-            Properties.Settings.Default.CropHeight = Scanner.CropGeometry.Height;
-            Properties.Settings.Default.Save();*/
+            Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);/*
+            CropX      = Scanner.CropGeometry.X;
+            CropY      = Scanner.CropGeometry.Y;
+            CropWidth  = Scanner.CropGeometry.Width;
+            CropHeight = Scanner.CropGeometry.Height;*/
         }
 
         private void Aligner_ResizeEnd(object sender, EventArgs e)

@@ -11,13 +11,14 @@ namespace LiveSplit.VAS.Models
     public class DeltaResults : EventArgs
     {
         public readonly int Index;
-        public readonly TimeStamp FrameStart;
-        public readonly TimeStamp FrameEnd;
-        public readonly TimeStamp ScanEnd;
-        public TimeStamp WaitEnd;
+        public readonly DateTime FrameStart;
+        public readonly DateTime FrameEnd;
+        public readonly DateTime ScanEnd;
+        public DateTime? WaitEnd;
         public readonly double[] Deltas;
+        public readonly double[] Benchmarks;
 
-        public DeltaResults(int index, TimeStamp frameStart, TimeStamp frameEnd, TimeStamp scanEnd, double[] deltas)
+        public DeltaResults(int index, DateTime frameStart, DateTime frameEnd, DateTime scanEnd, double[] deltas, double[] benchmarks)
         {
             Index = index;
             FrameStart = frameStart;
@@ -25,16 +26,18 @@ namespace LiveSplit.VAS.Models
             ScanEnd = scanEnd;
             WaitEnd = null;
             Deltas = deltas;
+            Benchmarks = benchmarks;
         }
 
-        public DeltaResults(int index, Scan scan, TimeStamp scanEnd, double[] deltas)
+        public DeltaResults(int index, Scan scan, DateTime scanEnd, double[] deltas, double[] benchmarks)
         {
             Index = index;
-            FrameStart = scan.PreviousFrame.TimeStamp;
-            FrameEnd = scan.CurrentFrame.TimeStamp;
+            FrameStart = scan.PreviousFrame.DateTime;
+            FrameEnd = scan.CurrentFrame.DateTime;
             ScanEnd = scanEnd;
             WaitEnd = null;
             Deltas = deltas;
+            Benchmarks = benchmarks;
         }
 
         public TimeSpan FrameDuration
@@ -53,8 +56,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        // No handling WaitEnd != null for now.
-        public TimeSpan WaitDuration
+        public TimeSpan? WaitDuration
         {
             get
             {
@@ -62,7 +64,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public TimeSpan ProcessDuration
+        public TimeSpan? ProcessDuration
         {
             get
             {

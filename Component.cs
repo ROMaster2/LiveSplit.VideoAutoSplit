@@ -36,7 +36,7 @@ namespace LiveSplit.UI.Components
         {
             _state = state;
 
-            _settings = new ComponentSettings();
+            _settings = new ComponentSettings(this);
 
             _fs_watcher = new FileSystemWatcher();
             _fs_watcher.Changed += async (sender, args) => {
@@ -45,13 +45,12 @@ namespace LiveSplit.UI.Components
             };
 
             Scanner.NewResult += (sender, dm) => UpdateScript(sender, dm);
-            Scanner.Start(); // Where else should this go?
         }
 
         public VASComponent(LiveSplitState state, string script_path)
             : this(state)
         {
-            _settings = new ComponentSettings(script_path);
+            _settings = new ComponentSettings(this, script_path);
         }
 
         public override void Dispose()
@@ -84,13 +83,14 @@ namespace LiveSplit.UI.Components
         public override void SetSettings(XmlNode settings)
         {
             _settings.SetSettings(settings);
+            UpdateScript(null, null);
         }
 
         public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height,
             LayoutMode mode)
         { }
 
-        private void UpdateScript(object sender, DeltaManager dm)
+        internal void UpdateScript(object sender, DeltaManager dm)
         {
             if (_settings.ScriptPath != _old_script_path || _do_reload)
             {
@@ -133,22 +133,35 @@ namespace LiveSplit.UI.Components
 
         private void LoadScript()
         {
-            Log.Info("[VASL] Loading new script: " + _settings.ScriptPath);
+            try {
+                Log.Info("[VASL] Loading new profile: " + _settings.ScriptPath);
 
-            _fs_watcher.Path = Path.GetDirectoryName(_settings.ScriptPath);
-            _fs_watcher.Filter = Path.GetFileName(_settings.ScriptPath);
-            _fs_watcher.EnableRaisingEvents = true;
+                var gp = GameProfile.FromZip(_settings.ScriptPath);
+                Scanner.GameProfile = gp;
 
-            var archive = ZipFile.OpenRead(_settings.ScriptPath);
-            var entries = archive.Entries;
-            var stream = entries.Where(z => z.Name == "script.asl").First().Open();
-            var script = new StreamReader(stream).ReadToEnd();
+                Log.Info("[VASL] Loading new script: " + _settings.ScriptPath);
 
-            // New script
-            Script = VASLParser.Parse(script);
+                _fs_watcher.Path = Path.GetDirectoryName(_settings.ScriptPath);
+                _fs_watcher.Filter = Path.GetFileName(_settings.ScriptPath + ".tmp");
+                _fs_watcher.EnableRaisingEvents = true;
 
-            Script.GameVersionChanged += (sender, version) => _settings.SetGameVersion(version);
-            _settings.SetGameVersion(null);
+                var archive = ZipFile.OpenRead(_settings.ScriptPath);
+                var entries = archive.Entries;
+                var stream = entries.Where(z => z.Name == "script.asl").First().Open();
+                var script = new StreamReader(stream).ReadToEnd();
+
+                // New script
+                Script = VASLParser.Parse(script);
+
+                Script.GameVersionChanged += (sender, version) => _settings.SetGameVersion(version);
+                _settings.SetGameVersion(null);
+            }
+            catch (Exception ex)
+            {
+                // Todo: Update UI if Game Profile failed to load.
+                Log.Error(ex);
+                ScriptCleanup();
+            }
 
             // Give custom VASL settings to GUI, which populates the list and
             // stores the VASLSetting objects which are shared between the GUI
@@ -157,6 +170,7 @@ namespace LiveSplit.UI.Components
             {
                 VASLSettings settings = Script.RunStartup(_state);
                 _settings.SetVASLSettings(settings);
+                Scanner.AsyncStart();
             }
             catch (Exception ex)
             {
@@ -168,6 +182,7 @@ namespace LiveSplit.UI.Components
 
         private void ScriptCleanup()
         {
+            Scanner.Stop();
             if (Script == null)
                 return;
 

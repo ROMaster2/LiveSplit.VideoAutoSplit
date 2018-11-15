@@ -6,20 +6,20 @@ namespace LiveSplit.VAS.Models
 {
     public struct Frame // Bad name idea?
     {
-        public readonly TimeStamp TimeStamp;
+        public readonly DateTime DateTime;
         public readonly Bitmap Bitmap;
 
-        public Frame(TimeStamp timeStamp, Bitmap bitmap)
+        public Frame(DateTime dateTime, Bitmap bitmap)
         {
-            TimeStamp = timeStamp;
+            DateTime = dateTime;
             Bitmap = bitmap;
         }
 
-        public static readonly Frame Blank = new Frame(TimeStamp.Now, new Bitmap(1, 1));
+        public static readonly Frame Blank = new Frame(TimeStamp.CurrentDateTime.Time, new Bitmap(1, 1));
 
         public Frame Clone()
         {
-            return new Frame(TimeStamp, (Bitmap)Bitmap.Clone());
+            return new Frame(DateTime, (Bitmap)Bitmap.Clone());
         }
     }
 }

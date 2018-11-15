@@ -24,15 +24,14 @@ namespace LiveSplit.VAS
 {
     static class Scanner
     {
-        public const int FEATURE_COUNT_LIMIT = DeltaManager.FEATURE_COUNT_LIMIT; // Temporary reference. TO REMOVE.
-
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
 
         public static Frame CurrentFrame = Frame.Blank;
         public static int CurrentIndex = 0;
-        public static bool IsScanning = false;
         public static bool IsScannerLocked = false;
+        public static int ScanningCount = 0;
+        public static bool IsScanning { get { return ScanningCount > 0; } }
 
         public static event DeltaResultsHandler NewResult;
 
@@ -168,9 +167,19 @@ namespace LiveSplit.VAS
         public static void Stop()
         {
             VideoSource.SignalToStop();
-            CurrentIndex = 0;
             UnsubscribeFromFrameHandler(new NewFrameEventHandler(HandleNewFrame));
-            VideoSource.WaitForStop();
+            while (Scanner.IsScanning) { Thread.Sleep(5); }
+            CurrentIndex = 0;
+            DeltaManager.History = new DeltaResults[DeltaManager.HistorySize];
+            VideoSource.Stop();
+            while (VideoSource.IsRunning)
+                Thread.Sleep(1);
+        }
+
+        public async static void AsyncStart()
+        {
+            await Task.Delay(1000);
+            Start();
         }
 
         public static void Start()
@@ -179,8 +188,10 @@ namespace LiveSplit.VAS
             if (GameProfile != null && IsVideoSourceValid())
             {
                 CurrentIndex = 0;
-                SubscribeToFrameHandler(new NewFrameEventHandler(HandleNewFrame));
                 VideoSource.Start();
+
+                initCount = 0;
+                SubscribeToFrameHandler(new NewFrameEventHandler(HandleNewFrame));
             }
         }
 
@@ -219,13 +230,7 @@ namespace LiveSplit.VAS
                     s.CropGeometry = CropGeometry;
                 }
 
-                IsScannerLocked = true; // Scanner.Stop()+Start() would cause a loop, so this is used instead.
-                while (IsScanning) { }
-
                 CompiledFeatures.Compile(GameProfile);
-
-                IsScannerLocked = false;
-
             }
         }
 
@@ -234,6 +239,10 @@ namespace LiveSplit.VAS
         {
             IMagickImage mi = input.Clone();
             mi.ColorSpace = colorSpace;
+            if (mi.ChannelCount != 3)
+            {
+                FuckingStop();
+            }
             if (channelIndex > -1)
             {
                 mi = input.Separate().ElementAt(channelIndex);
@@ -241,39 +250,47 @@ namespace LiveSplit.VAS
             return mi;
         }
 
+        private static void FuckingStop()
+        {
+            throw new Exception("Fuck");
+        }
+
+        internal static int initCount = 0; // To stop wasting CPU when first starting.
+
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
-            var now = TimeStamp.Now;
-            if (!IsScannerLocked)
+            var now = TimeStamp.CurrentDateTime.Time;
+            initCount++;
+            if (!IsScannerLocked && (initCount > 300 || initCount % 10 == 0) && !CompiledFeatures.IsPaused(now))
             {
-                IsScanning = true;
+                ScanningCount++;
                 // We should NOT be cloning this much, but then the previous frame gets disposed.
                 // I'll figure it out at some point...hopefully.
                 var newScan = new Scan(new Frame(now, (Bitmap)e.Frame.Clone()), CurrentFrame.Clone());
                 CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
+                var index = CurrentIndex;
                 CurrentIndex++;
-                Task.Run(() => NewRun(newScan, CurrentIndex));
+                Task.Factory.StartNew(() => NewRun(newScan, index));
             }
         }
 
         // Todo: prevFile isn't necessary. Instead store the features of the current scan to be used on the next.
-        // That can cause sync problems so it needs to be investigated.
-        //
-        // Also, unsafe is used as ref can't be passed through lambda.
+        // That could cause sync problems so it needs to be investigated.
         private static void NewRun(Scan scan, int index)
         {
-            var deltas = new double[FEATURE_COUNT_LIMIT];
+            var deltas = new double[CompiledFeatures.FeatureCount];
+            var benchmarks = new double[CompiledFeatures.FeatureCount];
             using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
             using (var prevFileImageBase = CompiledFeatures.HasDupeCheck ? new MagickImage(scan.PreviousFrame.Bitmap) : null)
             {
                 foreach (var cWatchZone in CompiledFeatures.CWatchZones)
-                    CropScan(ref deltas, fileImageBase, prevFileImageBase, cWatchZone);
+                    CropScan(ref deltas, ref benchmarks, scan.CurrentFrame.DateTime, fileImageBase, prevFileImageBase, cWatchZone);
             }
-            IsScanning = false;
-            var scanEnd = TimeStamp.Now;
-            DeltaManager.AddResult(index, scan, scanEnd, deltas);
-            NewResult(null, new DeltaManager(index, AverageFPS)); // Testing AverageFPS part
+            ScanningCount--;
+            var scanEnd = TimeStamp.CurrentDateTime.Time;
             scan.Dispose();
+            DeltaManager.AddResult(index, scan, scanEnd, deltas, benchmarks);
+            NewResult(null, new DeltaManager(index, AverageFPS));
 
             // It's on its own thread so running it here should be okay.
             if (index % 30 == 0)
@@ -291,11 +308,11 @@ namespace LiveSplit.VAS
                         sumFPS += fd;
                         minFPS = Math.Min(minFPS, fd);
                         maxFPS = Math.Max(maxFPS, fd);
-                        var sd = d.ScanDuration.TotalMilliseconds;
+                        var sd = d.ScanDuration.TotalSeconds;
                         sumScanTime += sd;
                         minScanTime = Math.Min(minScanTime, sd);
                         maxScanTime = Math.Max(maxScanTime, sd);
-                        var wd = d.WaitEnd != null ? d.WaitDuration.TotalMilliseconds : AverageWaitTime;
+                        var wd = d.WaitDuration?.TotalSeconds ?? AverageWaitTime;
                         sumWaitTime += wd;
                         minWaitTime = Math.Min(minWaitTime, wd);
                         maxWaitTime = Math.Max(maxWaitTime, wd);
@@ -316,46 +333,82 @@ namespace LiveSplit.VAS
             }
         }
 
-        private static void EnumerateWatchZones(ref double[] deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase)
+        private static void CropScan(ref double[] deltas, ref double[] benchmarks, DateTime now, IMagickImage fileImageBase, IMagickImage prevFileImageBase, CWatchZone cWatchZone)
         {
-            foreach (var cWatchZone in CompiledFeatures.CWatchZones) CropScan(ref deltas, fileImageBase, prevFileImageBase, cWatchZone);
-        }
-
-        private static void CropScan(ref double[] deltas, IMagickImage fileImageBase, IMagickImage prevFileImageBase, CWatchZone cWatchZone)
-        {
-            using (var fileImageCropped = fileImageBase.Clone(cWatchZone.MagickGeometry))
-            using (var prevFileImageCropped = CompiledFeatures.HasDupeCheck ? prevFileImageBase.Clone(cWatchZone.MagickGeometry) : null)
+            if (!cWatchZone.IsPaused(now))
             {
-                foreach (var cWatcher in cWatchZone.CWatches) ComposeScan(ref deltas, fileImageCropped, prevFileImageCropped, cWatcher);
-            }
-        }
-
-        private static void ComposeScan(ref double[] deltas, IMagickImage fileImageCropped, IMagickImage prevFileImageCropped, CWatcher cWatcher)
-        {
-            using (var fileImageComposed = GetComposedImage(fileImageCropped, cWatcher.Channel, cWatcher.ColorSpace))
-            using (var prevFileImageComposed = CompiledFeatures.HasDupeCheck ? GetComposedImage(prevFileImageCropped, cWatcher.Channel, cWatcher.ColorSpace) : null)
-            {
-                if (cWatcher.Equalize)
+                using (var fileImageCropped = fileImageBase.Clone(cWatchZone.MagickGeometry))
+                using (var prevFileImageCropped = CompiledFeatures.HasDupeCheck ? prevFileImageBase.Clone(cWatchZone.MagickGeometry) : null)
                 {
-                    fileImageComposed.Equalize();
-                    if (CompiledFeatures.HasDupeCheck) prevFileImageComposed.Equalize();
+                    foreach (var cWatcher in cWatchZone.CWatches) ComposeScan(ref deltas, ref benchmarks, now, fileImageCropped, prevFileImageCropped, cWatcher);
                 }
-
-                if (cWatcher.IsStandard)
-                    foreach (var cWatchImage in cWatcher.CWatchImages) CompareAgainstFeature(ref deltas, fileImageComposed, cWatcher, cWatchImage);
-                else
-                    throw new NotImplementedException("todo lol");
+            }
+            else
+            {
+                foreach (var cWatcher in cWatchZone.CWatches)
+                {
+                    foreach (var cWatchImage in cWatcher.CWatchImages)
+                    {
+                        deltas[cWatchImage.Index] = double.NaN;
+                        benchmarks[cWatchImage.Index] = 0;
+                    }
+                }
             }
         }
 
-        private static void CompareAgainstFeature(ref double[] deltas, IMagickImage fileImageComposed, CWatcher cWatcher, CWatchImage cWatchImage)
+        private static void ComposeScan(ref double[] deltas, ref double[] benchmarks, DateTime now, IMagickImage fileImageCropped, IMagickImage prevFileImageCropped, CWatcher cWatcher)
         {
-            using (var fileImageCompare = fileImageComposed.Clone())
-            using (var deltaImage = cWatchImage.MagickImage.Clone())
+            if (!cWatcher.IsPaused(now))
             {
-                if (cWatchImage.HasAlpha) fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
+                using (var fileImageComposed = GetComposedImage(fileImageCropped, cWatcher.Channel, cWatcher.ColorSpace))
+                using (var prevFileImageComposed = CompiledFeatures.HasDupeCheck ? GetComposedImage(prevFileImageCropped, cWatcher.Channel, cWatcher.ColorSpace) : null)
+                {
+                    if (cWatcher.Equalize)
+                    {
+                        fileImageComposed.Equalize();
+                        if (CompiledFeatures.HasDupeCheck) prevFileImageComposed.Equalize();
+                    }
 
-                SetDelta(ref deltas, fileImageCompare, deltaImage, cWatcher, cWatchImage);
+                    if (cWatcher.IsStandard)
+                        foreach (var cWatchImage in cWatcher.CWatchImages) CompareAgainstFeature(ref deltas, ref benchmarks, now, fileImageComposed, cWatcher, cWatchImage);
+                    else
+                        throw new NotImplementedException("todo lol");
+                }
+            }
+            else
+            {
+                foreach (var cWatchImage in cWatcher.CWatchImages)
+                {
+                    deltas[cWatchImage.Index] = double.NaN;
+                    benchmarks[cWatchImage.Index] = 0;
+                }
+            }
+        }
+
+        private static void CompareAgainstFeature(
+            ref double[] deltas,
+            ref double[] benchmarks,
+            DateTime now,
+            IMagickImage fileImageComposed,
+            CWatcher cWatcher,
+            CWatchImage cWatchImage)
+        {
+            if (!cWatchImage.IsPaused(now))
+            {
+                var benchmark = TimeStamp.Now;
+                using (var fileImageCompare = fileImageComposed.Clone())
+                using (var deltaImage = cWatchImage.MagickImage.Clone())
+                {
+                    if (cWatchImage.HasAlpha) fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
+
+                    SetDelta(ref deltas, fileImageCompare, deltaImage, cWatcher, cWatchImage);
+                    SetBenchmark(ref benchmarks, benchmark, cWatchImage);
+                }
+            }
+            else
+            {
+                deltas[cWatchImage.Index] = double.NaN;
+                benchmarks[cWatchImage.Index] = 0;
             }
         }
 
@@ -368,5 +421,11 @@ namespace LiveSplit.VAS
         {
             deltas[cWatchImage.Index] = fileImageCompare.Compare(deltaImage, cWatcher.ErrorMetric);
         }
+
+        private static void SetBenchmark(ref double[] benchmarks, TimeStamp timeStamp, CWatchImage cWatchImage)
+        {
+            benchmarks[cWatchImage.Index] = (TimeStamp.Now - timeStamp).TotalSeconds;
+        }
+
     }
 }

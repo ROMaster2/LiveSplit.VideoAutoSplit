@@ -90,9 +90,10 @@ namespace LiveSplit.VAS.Models
             {
                 throw new Exception("Multiple XML files found, we only need one.");
             }
-            var stream = xmlFiles.First().Open();
+            var stream = xmlFiles.First();
+            var test = stream.Open();
 
-            GameProfile gp = FromXml(stream);
+            GameProfile gp = FromXml(test);
 
             foreach (var s in gp.Screens)
             {

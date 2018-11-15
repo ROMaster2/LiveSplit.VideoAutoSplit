@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using LiveSplit.Model;
 
 namespace LiveSplit.VAS.Models
 {
@@ -15,22 +17,26 @@ namespace LiveSplit.VAS.Models
         public static int PixelLimit { get; private set; }
         public static int PixelCount { get; private set; }
         public static IReadOnlyDictionary<string, int> IndexNames { get; private set; }
+        internal static IDictionary<int, long> PauseIndex { get; set; }
 
         public static void Compile(GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
         {
+            Scanner.IsScannerLocked = true;
+            while (Scanner.ScanningCount > 0) { Thread.Sleep(5); }
+
             if (CWatchZones != null)
             {
                 foreach (var cWatchZone in CWatchZones)
                 {
                     cWatchZone.Dispose();
                 }
-                Array.Clear(CWatchZones, 0, CWatchZones.Length);
             }
             HasDupeCheck = false;
-            PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. This won't be easy.
+            PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
             PixelCount = 0;
 
-            var tmpDictionary = new Dictionary<string, int>();
+            var nameDictionary = new Dictionary<string, int>();
+            var pauseDictionary = new Dictionary<int, long>();
 
             var cWatchZones = new CWatchZone[gameProfile.WatchZones.Count];
             var indexCount = 0;
@@ -62,12 +68,15 @@ namespace LiveSplit.VAS.Models
                             var mi = new MagickImage(watchImage.Image) { ColorSpace = watcher.ColorSpace };
 
                             GetComposedImage(ref mi, watcher.Channel);
-                            mi.Write(@"E:\memes0.png");
-                            PreciseResize(ref mi, watchZone.Geometry, gameGeo, screen.CropGeometry, watcher.ColorSpace);
+                            if (indexCount == 0 ) mi.Write(@"E:\memes0.png"); // DEBUGGING
+                            StandardResize(ref mi, wzCropGeo);
+                            if (indexCount == 0) mi.Write(@"E:\memes1.png"); // DEBUGGING
+                            //PreciseResize(ref mi, watchZone.Geometry, gameGeo, screen.CropGeometry, watcher.ColorSpace);
                             if (watcher.Equalize) mi.Equalize();
 
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
-                            AddIndexName(tmpDictionary, indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
+                            pauseDictionary.Add(indexCount, -DateTime.MaxValue.Ticks);
+                            AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
                             PixelCount += mi.Width * mi.Height;
                             indexCount++;
                         }
@@ -88,10 +97,13 @@ namespace LiveSplit.VAS.Models
                 cWatchZones[i1] = new CWatchZone(watchZone.Name, wzCropGeo, CWatches);
             }
 
-            IndexNames = tmpDictionary;
+            IndexNames = nameDictionary;
+            PauseIndex = pauseDictionary;
             FeatureCount = indexCount;
-            ValidateIndexNames();
             CWatchZones = cWatchZones;
+
+            Scanner.IsScannerLocked = false;
+            ValidateIndexNames();
         }
 
         private static void AddIndexName(IDictionary<string, int> dictionary, int index, string name1, string name2, string name3)
@@ -129,10 +141,11 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public static void StandardResize(ref MagickImage mi, MagickGeometry geo)
+        public static void StandardResize(ref MagickImage mi, Geometry geo)
         {
-            geo.IgnoreAspectRatio = true;
-            mi.Scale(geo);
+            var mGeo = geo.ToMagick(false);
+            mGeo.IgnoreAspectRatio = true;
+            mi.Scale(mGeo);
             mi.RePage();
         }
 
@@ -176,6 +189,37 @@ namespace LiveSplit.VAS.Models
             }
         }
 
+        public static void PauseFeature(int index, DateTime untilTime)
+        {
+            PauseIndex[index] = untilTime.Ticks;
+            //EvaluatePauses(untilTime);
+        }
+
+        public static void ResumeFeature(int index, DateTime untilTime)
+        {
+            PauseIndex[index] = -untilTime.Ticks;
+            //EvaluatePauses(untilTime);
+        }
+
+        public static bool IsPaused(DateTime dateTime)
+        {
+            return CWatchZones.All(wz => wz.IsPaused(dateTime));
+        }
+
+        /*
+        public static void EvaluatePauses(DateTime untilTime)
+        {
+            for (int i = 0; i < CWatchZones.Length; i++)
+            {
+                for (int n = 0; n < CWatchZones[i].CWatches.Length; n++)
+                {
+                    CWatchZones[i].CWatches[n]._IsPaused = CWatchZones[i].CWatches[n].CWatchImages.All(wi => wi.IsPaused(untilTime));
+                }
+                CWatchZones[i]._IsPaused = CWatchZones[i].CWatches.All(w => w._IsPaused);
+            }
+            HasDupeCheck = CWatchZones.All(wz => wz.CWatches.All(w => w.IsDuplicateFrame && !w._IsPaused));
+        }
+        */
     }
 
     public struct CWatchZone
@@ -186,18 +230,25 @@ namespace LiveSplit.VAS.Models
             TrueGeometry = geometry;
             MagickGeometry = geometry.ToMagick();
             CWatches = cWatches;
+            _IsPaused = false;
         }
         public string Name { get; }
         public Geometry TrueGeometry { get; }
         public MagickGeometry MagickGeometry { get; }
         public CWatcher[] CWatches { get; }
+        internal bool _IsPaused { get; set; }
+
+        public bool IsPaused(DateTime dateTime)
+        {
+            return CWatches.All(w => w.IsPaused(dateTime));
+        }
+
         public void Dispose()
         {
             foreach (var cWatcher in CWatches)
             {
                 cWatcher.Dispose();
             }
-            Array.Clear(CWatches, 0, CWatches.Length);
         }
     }
 
@@ -248,13 +299,18 @@ namespace LiveSplit.VAS.Models
 
         public bool IsStandard;
         public bool IsDuplicateFrame;
+
+        public bool IsPaused(DateTime dateTime)
+        {
+            return CWatchImages.All(wi => wi.IsPaused(dateTime));
+        }
+
         public void Dispose()
         {
             foreach (var cWatchImage in CWatchImages)
             {
                 cWatchImage.Dispose();
             }
-            Array.Clear(CWatchImages, 0, CWatchImages.Length);
         }
     }
 
@@ -270,7 +326,7 @@ namespace LiveSplit.VAS.Models
             TransparencyRate = MagickImage.TransparencyRate();
         }
 
-        // Duplicate dummy
+        // Dummy for Dupe Frame checking
         public CWatchImage(string name, int index)
         {
             Name = name;
@@ -285,9 +341,25 @@ namespace LiveSplit.VAS.Models
         public IMagickImage MagickImage { get; }
         public bool HasAlpha { get; }
         public double TransparencyRate { get; }
+
+        public bool IsPaused(DateTime dateTime)
+        {
+            long value = CompiledFeatures.PauseIndex[Index];
+            long now = dateTime.Ticks;
+            return value > 0L ? value > now : -value < now;
+        }
+
         public void Dispose()
         {
             MagickImage?.Dispose();
+        }
+
+        internal bool Testing
+        {
+            get
+            {
+                return IsPaused(TimeStamp.CurrentDateTime.Time);
+            }
         }
     }
 }

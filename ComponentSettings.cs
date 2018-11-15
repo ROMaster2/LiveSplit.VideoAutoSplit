@@ -13,6 +13,8 @@ using System.IO;
 using LiveSplit.VAS.Models;
 using LiveSplit.VAS.VASL;
 using Accord.Video.DirectShow;
+using LiveSplit.UI.Components;
+using LiveSplit.VAS.Forms;
 
 namespace LiveSplit.VAS
 {
@@ -44,9 +46,11 @@ namespace LiveSplit.VAS
         // Custom settings
         private Dictionary<string, bool> _custom_settings_state;
 
+        private readonly VASComponent Component;
 
-        public ComponentSettings()
+        public ComponentSettings(VASComponent component)
         {
+            Component = component;
             InitializeComponent();
             FillboxCaptureDevice();
 
@@ -70,8 +74,8 @@ namespace LiveSplit.VAS
             _custom_settings_state = new Dictionary<string, bool>();
         }
 
-        public ComponentSettings(string scriptPath)
-            : this()
+        public ComponentSettings(VASComponent component, string scriptPath)
+            : this(component)
         {
             ScriptPath = scriptPath;
             _ignore_next_path_setting = true;
@@ -81,8 +85,13 @@ namespace LiveSplit.VAS
         {
             XmlElement settings_node = document.CreateElement("Settings");
 
-            settings_node.AppendChild(SettingsHelper.ToElement(document, "Version", "0.1"));
+            settings_node.AppendChild(SettingsHelper.ToElement(document, "Version",    "0.1"));
             settings_node.AppendChild(SettingsHelper.ToElement(document, "ScriptPath", ScriptPath));
+            // Todo: Handle when Scanner.CropGeometry == Scanner.VideoGeometry.
+            settings_node.AppendChild(SettingsHelper.ToElement(document, "CropX",      Scanner.CropGeometry.X));
+            settings_node.AppendChild(SettingsHelper.ToElement(document, "CropY",      Scanner.CropGeometry.Y));
+            settings_node.AppendChild(SettingsHelper.ToElement(document, "CropWidth",  Scanner.CropGeometry.Width));
+            settings_node.AppendChild(SettingsHelper.ToElement(document, "CropHeight", Scanner.CropGeometry.Height));
             AppendBasicSettingsToXml(document, settings_node);
             AppendCustomSettingsToXml(document, settings_node);
 
@@ -99,6 +108,15 @@ namespace LiveSplit.VAS
                 if (!_ignore_next_path_setting)
                     ScriptPath = SettingsHelper.ParseString(element["ScriptPath"], string.Empty);
                 _ignore_next_path_setting = false;
+
+                var geo = new Geometry()
+                {
+                    X =      SettingsHelper.ParseDouble(element["CropX"], 0),
+                    Y =      SettingsHelper.ParseDouble(element["CropY"], 0),
+                    Width =  SettingsHelper.ParseDouble(element["CropWidth"], 0),
+                    Height = SettingsHelper.ParseDouble(element["CropHeight"], 0)
+                };
+
                 ParseBasicSettingsFromXml(element);
                 ParseCustomSettingsFromXml(element);
 
@@ -106,11 +124,11 @@ namespace LiveSplit.VAS
                 {
                     var gp = GameProfile.FromZip(ScriptPath);
                     Scanner.GameProfile = gp;
-                    Scanner.Start();
+                    Scanner.CropGeometry = geo;
                 }
                 catch (Exception e)
                 {
-                    LiveSplit.Options.Log.Error(e);
+                    LiveSplit.Options.Log.Error(e); // Change, probably
                 }
             }
         }
@@ -134,7 +152,13 @@ namespace LiveSplit.VAS
         /// </summary>
         public void ResetVASLSettings()
         {
-            InitVASLSettings(new VASLSettings(), false);
+            if (IsHandleCreated)
+            {
+                BeginInvoke((MethodInvoker)delegate ()
+                {
+                    InitVASLSettings(new VASLSettings(), false);
+                });
+            }
         }
 
         // Todo: Later
@@ -505,11 +529,10 @@ namespace LiveSplit.VAS
                     }
                     else
                     {
-                        Scanner.GameProfile = gp;
+                        //Scanner.GameProfile = gp;
                         ScriptPath = this.txtGameProfile.Text = ofd.FileName;
-                        Scanner.Start();
-                        //Properties.Settings.Default.GameProfile = ofd.FileName;
-                        //Properties.Settings.Default.Save();
+                        //Scanner.AsyncStart();
+                        Component.UpdateScript(null, null);
                     }
                 }
             }
@@ -606,8 +629,11 @@ namespace LiveSplit.VAS
 
         private void BtnSetCaptureRegion_Click(object sender, EventArgs e)
         {
-            LiveSplit.VAS.Forms.Aligner w = new LiveSplit.VAS.Forms.Aligner();
-            w.Show();
+            using (Aligner w = new Aligner())
+            {
+                w.ShowDialog();
+
+            }
         }
 
 
