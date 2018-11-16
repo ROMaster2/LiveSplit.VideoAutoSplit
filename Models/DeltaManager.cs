@@ -164,9 +164,9 @@ namespace LiveSplit.VAS.Models
             return result;
         }
 
-    #region VASL Syntax
+        #region VASL Syntax
 
-    public DeltaManager this[int i]
+        public DeltaManager this[int i]
         {
             get
             {
