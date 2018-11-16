@@ -90,10 +90,10 @@ namespace LiveSplit.VAS.Models
                     {
                         HasDupeCheck = true;
 
-                        CWatches[i2] = new CWatcher(new CWatchImage[] { new CWatchImage(watcher.Name, indexCount, null) }, watcher);
+                        CWatches[i2] = new CWatcher(new CWatchImage[] { new CWatchImage(watcher.Name, indexCount) }, watcher);
 
                         pauseDictionary.Add(indexCount, -DateTime.MaxValue.Ticks);
-                        AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, watcher.Name);
+                        AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, string.Empty);
                         PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
                         indexCount++;
                     }
