@@ -78,7 +78,7 @@ namespace LiveSplit.VAS.Models
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
                             pauseDictionary.Add(indexCount, -DateTime.MaxValue.Ticks);
                             AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
-                            PixelCount += mi.Width * mi.Height;
+                            PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
                             indexCount++;
                         }
 
