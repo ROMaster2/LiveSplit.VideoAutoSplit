@@ -163,7 +163,7 @@ namespace LiveSplit.VAS
                 s.CropGeometry = Scanner.CropGeometry;
             }
 
-            CompiledFeatures.Compile(gp);
+            //CompiledFeatures.Compile(gp);
 
             /*
             var x = new MagickReadSettings()

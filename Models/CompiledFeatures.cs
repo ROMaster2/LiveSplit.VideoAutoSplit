@@ -139,7 +139,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public static void StandardResize(ref MagickImage mi, Geometry geo)
+        private static void StandardResize(ref MagickImage mi, Geometry geo)
         {
             var mGeo = geo.ToMagick(false);
             mGeo.IgnoreAspectRatio = true;
@@ -148,7 +148,7 @@ namespace LiveSplit.VAS.Models
         }
 
         // Todo: Test this more...and clean it up.
-        public static void PreciseResize(ref MagickImage mi, Geometry wzGeo, Geometry gameGeo, Geometry cropGeo, ColorSpace cs)
+        private static void PreciseResize(ref MagickImage mi, Geometry wzGeo, Geometry gameGeo, Geometry cropGeo, ColorSpace cs)
         {
             var underlay = new MagickImage(MagickColors.Transparent, (int)gameGeo.Width, (int)gameGeo.Height) { ColorSpace = cs };
             var point = wzGeo.LocationWithoutAnchor(gameGeo);
@@ -165,7 +165,7 @@ namespace LiveSplit.VAS.Models
 
         // May need to update to support multiple channels.
         // Todo: Put this elsewhere. It's copied from Scanner.cs...
-        public static void GetComposedImage(ref MagickImage mi, int channelIndex)
+        private static void GetComposedImage(ref MagickImage mi, int channelIndex)
         {
             if (channelIndex > -1)
             {
@@ -211,13 +211,11 @@ namespace LiveSplit.VAS.Models
             TrueGeometry = geometry;
             MagickGeometry = geometry.ToMagick();
             CWatches = cWatches;
-            _IsPaused = false;
         }
         public string Name { get; }
         public Geometry TrueGeometry { get; }
         public MagickGeometry MagickGeometry { get; }
         public CWatcher[] CWatches { get; }
-        internal bool _IsPaused { get; set; }
 
         public bool IsPaused(DateTime dateTime)
         {
@@ -278,8 +276,8 @@ namespace LiveSplit.VAS.Models
         public ErrorMetric ErrorMetric { get; }
         public CWatchImage[] CWatchImages { get; }
 
-        public bool IsStandard;
-        public bool IsDuplicateFrame;
+        public bool IsStandard { get; }
+        public bool IsDuplicateFrame { get; }
 
         public bool IsPaused(DateTime dateTime)
         {
