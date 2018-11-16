@@ -62,6 +62,9 @@ namespace LiveSplit.VAS.Models
                     {
                         var CWatchImages = new CWatchImage[watcher.WatchImages.Count];
 
+                        if (wiCount <= 0)
+                            throw new ArgumentException("Standard Watchers require at least one image to compare against.");
+
                         for (int i3 = 0; i3 < watcher.WatchImages.Count; i3++)
                         {
                             WatchImage watchImage = watcher.WatchImages[i3];
