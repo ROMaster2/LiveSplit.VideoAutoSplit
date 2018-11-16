@@ -60,12 +60,13 @@ namespace LiveSplit.VAS.Models
 
                     if (watcher.WatcherType == WatcherType.Standard)
                     {
-                        var CWatchImages = new CWatchImage[watcher.WatchImages.Count];
+                        var wiCount = watcher.WatchImages.Count;
+                        var CWatchImages = new CWatchImage[wiCount];
 
                         if (wiCount <= 0)
                             throw new ArgumentException("Standard Watchers require at least one image to compare against.");
 
-                        for (int i3 = 0; i3 < watcher.WatchImages.Count; i3++)
+                        for (int i3 = 0; i3 < wiCount; i3++)
                         {
                             WatchImage watchImage = watcher.WatchImages[i3];
                             var mi = new MagickImage(watchImage.Image) { ColorSpace = watcher.ColorSpace };
@@ -76,6 +77,7 @@ namespace LiveSplit.VAS.Models
                             if (watcher.Equalize) mi.Equalize();
 
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
+
                             pauseDictionary.Add(indexCount, -DateTime.MaxValue.Ticks);
                             AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
                             PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
@@ -87,7 +89,13 @@ namespace LiveSplit.VAS.Models
                     else if (watcher.WatcherType == WatcherType.DuplicateFrame)
                     {
                         HasDupeCheck = true;
-                        throw new NotImplementedException("todo lol");
+
+                        CWatches[i2] = new CWatcher(new CWatchImage[] { new CWatchImage(watcher.Name, indexCount, null) }, watcher);
+
+                        pauseDictionary.Add(indexCount, -DateTime.MaxValue.Ticks);
+                        AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, watcher.Name);
+                        PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
+                        indexCount++;
                     }
                     else
                     {

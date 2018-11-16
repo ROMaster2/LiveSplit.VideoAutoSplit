@@ -362,8 +362,10 @@ namespace LiveSplit.VAS
 
                     if (cWatcher.IsStandard)
                         foreach (var cWatchImage in cWatcher.CWatchImages) CompareAgainstFeature(ref deltas, ref benchmarks, now, fileImageComposed, cWatcher, cWatchImage);
+                    else if (cWatcher.IsDuplicateFrame)
+                        CompareAgainstPreviousFrame(ref deltas, ref benchmarks, now, fileImageComposed, prevFileImageComposed, cWatcher);
                     else
-                        throw new NotImplementedException("todo lol");
+                        throw new NotImplementedException("How'd you get here?");
                 }
             }
             else
@@ -393,6 +395,32 @@ namespace LiveSplit.VAS
                     if (cWatchImage.HasAlpha) fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
 
                     SetDelta(ref deltas, fileImageCompare, deltaImage, cWatcher, cWatchImage);
+                    SetBenchmark(ref benchmarks, benchmark, cWatchImage);
+                }
+            }
+            else
+            {
+                deltas[cWatchImage.Index] = double.NaN;
+                benchmarks[cWatchImage.Index] = 0;
+            }
+        }
+
+        private static void CompareAgainstPreviousFrame(
+            ref double[] deltas,
+            ref double[] benchmarks,
+            DateTime now,
+            IMagickImage fileImageComposed,
+            IMagickImage prevFileImageComposed,
+            CWatcher cWatcher)
+        {
+            var cWatchImage = cWatcher.CWatchImages[0];
+            if (!cWatchImage.IsPaused(now))
+            {
+                var benchmark = TimeStamp.Now;
+                using (var fileImageCompare = fileImageComposed.Clone())
+                using (var prevFileImageCompare = prevFileImageComposed.Clone())
+                {
+                    SetDelta(ref deltas, fileImageCompare, prevFileImageCompare, cWatcher, cWatchImage);
                     SetBenchmark(ref benchmarks, benchmark, cWatchImage);
                 }
             }
