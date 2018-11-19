@@ -32,6 +32,14 @@ namespace LiveSplit.UI.Components
 
         private LiveSplitState _state;
 
+        private string scriptPath
+        {
+            get
+            {
+                return _settings?.ScriptPath;
+            }
+        }
+
         public VASComponent(LiveSplitState state)
         {
             _state = state;
@@ -92,16 +100,16 @@ namespace LiveSplit.UI.Components
 
         internal void UpdateScript(object sender, DeltaManager dm)
         {
-            if (_settings.ScriptPath != _old_script_path || _do_reload)
+            if (scriptPath != _old_script_path || _do_reload)
             {
                 try
                 {
                     _do_reload = false;
-                    _old_script_path = _settings.ScriptPath;
+                    _old_script_path = scriptPath;
 
                     ScriptCleanup();
 
-                    if (string.IsNullOrEmpty(_settings.ScriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
                         _fs_watcher.EnableRaisingEvents = false;
                     }
@@ -133,22 +141,36 @@ namespace LiveSplit.UI.Components
 
         private void LoadScript()
         {
-            try {
-                Log.Info("[VASL] Loading new profile: " + _settings.ScriptPath);
+            try
+            {
+                Log.Info("[VASL] Loading new profile: " + scriptPath);
 
-                var gp = GameProfile.FromZip(_settings.ScriptPath);
-                Scanner.GameProfile = gp;
+                GameProfile gp;
 
-                Log.Info("[VASL] Loading new script: " + _settings.ScriptPath);
+                if (File.Exists(scriptPath))
+                    gp = GameProfile.FromZip(scriptPath);
+                else if (Directory.Exists(scriptPath))
+                    gp = GameProfile.FromFolder(scriptPath);
+                else
+                    throw new FileNotFoundException();
 
-                _fs_watcher.Path = Path.GetDirectoryName(_settings.ScriptPath);
-                _fs_watcher.Filter = Path.GetFileName(_settings.ScriptPath + ".tmp");
+
+                if (File.Exists(scriptPath))
+                {
+                    _fs_watcher.Path = Path.GetDirectoryName(scriptPath);
+                    _fs_watcher.Filter = Path.GetFileName(scriptPath + "*");
+                }
+                else
+                {
+                    _fs_watcher.Path = scriptPath;
+                    _fs_watcher.Filter = null;
+                }
+
                 _fs_watcher.EnableRaisingEvents = true;
 
-                var archive = ZipFile.OpenRead(_settings.ScriptPath);
-                var entries = archive.Entries;
-                var stream = entries.Where(z => z.Name == "script.asl").First().Open();
-                var script = new StreamReader(stream).ReadToEnd();
+                Log.Info("[VASL] Loading script within profile.");
+
+                var script = gp.RawScript;
 
                 // New script
                 Script = VASLParser.Parse(script);

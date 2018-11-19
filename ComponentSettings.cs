@@ -122,7 +122,15 @@ namespace LiveSplit.VAS
 
                 try
                 {
-                    var gp = GameProfile.FromZip(ScriptPath);
+                    GameProfile gp;
+
+                    if (File.Exists(ScriptPath))
+                        gp = GameProfile.FromZip(ScriptPath);
+                    else if (Directory.Exists(ScriptPath))
+                        gp = GameProfile.FromFolder(ScriptPath);
+                    else
+                        throw new FileNotFoundException();
+
                     Scanner.GameProfile = gp;
                     Scanner.CropGeometry = geo;
                 }
@@ -498,9 +506,22 @@ namespace LiveSplit.VAS
             UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);*/
         }
 
+        // Temporary until better UI solution
         private void BtnGameProfile_Click(object sender, EventArgs e)
         {
-            using (var ofd = new OpenFileDialog() { Filter = "Zip Files|*.zip", Title = "Load a Game Profile" })
+            if (ModifierKeys.HasFlag(Keys.Shift))
+                SetGameProfileWithFolder();
+            else
+                SetGameProfileWithFile();
+        }
+
+        private void SetGameProfileWithFile()
+        {
+            using (var ofd = new OpenFileDialog()
+            {
+                Filter = "VASL files (*.vasl)|*.vasl|ZIP files|*.zip|All files (*.*)|*.*",
+                Title = "Load a Game Profile"
+            })
             {
                 if (File.Exists(ScriptPath))
                 {
@@ -510,7 +531,7 @@ namespace LiveSplit.VAS
 
                 if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists == true)
                 {
-                retry:
+                    retry:
                     var gp = GameProfile.FromZip(ofd.FileName);
 
                     if (gp == null)
@@ -532,6 +553,47 @@ namespace LiveSplit.VAS
                         //Scanner.GameProfile = gp;
                         ScriptPath = this.txtGameProfile.Text = ofd.FileName;
                         //Scanner.AsyncStart();
+                        Component.UpdateScript(null, null);
+                    }
+                }
+            }
+        }
+
+        private void SetGameProfileWithFolder()
+        {
+            using (var fbd = new FolderBrowserDialog() { ShowNewFolderButton = false } )
+            {
+                if (Directory.Exists(ScriptPath))
+                {
+                    fbd.SelectedPath = ScriptPath;
+                }
+                else if (File.Exists(ScriptPath))
+                {
+                    fbd.SelectedPath = Path.GetDirectoryName(ScriptPath);
+                }
+
+                if (fbd.ShowDialog() == DialogResult.OK && Directory.Exists(fbd.SelectedPath))
+                {
+                    retry:
+                    var gp = GameProfile.FromFolder(fbd.SelectedPath);
+
+                    if (gp == null)
+                    {
+                        DialogResult dr = MessageBox.Show(
+                            "Failed to load Game Profile.",
+                            "Error",
+                            MessageBoxButtons.RetryCancel,
+                            MessageBoxIcon.Error
+                            );
+
+                        if (dr == DialogResult.Retry)
+                        {
+                            goto retry;
+                        }
+                    }
+                    else
+                    {
+                        ScriptPath = this.txtGameProfile.Text = fbd.SelectedPath;
                         Component.UpdateScript(null, null);
                     }
                 }
