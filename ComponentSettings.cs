@@ -624,7 +624,7 @@ namespace LiveSplit.VAS
                     FillboxCaptureDevice();
                 }
             }
-            Scanner.Start();
+            Scanner.AsyncStart();
         }
 
         private void BtnSetCaptureRegion_Click(object sender, EventArgs e)

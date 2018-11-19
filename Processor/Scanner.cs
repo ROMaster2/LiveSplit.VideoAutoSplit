@@ -24,6 +24,8 @@ namespace LiveSplit.VAS
 {
     static class Scanner
     {
+        public static Thread Thread;
+
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
 
@@ -174,12 +176,17 @@ namespace LiveSplit.VAS
             VideoSource.Stop();
             while (VideoSource.IsRunning)
                 Thread.Sleep(1);
+            Thread?.Abort();
         }
 
-        public async static void AsyncStart()
+        public static void AsyncStart()
         {
-            await Task.Delay(1000);
-            Start();
+            if (!Thread?.IsAlive ?? false)
+            {
+                ThreadStart t = new ThreadStart(Start);
+                Thread = new Thread(t);
+                Thread.Start();
+            }
         }
 
         public static void Start()
@@ -198,6 +205,7 @@ namespace LiveSplit.VAS
         public static void Restart()
         {
             Stop();
+            Thread.Sleep(500);
             Start();
         }
 
