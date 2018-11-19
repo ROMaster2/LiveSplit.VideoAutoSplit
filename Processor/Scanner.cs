@@ -170,12 +170,11 @@ namespace LiveSplit.VAS
         {
             VideoSource.SignalToStop();
             UnsubscribeFromFrameHandler(new NewFrameEventHandler(HandleNewFrame));
-            while (Scanner.IsScanning) { Thread.Sleep(5); }
+            while (IsScanning) Thread.Sleep(1);
             CurrentIndex = 0;
             DeltaManager.History = new DeltaResults[DeltaManager.HistorySize];
             VideoSource.Stop();
-            while (VideoSource.IsRunning)
-                Thread.Sleep(1);
+            while (VideoSource.IsRunning) Thread.Sleep(1);
             Thread?.Abort();
         }
 
@@ -205,7 +204,7 @@ namespace LiveSplit.VAS
         public static void Restart()
         {
             Stop();
-            Thread.Sleep(500);
+            Thread.Sleep(200);
             Start();
         }
 
@@ -238,7 +237,9 @@ namespace LiveSplit.VAS
                     s.CropGeometry = CropGeometry;
                 }
 
+                IsScannerLocked = true;
                 CompiledFeatures.Compile(GameProfile);
+                IsScannerLocked = false;
             }
         }
 

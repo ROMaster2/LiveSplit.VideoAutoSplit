@@ -21,8 +21,7 @@ namespace LiveSplit.VAS.Models
 
         public static void Compile(GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
         {
-            Scanner.IsScannerLocked = true;
-            while (Scanner.ScanningCount > 0) { Thread.Sleep(5); }
+            while (Scanner.IsScanning) { Thread.Sleep(1); }
 
             if (CWatchZones != null)
             {
@@ -111,7 +110,6 @@ namespace LiveSplit.VAS.Models
             FeatureCount = indexCount;
             CWatchZones = cWatchZones;
 
-            Scanner.IsScannerLocked = false;
             ValidateIndexNames();
         }
 
