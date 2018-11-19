@@ -182,7 +182,7 @@ namespace LiveSplit.VAS
         {
             if (!Thread?.IsAlive ?? true)
             {
-                ThreadStart t = new ThreadStart(Start);
+                ThreadStart t = new ThreadStart(Restart);
                 Thread = new Thread(t);
                 Thread.Start();
             }
