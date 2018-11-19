@@ -261,7 +261,7 @@ namespace LiveSplit.VAS
         {
             var now = TimeStamp.CurrentDateTime.Time;
             initCount++;
-            if (!IsScannerLocked && (initCount > 300 || initCount % 10 == 0) && !CompiledFeatures.IsPaused(now))
+            if (!IsScannerLocked && (initCount > 300 || initCount % 10 == 0) && !CompiledFeatures.IsPaused(now) && ScanningCount < 60)
             {
                 ScanningCount++;
                 // We should NOT be cloning this much, but then the previous frame gets disposed.
