@@ -197,9 +197,9 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public double old(int milliseconds = -1)
+        public double old(int milliseconds = 0)
         {
-            if (milliseconds < 0)
+            if (milliseconds <= 0)
                 milliseconds = DefaultOffset;
 
             var prevFrameIndex = IndexFromOffset(FrameOffset(milliseconds));
@@ -228,11 +228,9 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public double min(int milliseconds)
+        public double min(int milliseconds = 0)
         {
-            var range = GetDeltaRange(0, milliseconds);
-            var min = range.Min();
-            return min;
+            return min(0, milliseconds);
         }
 
         public double min(int startMilliseconds, int endMilliseconds)
@@ -241,10 +239,9 @@ namespace LiveSplit.VAS.Models
             return range.Min();
         }
 
-        public double max(int milliseconds)
+        public double max(int milliseconds = 0)
         {
-            var range = GetDeltaRange(0, milliseconds);
-            return range.Max();
+            return max(0, milliseconds);
         }
 
         public double max(int startMilliseconds, int endMilliseconds)
@@ -253,10 +250,9 @@ namespace LiveSplit.VAS.Models
             return range.Max();
         }
 
-        public double average(int milliseconds)
+        public double average(int milliseconds = 0)
         {
-            var range = GetDeltaRange(0, milliseconds);
-            return range.Average();
+            return average(0, milliseconds);
         }
 
         public double average(int startMilliseconds, int endMilliseconds)
