@@ -60,6 +60,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
+        // Name is questionable
         private int FrameOffset(int milliseconds)
         {
             if (milliseconds < 0)
@@ -75,7 +76,8 @@ namespace LiveSplit.VAS.Models
 
             return Math.Max(1, (int)Math.Round(FrameRate * milliseconds / 1000d));
         }
-        // ^ v These names are questionable
+
+        // Name is questionable
         private int IndexFromOffset(int offset)
         {
             return (OriginalIndex - offset) % HistorySize;
@@ -304,7 +306,7 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                return BenchmarkAverages[FeatureIndex] * FrameRate;
+                return Benchmarks[FrameIndex, FeatureIndex] * FrameRate;
             }
         }
 
