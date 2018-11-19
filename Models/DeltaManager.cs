@@ -220,6 +220,15 @@ namespace LiveSplit.VAS.Models
             CompiledFeatures.ResumeFeature(FeatureIndex, untilDate);
         }
 
+        public void pauseAll()
+        {
+            var untilDate = DateTime.MaxValue;
+            for (int i = 0; i < CompiledFeatures.FeatureCount; i++)
+            {
+                CompiledFeatures.PauseFeature(i, untilDate);
+            }
+        }
+
         public bool isPaused
         {
             get
@@ -259,6 +268,44 @@ namespace LiveSplit.VAS.Models
         {
             var range = GetDeltaRange(startMilliseconds, endMilliseconds - startMilliseconds);
             return range.Average();
+        }
+
+        public double delta(int milliseconds = 0)
+        {
+            return delta(0, milliseconds);
+        }
+
+        public double delta(int startMilliseconds, int endMilliseconds)
+        {
+            var featureIndex = FeatureIndex;
+
+            double start;
+            if (startMilliseconds <= 0)
+            {
+                start = this[featureIndex].current;
+                startMilliseconds = 0;
+            }
+            else
+                start = this[featureIndex].old(startMilliseconds);
+
+            return start / this[featureIndex].old(endMilliseconds - startMilliseconds);
+        }
+
+        // Incomplete
+        public double dupeDelta(int milliseconds = 0)
+        {
+            var featureIndex = FeatureIndex;
+
+            return this[featureIndex].min(milliseconds) / this[featureIndex].max(milliseconds, milliseconds * 2);
+        }
+
+        // DEBUGGING
+        public double jitter
+        {
+            get
+            {
+                return BenchmarkAverages[FeatureIndex] * FrameRate;
+            }
         }
 
         #endregion VASL Syntax
