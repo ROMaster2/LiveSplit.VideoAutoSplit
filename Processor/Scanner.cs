@@ -175,16 +175,19 @@ namespace LiveSplit.VAS
             DeltaManager.History = new DeltaResults[DeltaManager.HistorySize];
             VideoSource.Stop();
             while (VideoSource.IsRunning) Thread.Sleep(1);
-            Thread?.Abort();
         }
 
         public static void AsyncStart()
         {
             if (!Thread?.IsAlive ?? true)
             {
-                ThreadStart t = new ThreadStart(Restart);
+                ThreadStart t = new ThreadStart(Start);
                 Thread = new Thread(t);
                 Thread.Start();
+            }
+            else
+            {
+                Restart();
             }
         }
 
