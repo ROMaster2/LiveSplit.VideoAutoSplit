@@ -216,6 +216,8 @@ namespace LiveSplit.VAS
             _TrueCropGeometry = Geometry.Blank;
             if (GameProfile != null)
             {
+                IsScannerLocked = true;
+
                 // TO REMOVE
                 // I'm afraid that removing it will break things so that'll happen later.
                 int i = 0;
@@ -240,7 +242,6 @@ namespace LiveSplit.VAS
                     s.CropGeometry = CropGeometry;
                 }
 
-                IsScannerLocked = true;
                 CompiledFeatures.Compile(GameProfile);
                 IsScannerLocked = false;
             }
