@@ -246,6 +246,8 @@ namespace LiveSplit.VAS
         // Does this dispose properly?
         private static IMagickImage GetComposedImage(IMagickImage input, int channelIndex, ColorSpace colorSpace)
         {
+            if (input == null) return null;
+
             IMagickImage mi = input.Clone();
             mi.ColorSpace = colorSpace;
             if (channelIndex > -1)
@@ -280,11 +282,15 @@ namespace LiveSplit.VAS
         {
             var deltas = new double[CompiledFeatures.FeatureCount];
             var benchmarks = new double[CompiledFeatures.FeatureCount];
+
+            var now = scan.CurrentFrame.DateTime;
+            var useDupeCheck = CompiledFeatures.UseDupeCheck(now);
+
             using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
-            using (var prevFileImageBase = CompiledFeatures.HasDupeCheck ? new MagickImage(scan.PreviousFrame.Bitmap) : null)
+            using (var prevFileImageBase = useDupeCheck ? new MagickImage(scan.PreviousFrame.Bitmap) : null)
             {
                 foreach (var cWatchZone in CompiledFeatures.CWatchZones)
-                    CropScan(ref deltas, ref benchmarks, scan.CurrentFrame.DateTime, fileImageBase, prevFileImageBase, cWatchZone);
+                    CropScan(ref deltas, ref benchmarks, now, fileImageBase, prevFileImageBase, cWatchZone);
             }
             ScanningCount--;
             var scanEnd = TimeStamp.CurrentDateTime.Time;
@@ -338,7 +344,7 @@ namespace LiveSplit.VAS
             if (!cWatchZone.IsPaused(now))
             {
                 using (var fileImageCropped = fileImageBase.Clone(cWatchZone.MagickGeometry))
-                using (var prevFileImageCropped = CompiledFeatures.HasDupeCheck ? prevFileImageBase.Clone(cWatchZone.MagickGeometry) : null)
+                using (var prevFileImageCropped = prevFileImageBase?.Clone(cWatchZone.MagickGeometry))
                 {
                     foreach (var cWatcher in cWatchZone.CWatches) ComposeScan(ref deltas, ref benchmarks, now, fileImageCropped, prevFileImageCropped, cWatcher);
                 }
@@ -361,12 +367,12 @@ namespace LiveSplit.VAS
             if (!cWatcher.IsPaused(now))
             {
                 using (var fileImageComposed = GetComposedImage(fileImageCropped, cWatcher.Channel, cWatcher.ColorSpace))
-                using (var prevFileImageComposed = CompiledFeatures.HasDupeCheck ? GetComposedImage(prevFileImageCropped, cWatcher.Channel, cWatcher.ColorSpace) : null)
+                using (var prevFileImageComposed = GetComposedImage(prevFileImageCropped, cWatcher.Channel, cWatcher.ColorSpace))
                 {
                     if (cWatcher.Equalize)
                     {
                         fileImageComposed.Equalize();
-                        if (CompiledFeatures.HasDupeCheck) prevFileImageComposed.Equalize();
+                        prevFileImageComposed?.Equalize();
                     }
 
                     if (cWatcher.IsStandard)
@@ -425,6 +431,8 @@ namespace LiveSplit.VAS
             var cWatchImage = cWatcher.CWatchImages[0];
             if (!cWatchImage.IsPaused(now))
             {
+                if (prevFileImageComposed == null) throw new NullReferenceException("Previous frame not rendered, somehow.");
+
                 var benchmark = TimeStamp.Now;
                 using (var fileImageCompare = fileImageComposed.Clone())
                 using (var prevFileImageCompare = prevFileImageComposed.Clone())

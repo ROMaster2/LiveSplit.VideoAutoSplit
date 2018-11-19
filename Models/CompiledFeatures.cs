@@ -13,7 +13,7 @@ namespace LiveSplit.VAS.Models
 
         public static CWatchZone[] CWatchZones { get; private set; }
         public static int FeatureCount { get; private set; }
-        public static bool HasDupeCheck { get; private set; }
+        private static bool HasDupeCheck { get; set; }
         public static int PixelLimit { get; private set; }
         public static int PixelCount { get; private set; }
         public static IReadOnlyDictionary<string, int> IndexNames { get; private set; }
@@ -209,6 +209,12 @@ namespace LiveSplit.VAS.Models
         public static bool IsPaused(DateTime dateTime)
         {
             return CWatchZones.All(wz => wz.IsPaused(dateTime));
+        }
+
+        public static bool UseDupeCheck(DateTime dateTime)
+        {
+            return HasDupeCheck &&
+                CWatchZones.All(wz => wz.CWatches.All(w => w.IsStandard || w.IsPaused(dateTime)));
         }
     }
 
