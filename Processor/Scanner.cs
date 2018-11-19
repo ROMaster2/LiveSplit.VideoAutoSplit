@@ -277,6 +277,11 @@ namespace LiveSplit.VAS
                 CurrentIndex++;
                 Task.Factory.StartNew(() => NewRun(newScan, index));
             }
+            else if (ScanningCount >= 60)
+            {
+                // Todo: Make this do something more.
+                LiveSplit.Options.Log.Warning("VASL: Frame handler is overloaded!!!");
+            }
         }
 
         // Todo: prevFile isn't necessary. Instead store the features of the current scan to be used on the next.
