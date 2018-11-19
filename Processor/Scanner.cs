@@ -145,6 +145,7 @@ namespace LiveSplit.VAS
 
         public static void SubscribeToFrameHandler(NewFrameEventHandler method)
         {
+
             VideoSource.NewFrame += method;
         }
 
@@ -199,7 +200,7 @@ namespace LiveSplit.VAS
                 CurrentIndex = 0;
                 VideoSource.Start();
 
-                initCount = 0;
+                Thread.Sleep(500); // Reduces overloaded CPU problems when subscribing.
                 SubscribeToFrameHandler(new NewFrameEventHandler(HandleNewFrame));
             }
         }
@@ -261,13 +262,10 @@ namespace LiveSplit.VAS
             return mi;
         }
 
-        internal static int initCount = 0; // To stop wasting CPU when first starting.
-
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             var now = TimeStamp.CurrentDateTime.Time;
-            initCount++;
-            if (!IsScannerLocked && (initCount > 300 || initCount % 10 == 0) && !CompiledFeatures.IsPaused(now) && ScanningCount < 60)
+            if (!IsScannerLocked && !CompiledFeatures.IsPaused(now) && ScanningCount < 20)
             {
                 ScanningCount++;
                 // We should NOT be cloning this much, but then the previous frame gets disposed.
@@ -278,7 +276,7 @@ namespace LiveSplit.VAS
                 CurrentIndex++;
                 Task.Factory.StartNew(() => NewRun(newScan, index));
             }
-            else if (ScanningCount >= 60)
+            else if (ScanningCount >= 20)
             {
                 // Todo: Make this do something more.
                 LiveSplit.Options.Log.Warning("VASL: Frame handler is overloaded!!!");
