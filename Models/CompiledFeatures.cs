@@ -213,8 +213,7 @@ namespace LiveSplit.VAS.Models
 
         public static bool UseDupeCheck(DateTime dateTime)
         {
-            return HasDupeCheck &&
-                CWatchZones.All(wz => wz.CWatches.All(w => w.IsStandard || w.IsPaused(dateTime)));
+            return HasDupeCheck && CWatchZones.All(wz => wz.CWatches.All(w => w.IsStandard || !w.IsPaused(dateTime)));
         }
     }
 

@@ -180,7 +180,7 @@ namespace LiveSplit.VAS
 
         public static void AsyncStart()
         {
-            if (!Thread?.IsAlive ?? false)
+            if (!Thread?.IsAlive ?? true)
             {
                 ThreadStart t = new ThreadStart(Start);
                 Thread = new Thread(t);
@@ -429,10 +429,8 @@ namespace LiveSplit.VAS
             CWatcher cWatcher)
         {
             var cWatchImage = cWatcher.CWatchImages[0];
-            if (!cWatchImage.IsPaused(now))
+            if (!cWatchImage.IsPaused(now) && prevFileImageComposed != null)
             {
-                if (prevFileImageComposed == null) throw new NullReferenceException("Previous frame not rendered, somehow.");
-
                 var benchmark = TimeStamp.Now;
                 using (var fileImageCompare = fileImageComposed.Clone())
                 using (var prevFileImageCompare = prevFileImageComposed.Clone())
