@@ -211,14 +211,14 @@ namespace LiveSplit.VAS.Models
         // For the below, actual timestamps will be used once splitting can be offset'd.
         public void pause(double milliseconds = 0d)
         {
-            //var untilDate = milliseconds > 0d ? History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
-            var untilDate = milliseconds > 0d ? TimeStamp.CurrentDateTime.Time.AddMilliseconds(milliseconds) : DateTime.MaxValue;
+            var untilDate = milliseconds > 0d ? History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
+            //var untilDate = milliseconds > 0d ? TimeStamp.CurrentDateTime.Time.AddMilliseconds(milliseconds) : DateTime.MaxValue;
             CompiledFeatures.PauseFeature(FeatureIndex, untilDate);
         }
 
         public void resume(double milliseconds = 0d)
         {
-            var untilDate = milliseconds > 0d ? TimeStamp.CurrentDateTime.Time.AddMilliseconds(milliseconds) : DateTime.MaxValue;
+            var untilDate = milliseconds > 0d ? History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
             CompiledFeatures.ResumeFeature(FeatureIndex, untilDate);
         }
 
