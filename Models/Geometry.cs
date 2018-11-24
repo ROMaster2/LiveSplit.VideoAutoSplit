@@ -676,6 +676,55 @@ namespace LiveSplit.VAS.Models
             Update(geo.X, geo.Y, geo.Width, geo.Height);
         }
 
+        // Todo: Handle fractional pixels.
+
+        public Geometry Round(bool includePoint = true, int rounding = 0)
+        {
+            const double rounder = 0.4999999999; // Difficult to be precise without posible error.
+            int x;
+            int y;
+            int width;
+            int height;
+
+            switch (rounding)
+            {
+                case 2: // Ceiling
+                    x = includePoint ? (int)Math.Ceiling(X) : 0;
+                    y = includePoint ? (int)Math.Ceiling(Y) : 0;
+                    width = (int)Math.Ceiling(Width);
+                    height = (int)Math.Ceiling(Height);
+                    break;
+                case 1: // Roundup
+                    x = includePoint ? (int)Math.Round(X + (Math.Sign(X) > 0 ? rounder : -rounder)) : 0;
+                    y = includePoint ? (int)Math.Round(Y + (Math.Sign(Y) > 0 ? rounder : -rounder)) : 0;
+                    width = (int)Math.Round(Width + (Math.Sign(Width) > 0 ? rounder : -rounder));
+                    height = (int)Math.Round(Height + (Math.Sign(Height) > 0 ? rounder : -rounder));
+                    break;
+                case 0: // Round
+                default:
+                    x = includePoint ? (int)Math.Round(X) : 0;
+                    y = includePoint ? (int)Math.Round(Y) : 0;
+                    width = (int)Math.Round(Width);
+                    height = (int)Math.Round(Height);
+                    break;
+                case -1: // Rounddown
+                    x = includePoint ? (int)Math.Round(X + (Math.Sign(X) < 0 ? rounder : -rounder)) : 0;
+                    y = includePoint ? (int)Math.Round(Y + (Math.Sign(Y) < 0 ? rounder : -rounder)) : 0;
+                    width = (int)Math.Round(Width + (Math.Sign(Width) < 0 ? rounder : -rounder));
+                    height = (int)Math.Round(Height + (Math.Sign(Height) < 0 ? rounder : -rounder));
+                    break;
+                case -2: // Floor
+                    x = includePoint ? (int)Math.Floor(X) : 0;
+                    y = includePoint ? (int)Math.Floor(Y) : 0;
+                    width = (int)Math.Floor(Width);
+                    height = (int)Math.Floor(Height);
+                    break;
+            }
+
+            return new Geometry(x, y, width, height);
+        }
+
+
         // I do not trust these contains and related. They need testing.
 
         /// <summary>

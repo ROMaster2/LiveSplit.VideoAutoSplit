@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Drawing;
 using System.Threading;
 using LiveSplit.Model;
 
@@ -18,7 +19,38 @@ namespace LiveSplit.VAS.Models
         public static int PixelCount { get; private set; }
         public static IReadOnlyDictionary<string, int> IndexNames { get; private set; }
         internal static IDictionary<int, long> PauseIndex { get; private set; }
-
+        /*
+        private static Geometry _TrueCropGeometry;
+        public static Geometry TrueCropGeometry
+        {
+            get
+            {
+                if (!_TrueCropGeometry.HasSize)
+                {
+                    double x = 32768d;
+                    double y = 32768d;
+                    double width = -32768d;
+                    double height = -32768d;
+                    foreach (var wz in Scanner.GameProfile.Screens[0].WatchZones)
+                    {
+                        var geo = wz.Geometry;
+                        geo.RemoveAnchor(wz.Screen.Geometry);
+                        x = Math.Min(x, geo.X);
+                        y = Math.Min(y, geo.Y);
+                        width = Math.Max(width, geo.X + geo.Width);
+                        height = Math.Max(height, geo.Y + geo.Height);
+                    }
+                    width -= x;
+                    height -= y;
+                    var sGeo = new Geometry(x, y, width, height);
+                    sGeo.ResizeTo(CropGeometry, GameProfile.Screens[0].Geometry);
+                    sGeo.Update(CropGeometry.X, CropGeometry.Y);
+                    _TrueCropGeometry = sGeo;
+                }
+                return _TrueCropGeometry;
+            }
+        }
+        */
         public static void Compile(GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
         {
             while (Scanner.IsScanning) { Thread.Sleep(1); }
@@ -213,7 +245,7 @@ namespace LiveSplit.VAS.Models
 
         public static bool UseDupeCheck(DateTime dateTime)
         {
-            return HasDupeCheck && CWatchZones.All(wz => wz.CWatches.All(w => w.IsStandard || !w.IsPaused(dateTime)));
+            return HasDupeCheck && CWatchZones.Any(wz => wz.UseDupeCheck(dateTime));
         }
     }
 
@@ -222,14 +254,16 @@ namespace LiveSplit.VAS.Models
         public CWatchZone(string name, Geometry geometry, CWatcher[] cWatches)
         {
             Name = name;
-            TrueGeometry = geometry;
-            MagickGeometry = geometry.ToMagick();
+            Geometry = geometry;
+            Rectangle = geometry.ToRectangle();
             CWatches = cWatches;
+            HasDupeCheck = CWatches.Any(w => w.IsDuplicateFrame);
         }
         public string Name { get; }
-        public Geometry TrueGeometry { get; }
-        public MagickGeometry MagickGeometry { get; }
+        public Geometry Geometry { get; }
+        public Rectangle Rectangle { get; }
         public CWatcher[] CWatches { get; }
+        private bool HasDupeCheck { get; set; }
 
         public bool IsPaused(DateTime dateTime)
         {
@@ -242,6 +276,11 @@ namespace LiveSplit.VAS.Models
             {
                 cWatcher.Dispose();
             }
+        }
+
+        public bool UseDupeCheck(DateTime dateTime)
+        {
+            return HasDupeCheck && CWatches.Any(w => w.IsDuplicateFrame && !w.IsPaused(dateTime));
         }
     }
 

@@ -1,32 +1,23 @@
-﻿using System;
-
-namespace LiveSplit.VAS.Models
+﻿namespace LiveSplit.VAS.Models
 {
     public struct Scan
     {
         public readonly Frame CurrentFrame;
         public readonly Frame PreviousFrame;
-        public bool IsDisposed;
+        public readonly bool HasPreviousFrame;
 
-        public Scan(Frame currentFrame, Frame previousFrame)
+        public Scan(Frame currentFrame, Frame previousFrame, bool usePreviousFrame)
         {
             CurrentFrame = currentFrame;
             PreviousFrame = previousFrame;
-            IsDisposed = false;
+            HasPreviousFrame = usePreviousFrame || !previousFrame.IsBlank;
         }
 
-        public static readonly Scan Blank = new Scan(Frame.Blank, Frame.Blank);
-
-        public TimeSpan TimeDelta()
-        {
-            return CurrentFrame.DateTime - PreviousFrame.DateTime;
-        }
+        public static readonly Scan Blank = new Scan(Frame.Blank, Frame.Blank, false);
 
         public void Dispose()
         {
-            IsDisposed = true;
-            CurrentFrame.Bitmap.Dispose();
-            PreviousFrame.Bitmap.Dispose();
+            PreviousFrame.Bitmap?.Dispose();
         }
     }
 }

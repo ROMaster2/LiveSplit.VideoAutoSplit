@@ -23,19 +23,20 @@ namespace LiveSplit.VAS.Models
         public readonly int FrameIndex;
         public readonly double FrameRate;
 
-        private int _FeatureIndex = -1;
-        private int FeatureIndex {
+        private int[] _FeatureIndexes = null;
+        private int[] FeatureIndexes
+        {
             get
             {
-                var featureIndex = _FeatureIndex;
-                _FeatureIndex = -1;
-                return featureIndex;
+                var featureIndexes = _FeatureIndexes;
+                _FeatureIndexes = null;
+                return featureIndexes;
             }
             set
             {
-                if (value >= CompiledFeatures.FeatureCount || value < 0)
-                    throw new IndexOutOfRangeException();
-                _FeatureIndex = value;
+                if (value.Length > CompiledFeatures.FeatureCount)
+                    throw new ArgumentOutOfRangeException();
+                _FeatureIndexes = value;
             }
         }
 
@@ -132,7 +133,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public double[] GetDeltaRange(int startMilliseconds, int duration)
+        public double[] GetDeltaRange(int startMilliseconds, int duration, params int[] indexes)
         {
             int startOffset;
             int endOffset;
@@ -150,62 +151,64 @@ namespace LiveSplit.VAS.Models
             else
                 endOffset = FrameOffset(startMilliseconds + duration);
 
-            var featureIndex = FeatureIndex;
-
             var result = new double[endOffset - startOffset];
 
             if (result.Length == 0)
                 return new double[] { double.NaN };
 
+            var featureIndexes = indexes.Length == 0 ? FeatureIndexes : indexes;
+
             for (int i = 0; i < endOffset - startOffset; i++)
             {
                 var frameIndex = IndexFromOffset(i + startOffset);
-                result[i] = History[frameIndex].Deltas[featureIndex]; // Todo: Handle NaN.
+                foreach (var f in featureIndexes)
+                {
+                    result[i] = History[frameIndex].Deltas[f]; // Todo: Handle NaN.
+                }
             }
 
             return result;
         }
 
+        public double[] MinMany(int startMilliseconds, int endMilliseconds)
+        {
+            var featureIndexes = FeatureIndexes;
+            var results = new double[featureIndexes.Length];
+            for (int i = 0; i < featureIndexes.Length; i++)
+            {
+                results[i] = GetDeltaRange(startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes[i]).Min();
+            }
+            return results;
+        }
+
+        public double[] MaxMany(int startMilliseconds, int endMilliseconds)
+        {
+            var featureIndexes = FeatureIndexes;
+            var results = new double[featureIndexes.Length];
+            for (int i = 0; i < featureIndexes.Length; i++)
+            {
+                results[i] = GetDeltaRange(startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes[i]).Max();
+            }
+            return results;
+        }
+
         #region VASL Syntax
 
-        public DeltaManager this[int i]
+        public double current // Single index only
         {
             get
             {
-                FeatureIndex = i;
-                return this;
+                return History[FrameIndex].Deltas[FeatureIndexes[0]];
             }
         }
 
-        public DeltaManager this[string str]
-        {
-            get
-            {
-                int i;
-                if (!CompiledFeatures.IndexNames.TryGetValue(str, out i))
-                    throw new ArgumentException("This name does not exist.");
-                if (i < 0)
-                    throw new ArgumentException("This name is shared between more than one feature. Identify it more specifically.");
-                FeatureIndex = i;
-                return this;
-            }
-        }
-
-        public double current
-        {
-            get
-            {
-                return History[FrameIndex].Deltas[FeatureIndex];
-            }
-        }
-
-        public double old(int milliseconds = 0)
+        public double old(int milliseconds = 0) // Single index only
         {
             if (milliseconds <= 0)
                 milliseconds = DefaultOffset;
 
             var prevFrameIndex = IndexFromOffset(FrameOffset(milliseconds));
-            return History[prevFrameIndex].Deltas[FeatureIndex];
+            return History[prevFrameIndex].Deltas[FeatureIndexes[0]];
         }
 
         // For the below, actual timestamps will be used once splitting can be offset'd.
@@ -213,13 +216,19 @@ namespace LiveSplit.VAS.Models
         {
             var untilDate = milliseconds > 0d ? History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
             //var untilDate = milliseconds > 0d ? TimeStamp.CurrentDateTime.Time.AddMilliseconds(milliseconds) : DateTime.MaxValue;
-            CompiledFeatures.PauseFeature(FeatureIndex, untilDate);
+            foreach (var f in FeatureIndexes)
+            {
+                CompiledFeatures.PauseFeature(f, untilDate);
+            }
         }
 
         public void resume(double milliseconds = 0d)
         {
             var untilDate = milliseconds > 0d ? History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
-            CompiledFeatures.ResumeFeature(FeatureIndex, untilDate);
+            foreach (var f in FeatureIndexes)
+            {
+                CompiledFeatures.ResumeFeature(f, untilDate);
+            }
         }
 
         public void pauseAll()
@@ -235,7 +244,16 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                return double.IsNaN(History[FrameIndex].Deltas[FeatureIndex]); // Should work...
+                var result = false;
+                foreach (var f in FeatureIndexes)
+                {
+                    if (double.IsNaN(History[FrameIndex].Deltas[f]))
+                    {
+                        result = true;
+                        break;
+                    }
+                }
+                return result;
             }
         }
 
@@ -272,14 +290,25 @@ namespace LiveSplit.VAS.Models
             return range.Average();
         }
 
+        public double stdev(int milliseconds = 0)
+        {
+            return stdev(0, milliseconds);
+        }
+
+        public double stdev(int startMilliseconds, int endMilliseconds)
+        {
+            var range = GetDeltaRange(startMilliseconds, endMilliseconds - startMilliseconds);
+            return range.StdDev();
+        }
+
         public double delta(int milliseconds = 0)
         {
             return delta(0, milliseconds);
         }
 
-        public double delta(int startMilliseconds, int endMilliseconds)
+        public double delta(int startMilliseconds, int endMilliseconds) // Single index only
         {
-            var featureIndex = FeatureIndex;
+            var featureIndex = FeatureIndexes[0];
 
             double start;
             if (startMilliseconds <= 0)
@@ -294,20 +323,59 @@ namespace LiveSplit.VAS.Models
         }
 
         // Incomplete
-        public double dupeDelta(int milliseconds = 0)
+        public double dupeDelta(int milliseconds = 0) // Single index only
         {
-            var featureIndex = FeatureIndex;
+            var featureIndex = FeatureIndexes[0];
 
             return this[featureIndex].min(milliseconds) / this[featureIndex].max(milliseconds, milliseconds * 2);
         }
 
         // DEBUGGING
-        public double jitter
+        public double jitter // Single index only
         {
             get
             {
-                return Benchmarks[FrameIndex, FeatureIndex] * FrameRate;
+                return Benchmarks[FrameIndex, FeatureIndexes[0]] * FrameRate;
             }
+        }
+
+        public DeltaManager this[params int[] numbers]
+        {
+            get
+            {
+                FeatureIndexes = numbers;
+                return this;
+            }
+        }
+
+        public DeltaManager this[params string[] strings]
+        {
+            get
+            {
+                int[] numbers = new int[strings.Length];
+                for (int n = 0; n < strings.Length; n++)
+                {
+                    int i;
+                    if (!CompiledFeatures.IndexNames.TryGetValue(strings[n], out i))
+                        throw new ArgumentException("This name does not exist.");
+                    if (i < 0)
+                        throw new ArgumentException("This name is shared between more than one feature. Identify it more specifically.");
+                    numbers[n] = i;
+                }
+                FeatureIndexes = numbers;
+                return this;
+            }
+        }
+
+        // Great naming. No one will ever get them mixed up.
+        public double maxMin(int milliseconds = 0)
+        {
+            return MinMany(0, milliseconds).Max();
+        }
+
+        public double minMax(int milliseconds = 0)
+        {
+            return MaxMany(0, milliseconds).Min();
         }
 
         #endregion VASL Syntax
@@ -323,7 +391,7 @@ namespace LiveSplit.VAS.Models
 
             if (index > SAFETY_THRESHOLD)
             {
-                while (History[prevIndex] == null || History[prevIndex].Index != index - 1)
+                while ((History[prevIndex]?.Index ?? -1) != index - 1)
                 {
                     if (Scanner.CurrentIndex - HistorySize >= index)
                     {

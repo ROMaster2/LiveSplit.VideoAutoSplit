@@ -30,53 +30,21 @@ namespace LiveSplit.VAS.Models
             return Width.ToString() + ':' + Height.ToString() + ':' + X.ToString() + ':' + Y.ToString();
         }
 
-        // Todo: Handle fractional pixels.
-
         public ImageMagick.MagickGeometry ToMagick(bool includePoint = true, int rounding = 0)
         {
+            var geo = Round(includePoint, rounding);
+            return new ImageMagick.MagickGeometry((int)geo.X, (int)geo.Y, (int)geo.Width, (int)geo.Height);
+        }
 
-            const double rounder = 0.4999999999; // Difficult to be precise without posible error.
-            int x;
-            int y;
-            int width;
-            int height;
+        public System.Drawing.Rectangle ToRectangle(bool includePoint = true, int rounding = 0)
+        {
+            var geo = Round(includePoint, rounding);
+            return new System.Drawing.Rectangle((int)geo.X, (int)geo.Y, (int)geo.Width, (int)geo.Height);
+        }
 
-            switch (rounding)
-            {
-                case 2: // Ceiling
-                    x = includePoint ? (int)Math.Ceiling(X) : 0;
-                    y = includePoint ? (int)Math.Ceiling(Y) : 0;
-                    width = (int)Math.Ceiling(Width);
-                    height = (int)Math.Ceiling(Height);
-                    break;
-                case 1: // Roundup
-                    x = includePoint ? (int)Math.Round(X + (Math.Sign(X) > 0 ? rounder : -rounder)) : 0;
-                    y = includePoint ? (int)Math.Round(Y + (Math.Sign(Y) > 0 ? rounder : -rounder)) : 0;
-                    width = (int)Math.Round(Width + (Math.Sign(Width) > 0 ? rounder : -rounder));
-                    height = (int)Math.Round(Height + (Math.Sign(Height) > 0 ? rounder : -rounder));
-                    break;
-                case 0: // Round
-                default:
-                    x = includePoint ? (int)Math.Round(X) : 0;
-                    y = includePoint ? (int)Math.Round(Y) : 0;
-                    width = (int)Math.Round(Width);
-                    height = (int)Math.Round(Height);
-                    break;
-                case -1: // Rounddown
-                    x = includePoint ? (int)Math.Round(X + (Math.Sign(X) < 0 ? rounder : -rounder)) : 0;
-                    y = includePoint ? (int)Math.Round(Y + (Math.Sign(Y) < 0 ? rounder : -rounder)) : 0;
-                    width = (int)Math.Round(Width + (Math.Sign(Width) < 0 ? rounder : -rounder));
-                    height = (int)Math.Round(Height + (Math.Sign(Height) < 0 ? rounder : -rounder));
-                    break;
-                case -2: // Floor
-                    x = includePoint ? (int)Math.Floor(X) : 0;
-                    y = includePoint ? (int)Math.Floor(Y) : 0;
-                    width = (int)Math.Floor(Width);
-                    height = (int)Math.Floor(Height);
-                    break;
-            }
-
-            return new ImageMagick.MagickGeometry(x, y, width, height);
+        public System.Drawing.RectangleF ToRectangleF()
+        {
+            return new System.Drawing.RectangleF((float)X, (float)Y, (float)Width, (float)Height);
         }
 
         #endregion Public Methods

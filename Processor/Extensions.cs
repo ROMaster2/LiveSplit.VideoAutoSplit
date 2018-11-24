@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace LiveSplit.VAS
 {
@@ -88,6 +89,20 @@ namespace LiveSplit.VAS
             }
 
             return new System.Drawing.Size(x, y);
+        }
+
+        // Population, not sample
+        private static double StdDev(this IEnumerable<double> values)
+        {
+            double result = 0;
+            int count = values.Count();
+            if (count > 0)
+            {
+                double avg = values.Average();
+                double sum = values.Sum(x => Math.Pow(x - avg, 2));
+                result = Math.Sqrt(sum / count);
+            }
+            return result;
         }
 
     }
