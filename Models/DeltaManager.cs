@@ -19,6 +19,32 @@ namespace LiveSplit.VAS.Models
 
         public static DeltaResults[] History = new DeltaResults[HistorySize];
 
+        // In progress
+        private static DeltaResults _SplitReference = null;
+        private static int? _SplitIndex = null;
+        public int? SplitIndex
+        {
+            get
+            {
+                return _SplitIndex;
+            }
+            set
+            {
+                if (value.HasValue)
+                {
+                    if (value.Value > HistorySize || value.Value < 0)
+                        throw new IndexOutOfRangeException();
+                    _SplitIndex = value;
+                    _SplitReference = History[IndexFromOffset(value.Value)];
+                }
+                else
+                {
+                    _SplitIndex = null;
+                    _SplitReference = null;
+                }
+            }
+        }
+
         private readonly int OriginalIndex;
         public readonly int FrameIndex;
         public readonly double FrameRate;
