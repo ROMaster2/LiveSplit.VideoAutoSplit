@@ -408,10 +408,6 @@ namespace LiveSplit.VAS.Models
                         var MinWaitTime      = Scanner.MinWaitTime;
                         var MaxWaitTime      = Scanner.MaxWaitTime;
 
-                        var pauses = CompiledFeatures.PauseIndex;
-                        //var pause1 = CompiledFeatures.CWatchZones[0].CWatches[0].CWatchImages[0].IsPaused(TimeStamp.CurrentDateTime.Time);
-                        //var pause2 = CompiledFeatures.CWatchZones[3].CWatches[0].CWatchImages[0].IsPaused(TimeStamp.CurrentDateTime.Time);
-
                         throw new Exception("Previous frame could not be processed or is taking too long to process.");
                     }
                     Thread.Sleep(1);
