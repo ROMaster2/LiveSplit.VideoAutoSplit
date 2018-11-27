@@ -364,18 +364,12 @@ namespace LiveSplit.VAS
         {
             if (!cWatchZone.IsPaused(now))
             {
-                try
+                using (var fileImageCropped = fileImageBase.Clone(cWatchZone.Rectangle, PixelFormat.Format24bppRgb))
+                using (var prevFileImageCropped = cWatchZone.UseDupeCheck(now) ?
+                    prevFileImageBase?.Clone(cWatchZone.Rectangle, PixelFormat.Format24bppRgb) : null)
                 {
-                    using (var fileImageCropped = fileImageBase.Clone(cWatchZone.Rectangle, PixelFormat.Format24bppRgb))
-                    using (var prevFileImageCropped = cWatchZone.UseDupeCheck(now) ? prevFileImageBase?.Clone(cWatchZone.Rectangle, PixelFormat.Format24bppRgb) : null)
-                    {
-                        foreach (var cWatcher in cWatchZone.CWatches)
-                            ComposeScan(ref deltas, ref benchmarks, now, fileImageCropped, prevFileImageCropped, cWatcher);
-                    }
-                }
-                catch(Exception e) // Unknown bug
-                {
-                    LiveSplit.Options.Log.Error(e);
+                    foreach (var cWatcher in cWatchZone.CWatches)
+                        ComposeScan(ref deltas, ref benchmarks, now, fileImageCropped, prevFileImageCropped, cWatcher);
                 }
             }
             else
