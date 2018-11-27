@@ -216,7 +216,7 @@ namespace LiveSplit.VAS.VASL
                                 _timer.Split(DeltaManager.SplitTime - _timer.CurrentState.CurrentTime.RealTime);
                             }
                             else
-                                _timer.Split();
+                                _timer.Split(); // Legacy
                     }
                     */
 
