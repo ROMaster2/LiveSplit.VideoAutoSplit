@@ -16,7 +16,7 @@ using LiveSplit.VAS.Models;
 using LiveSplit.VAS.UI;
 using LiveSplit.VAS.VASL;
 
-namespace LiveSplit.VAS.UI
+namespace LiveSplit.UI.Components
 {
     public partial class NewComponentSettings : UserControl
     {
