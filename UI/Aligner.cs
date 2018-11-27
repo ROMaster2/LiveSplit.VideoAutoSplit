@@ -20,7 +20,7 @@ using LiveSplit.VAS.Models;
 
 using Screen = LiveSplit.VAS.Models.Screen;
 
-namespace LiveSplit.VAS.Forms
+namespace LiveSplit.VAS.UI
 {
     public partial class Aligner : Form
     {

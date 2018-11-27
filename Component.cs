@@ -8,7 +8,7 @@ using LiveSplit.Model;
 using LiveSplit.Options;
 using LiveSplit.VAS.VASL;
 using LiveSplit.VAS;
-using LiveSplit.VAS.Forms;
+using LiveSplit.VAS.UI;
 using LiveSplit.VAS.Models;
 using System.IO.Compression;
 using System.Linq;

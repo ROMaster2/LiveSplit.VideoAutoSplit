@@ -14,7 +14,7 @@ using LiveSplit.VAS.Models;
 using LiveSplit.VAS.VASL;
 using Accord.Video.DirectShow;
 using LiveSplit.UI.Components;
-using LiveSplit.VAS.Forms;
+using LiveSplit.VAS.UI;
 
 namespace LiveSplit.VAS
 {

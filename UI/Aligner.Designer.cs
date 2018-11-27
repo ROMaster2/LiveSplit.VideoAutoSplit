@@ -1,4 +1,4 @@
-﻿namespace LiveSplit.VAS.Forms
+﻿namespace LiveSplit.VAS.UI
 {
     partial class Aligner
     {

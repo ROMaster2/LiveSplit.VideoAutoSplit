@@ -114,11 +114,23 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Forms\Aligner.cs">
+    <Compile Include="UI\Aligner.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\Aligner.Designer.cs">
+    <Compile Include="UI\Aligner.Designer.cs">
       <DependentUpon>Aligner.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\NewComponentSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\NewComponentSettings.Designer.cs">
+      <DependentUpon>NewComponentSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Settings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Settings.Designer.cs">
+      <DependentUpon>Settings.cs</DependentUpon>
     </Compile>
     <Compile Include="VASL\VASLExceptions.cs" />
     <Compile Include="VASL\VASLGrammar.cs" />
@@ -135,6 +147,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ComponentSettings.resx">
       <DependentUpon>ComponentSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\NewComponentSettings.resx">
+      <DependentUpon>NewComponentSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Settings.resx">
+      <DependentUpon>Settings.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
