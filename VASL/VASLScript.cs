@@ -163,38 +163,65 @@ namespace LiveSplit.VAS.VASL
 
             if (state.CurrentPhase == TimerPhase.Running || state.CurrentPhase == TimerPhase.Paused)
             {
-                var is_paused = RunMethod(_methods.isLoading, state, dm);
-                if (is_paused != null)
+                if (_uses_game_time)
                 {
-                    var prevPauseState = state.IsGameTimePaused;
+                    if (!state.IsGameTimeInitialized)
+                        _timer.InitializeGameTime();
 
-                    state.IsGameTimePaused = is_paused;
-
-                    if (prevPauseState != is_paused)
+                    var is_paused = RunMethod(_methods.isLoading, state, dm);
+                    if (is_paused != null)
                     {
-                        var offsetTime = DeltaManager.History[dm.FrameIndex].ProcessDuration;
+                        var prevPauseState = state.IsGameTimePaused;
 
-                        if (is_paused)
-                            state.GameTimePauseTime -= offsetTime;
-                        else
-                            state.GameTimePauseTime += offsetTime;
+                        state.IsGameTimePaused = is_paused;
+
+                        if (prevPauseState != is_paused)
+                        {
+                            var offsetTime = DeltaManager.History[dm.FrameIndex].ProcessDuration;
+
+                            if (is_paused)
+                                state.GameTimePauseTime -= offsetTime;
+                            else
+                                state.GameTimePauseTime += offsetTime;
+                        }
                     }
+
+                    var game_time = RunMethod(_methods.gameTime, state, dm);
+                    if (game_time != null)
+                        state.SetGameTime(game_time);
                 }
-
-                if (_uses_game_time && !state.IsGameTimeInitialized)
-                    _timer.InitializeGameTime();
-
-                var game_time = RunMethod(_methods.gameTime, state, dm);
-                if (game_time != null)
-                    state.SetGameTime(game_time);
 
                 if (RunMethod(_methods.reset, state, dm) ?? false && _settings.GetBasicSettingValue("reset"))
                 {
                     _timer.Reset();
                 }
-                else if (RunMethod(_methods.split, state, dm) ?? false && _settings.GetBasicSettingValue("split"))
+                else if (_settings.GetBasicSettingValue("split"))
                 {
-                    _timer.Split(); // Todo: Add offsetting for splits.
+                    var offset = RunMethod(_methods.split, state, dm);
+
+                    // The below will be added once LiveSplit supports offseting
+                    // Could add it now, but that would require a version update,
+                    // which I'm avoiding for now for user simplicity.
+                    /*
+                    if (offset != null)
+                    {
+                        if (offset is TimeSpan)
+                            _timer.Split(offset);
+                        else if (offset is bool && offset == true)
+                            if (dm.SplitIndex != null)
+                            {
+                                var now = _timer.CurrentState.CurrentTime.RealTime.Value;
+                                var diff = DeltaManager.History[dm.FrameIndex].FrameEnd.Ticks - DeltaManager.SplitTime.Value.Ticks;
+                                var test = now - diff;
+                                _timer.Split(DeltaManager.SplitTime - _timer.CurrentState.CurrentTime.RealTime);
+                            }
+                            else
+                                _timer.Split();
+                    }
+                    */
+
+                    if (offset)
+                        _timer.Split();
                 }
             }
             else if (state.CurrentPhase == TimerPhase.NotRunning)
