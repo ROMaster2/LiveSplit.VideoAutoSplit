@@ -105,12 +105,11 @@ public class CompiledScript
             }
         }
 
-        public dynamic Call(LiveSplitState timer, ExpandoObject vars, ref string version, ref double refreshRate,
+        public dynamic Call(LiveSplitState timer, ExpandoObject vars, ref string version,
             dynamic settings, ExpandoObject old = null, ExpandoObject current = null, DeltaManager features = null)
         {
             // dynamic args can't be ref or out, this is a workaround
             _compiled_code.version = version;
-            _compiled_code.refreshRate = refreshRate;
             dynamic ret;
             try
             {
@@ -121,7 +120,6 @@ public class CompiledScript
                 throw new VASLRuntimeException(this, ex);
             }
             version = _compiled_code.version;
-            refreshRate = _compiled_code.refreshRate;
             return ret;
         }
     }

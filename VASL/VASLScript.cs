@@ -48,30 +48,20 @@ namespace LiveSplit.VAS.VASL
             IEnumerator IEnumerable.GetEnumerator() => GetMethods().GetEnumerator();
         }
 
-        public event EventHandler<double> RefreshRateChanged;
         public event EventHandler<string> GameVersionChanged;
 
         private string _game_version = string.Empty;
         public string GameVersion
         {
-            get { return _game_version; }
+            get
+            {
+                return _game_version;
+            }
             set
             {
                 if (value != _game_version)
                     GameVersionChanged?.Invoke(this, value);
                 _game_version = value;
-            }
-        }
-
-        private double _refresh_rate = 1000 / 15d;
-        public double RefreshRate // per sec
-        {
-            get { return _refresh_rate; }
-            set
-            {
-                if (Math.Abs(value - _refresh_rate) > 0.01)
-                    RefreshRateChanged?.Invoke(this, value);
-                _refresh_rate = value;
             }
         }
 
@@ -219,10 +209,7 @@ namespace LiveSplit.VAS.VASL
 
         private dynamic RunMethod(VASLMethod method, LiveSplitState state, DeltaManager dm, ref string version)
         {
-            var refresh_rate = RefreshRate;
-            var result = method.Call(state, Vars, ref version, ref refresh_rate, _settings.Reader,
-                OldState?.Data, State?.Data, dm);
-            RefreshRate = refresh_rate;
+            var result = method.Call(state, Vars, ref version, _settings.Reader, OldState?.Data, State?.Data, dm);
             return result;
         }
 
@@ -235,11 +222,8 @@ namespace LiveSplit.VAS.VASL
         // Run method without counting on being connected to the game (startup/shutdown).
         private void RunNoProcessMethod(VASLMethod method, LiveSplitState state, bool is_startup = false)
         {
-            var refresh_rate = RefreshRate;
             var version = GameVersion;
-            method.Call(state, Vars, ref version, ref refresh_rate,
-                is_startup ? _settings.Builder : (object)_settings.Reader);
-            RefreshRate = refresh_rate;
+            method.Call(state, Vars, ref version, is_startup ? _settings.Builder : (object)_settings.Reader);
         }
 
         private void Debug(string output, params object[] args)
