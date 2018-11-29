@@ -45,7 +45,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        private readonly int OriginalIndex;
+        public readonly int OriginalIndex;
         public readonly int FrameIndex;
         public readonly double FrameRate;
 
