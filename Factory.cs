@@ -18,6 +18,5 @@ namespace LiveSplit.UI.Components
         public string XMLURL => "http://livesplit.org/update/Components/update.LiveSplit.VideoAutoSplitter.xml";
 
         public IComponent Create(LiveSplitState state) => new VASComponent(state);
-        public IComponent Create(LiveSplitState state, string script) => new VASComponent(state, script);
     }
 }

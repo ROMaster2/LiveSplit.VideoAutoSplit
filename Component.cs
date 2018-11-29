@@ -21,104 +21,94 @@ namespace LiveSplit.UI.Components
 
         public VASLScript Script { get; private set; }
 
-        public event EventHandler ScriptChanged;
+        public event EventHandler ProfileChanged;
 
-        private bool _do_reload;
-        private string _old_script_path;
+        private bool doReload;
+        private string oldProfilePath;
 
-        private FileSystemWatcher _fs_watcher;
+        private FileSystemWatcher fsWatcher;
 
-        private ComponentSettings _settings;
+        private NewComponentSettings componentSettings;
 
-        private LiveSplitState _state;
+        private LiveSplitState state;
 
-        private string scriptPath
+        private string profilePath
         {
             get
             {
-                return _settings?.ScriptPath;
+                return componentSettings?.ProfilePath;
             }
         }
 
         public VASComponent(LiveSplitState state)
         {
-            _state = state;
+            this.state = state;
 
-            _settings = new ComponentSettings(this);
+            componentSettings = new NewComponentSettings();
 
-            _fs_watcher = new FileSystemWatcher();
-            _fs_watcher.Changed += async (sender, args) => {
+            fsWatcher = new FileSystemWatcher();
+            fsWatcher.Changed += async (sender, args) => {
                 await Task.Delay(200);
-                _do_reload = true;
+                doReload = true;
             };
 
-            Scanner.NewResult += (sender, dm) => UpdateScript(sender, dm);
-        }
-
-        public VASComponent(LiveSplitState state, string script_path)
-            : this(state)
-        {
-            _settings = new ComponentSettings(this, script_path);
+            Scanner.NewResult += (sender, dm) => UpdateProfile(sender, dm);
         }
 
         public override void Dispose()
         {
             Scanner.Stop();
-            ScriptCleanup();
+            ProfileCleanup();
 
             try
             {
-                ScriptChanged?.Invoke(this, EventArgs.Empty);
+                ProfileChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
             }
 
-            _fs_watcher?.Dispose();
+            fsWatcher?.Dispose();
         }
 
         public override Control GetSettingsControl(LayoutMode mode)
         {
-            return _settings;
+            return componentSettings;
         }
 
         public override XmlNode GetSettings(XmlDocument document)
         {
-            return _settings.GetSettings(document);
+            return componentSettings.GetSettings(document);
         }
 
         public override void SetSettings(XmlNode settings)
         {
-            _settings.SetSettings(settings);
-            UpdateScript(null, null);
+            componentSettings.SetSettings(settings);
+            UpdateProfile(null, null);
         }
 
         public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height,
             LayoutMode mode)
         { }
 
-        internal void UpdateScript(object sender, DeltaManager dm)
+        internal void UpdateProfile(object sender, DeltaManager dm)
         {
-            if (scriptPath != _old_script_path || _do_reload)
+            if (profilePath != oldProfilePath || doReload)
             {
                 try
                 {
-                    _do_reload = false;
-                    _old_script_path = scriptPath;
+                    doReload = false;
+                    oldProfilePath = profilePath;
 
-                    ScriptCleanup();
+                    ProfileCleanup();
 
-                    if (string.IsNullOrEmpty(scriptPath))
+                    if (!string.IsNullOrEmpty(profilePath))
                     {
-                        _fs_watcher.EnableRaisingEvents = false;
-                    }
-                    else
-                    {
-                        LoadScript();
+                        LoadProfile();
                     }
 
-                    ScriptChanged?.Invoke(this, EventArgs.Empty);
+                    ProfileChanged?.Invoke(this, EventArgs.Empty);
                 }
                 catch (Exception ex)
                 {
@@ -130,7 +120,7 @@ namespace LiveSplit.UI.Components
             {
                 try
                 {
-                    Script.Update(_state, dm);
+                    Script.Update(state, dm);
                 }
                 catch (Exception ex)
                 {
@@ -139,42 +129,42 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        private void LoadScript()
+        private void LoadProfile()
         {
             try
             {
-                Log.Info("[VASL] Loading new profile: " + scriptPath);
+                Log.Info("[VASL] Loading new profile: " + profilePath);
 
-                GameProfile gp = GameProfile.FromPath(scriptPath);
+                Scanner.GameProfile = GameProfile.FromPath(profilePath);
 
-                if (File.Exists(scriptPath))
+                if (File.Exists(profilePath))
                 {
-                    _fs_watcher.Path = Path.GetDirectoryName(scriptPath);
-                    _fs_watcher.Filter = Path.GetFileName(scriptPath + "*");
+                    fsWatcher.Path = Path.GetDirectoryName(profilePath);
+                    fsWatcher.Filter = Path.GetFileName(profilePath + "*");
                 }
                 else
                 {
-                    _fs_watcher.Path = scriptPath;
-                    _fs_watcher.Filter = null;
+                    fsWatcher.Path = profilePath;
+                    fsWatcher.Filter = null;
                 }
 
-                _fs_watcher.EnableRaisingEvents = true;
+                fsWatcher.EnableRaisingEvents = true;
 
                 Log.Info("[VASL] Loading script within profile.");
 
-                var script = gp.RawScript;
+                var script = Scanner.GameProfile.RawScript;
 
                 // New script
                 Script = VASLParser.Parse(script);
 
-                Script.GameVersionChanged += (sender, version) => _settings.SetGameVersion(version);
-                _settings.SetGameVersion(null);
+                Script.GameVersionChanged += (sender, version) => componentSettings.SetGameVersion(version);
+                componentSettings.SetGameVersion(null);
             }
             catch (Exception ex)
             {
                 // Todo: Update UI if Game Profile failed to load.
                 Log.Error(ex);
-                ScriptCleanup();
+                ProfileCleanup();
             }
 
             // Give custom VASL settings to GUI, which populates the list and
@@ -182,19 +172,19 @@ namespace LiveSplit.UI.Components
             // and VASLScript
             try
             {
-                VASLSettings settings = Script.RunStartup(_state);
-                _settings.SetVASLSettings(settings);
+                VASLSettings settings = Script.RunStartup(state);
+                componentSettings.SetVASLSettings(settings);
                 Scanner.AsyncStart();
             }
             catch (Exception ex)
             {
                 // Script already created, but startup failed, so clean up again
                 Log.Error(ex);
-                ScriptCleanup();
+                ProfileCleanup();
             }
         }
 
-        private void ScriptCleanup()
+        private void ProfileCleanup()
         {
             Scanner.Stop();
             if (Script == null)
@@ -202,7 +192,7 @@ namespace LiveSplit.UI.Components
 
             try
             {
-                Script.RunShutdown(_state);
+                Script.RunShutdown(state);
             }
             catch (Exception ex)
             {
@@ -210,8 +200,8 @@ namespace LiveSplit.UI.Components
             }
             finally
             {
-                _settings.SetGameVersion(null);
-                _settings.ResetVASLSettings();
+                componentSettings.SetGameVersion(null);
+                componentSettings.ResetVASLSettings();
 
                 // Script should no longer be used, even in case of error
                 // (which the VASL shutdown method may contain)

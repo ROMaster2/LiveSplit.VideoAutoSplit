@@ -544,7 +544,7 @@ namespace LiveSplit.VAS
                         //Scanner.GameProfile = gp;
                         ScriptPath = this.txtGameProfile.Text = ofd.FileName;
                         //Scanner.AsyncStart();
-                        Component.UpdateScript(null, null);
+                        Component.UpdateProfile(null, null);
                     }
                 }
             }
@@ -585,7 +585,7 @@ namespace LiveSplit.VAS
                     else
                     {
                         ScriptPath = this.txtGameProfile.Text = fbd.SelectedPath;
-                        Component.UpdateScript(null, null);
+                        Component.UpdateProfile(null, null);
                     }
                 }
             }
