@@ -38,8 +38,7 @@ namespace LiveSplit.VAS.VASL
             var options = new Dictionary<string, string> {
                 { "CompilerVersion", "v4.0" }
             };
-            // Todo: Remove memory and modules?.
-            // Refresh rate can stay, kind of, idk. Version is to be added to models eventually.
+
             using (var provider = new Microsoft.CSharp.CSharpCodeProvider(options))
             {
                 var user_code_start_marker = "// USER_CODE_START";
