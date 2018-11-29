@@ -52,12 +52,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public static GameProfile FromXml(string filePath)
-        {
-            return FromXml(new FileStream(filePath, FileMode.Open, FileAccess.Read));
-        }
-
-        public static GameProfile FromXml(Stream stream)
+        public static GameProfile FromXmlStream(Stream stream)
         {
             using (StreamReader reader = new StreamReader(stream))
             {
@@ -80,7 +75,21 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public static GameProfile FromZip(string filePath)
+        public static GameProfile FromPath(string path)
+        {
+            GameProfile gp;
+
+            if (File.Exists(path))
+                gp = FromZip(path);
+            else if (Directory.Exists(path))
+                gp = FromFolder(path);
+            else
+                throw new FileNotFoundException();
+
+            return gp;
+        }
+
+        private static GameProfile FromZip(string filePath)
         {
             var archive = ZipFile.OpenRead(filePath);
             var entries = archive.Entries;
@@ -98,7 +107,7 @@ namespace LiveSplit.VAS.Models
             var xmlStream = xmlFiles.First().Open();
 
 
-            GameProfile gp = FromXml(xmlStream);
+            GameProfile gp = FromXmlStream(xmlStream);
 
 
             search = "script.asl"; // To rename
@@ -148,7 +157,7 @@ namespace LiveSplit.VAS.Models
             return gp;
         }
 
-        public static GameProfile FromFolder(string folderPath)
+        private static GameProfile FromFolder(string folderPath)
         {
             var files = Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories);
 
@@ -165,7 +174,7 @@ namespace LiveSplit.VAS.Models
             var xmlFile = xmlFiles.First();
 
 
-            GameProfile gp = FromXml(xmlFile);
+            GameProfile gp = FromXmlStream(new FileStream(xmlFile, FileMode.Open, FileAccess.Read));
 
 
             search = "script.asl"; // To rename

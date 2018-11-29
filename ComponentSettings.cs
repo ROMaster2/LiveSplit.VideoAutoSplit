@@ -122,17 +122,8 @@ namespace LiveSplit.VAS
 
                 try
                 {
-                    GameProfile gp;
-
-                    if (File.Exists(ScriptPath))
-                        gp = GameProfile.FromZip(ScriptPath);
-                    else if (Directory.Exists(ScriptPath))
-                        gp = GameProfile.FromFolder(ScriptPath);
-                    else
-                        throw new FileNotFoundException();
-
-                    Scanner.GameProfile = gp;
                     Scanner.CropGeometry = geo;
+                    Scanner.GameProfile = GameProfile.FromPath(ScriptPath);
                 }
                 catch (Exception e)
                 {
@@ -532,7 +523,7 @@ namespace LiveSplit.VAS
                 if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists == true)
                 {
                     retry:
-                    var gp = GameProfile.FromZip(ofd.FileName);
+                    var gp = GameProfile.FromPath(ofd.FileName);
 
                     if (gp == null)
                     {
@@ -575,7 +566,7 @@ namespace LiveSplit.VAS
                 if (fbd.ShowDialog() == DialogResult.OK && Directory.Exists(fbd.SelectedPath))
                 {
                     retry:
-                    var gp = GameProfile.FromFolder(fbd.SelectedPath);
+                    var gp = GameProfile.FromPath(fbd.SelectedPath);
 
                     if (gp == null)
                     {

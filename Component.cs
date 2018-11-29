@@ -145,15 +145,7 @@ namespace LiveSplit.UI.Components
             {
                 Log.Info("[VASL] Loading new profile: " + scriptPath);
 
-                GameProfile gp;
-
-                if (File.Exists(scriptPath))
-                    gp = GameProfile.FromZip(scriptPath);
-                else if (Directory.Exists(scriptPath))
-                    gp = GameProfile.FromFolder(scriptPath);
-                else
-                    throw new FileNotFoundException();
-
+                GameProfile gp = GameProfile.FromPath(scriptPath);
 
                 if (File.Exists(scriptPath))
                 {
