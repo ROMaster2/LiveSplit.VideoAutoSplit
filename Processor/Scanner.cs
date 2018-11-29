@@ -35,7 +35,10 @@ namespace LiveSplit.VAS
         public static bool IsScannerLocked = false;
         public static int ScanningCount = 0;
         public static bool IsScanning { get { return ScanningCount > 0; } }
+        public static bool Restarting { get; set; } = false;
 
+        private static NewFrameEventHandler NewFrameEventHandler;
+        private static VideoSourceErrorEventHandler VideoSourceErrorEventHandler;
         public static event DeltaResultsHandler NewResult;
 
         // Todo: Add something for downscaling before comparing for large images.
@@ -154,6 +157,16 @@ namespace LiveSplit.VAS
             VideoSource.NewFrame -= method;
         }
 
+        public static void SubscribeToErrorHandler(VideoSourceErrorEventHandler method)
+        {
+            VideoSource.VideoSourceError += method;
+        }
+
+        public static void UnsubscribeFromErrorHandler(VideoSourceErrorEventHandler method)
+        {
+            VideoSource.VideoSourceError -= method;
+        }
+
         public static void SetVideoSource(string monikerString)
         {
             _VideoGeometry = Geometry.Blank;
@@ -169,13 +182,14 @@ namespace LiveSplit.VAS
 
         public static void Stop()
         {
-            VideoSource.SignalToStop();
-            UnsubscribeFromFrameHandler(new NewFrameEventHandler(HandleNewFrame));
-            //while (IsScanning) Thread.Sleep(1);
+            IsScannerLocked = true;
+            VideoSource?.SignalToStop();
+            UnsubscribeFromFrameHandler(NewFrameEventHandler);
             CurrentIndex = 0;
             DeltaManager.History = new DeltaResults[DeltaManager.HistorySize];
-            VideoSource.Stop();
-            while (VideoSource.IsRunning) Thread.Sleep(1);
+            VideoSource?.Stop();
+            while (VideoSource?.IsRunning ?? false) Thread.Sleep(1);
+            _VideoGeometry = Geometry.Blank;
         }
 
         public static void AsyncStart()
@@ -201,15 +215,25 @@ namespace LiveSplit.VAS
                 VideoSource.Start();
 
                 initCount = 0;
-                SubscribeToFrameHandler(new NewFrameEventHandler(HandleNewFrame));
+                NewFrameEventHandler = new NewFrameEventHandler(HandleNewFrame);
+                SubscribeToFrameHandler(NewFrameEventHandler);
+                VideoSourceErrorEventHandler = new VideoSourceErrorEventHandler(HandleVideoError);
+                SubscribeToErrorHandler(VideoSourceErrorEventHandler);
             }
         }
 
         public static void Restart()
         {
-            Stop();
-            Thread.Sleep(200);
-            Start();
+            if (!Restarting)
+            {
+                LiveSplit.Options.Log.Error("VAS: Fatal error encountered, restarting scanner...");
+                Restarting = true;
+                if (IsScannerLocked) Thread.Sleep(1);
+                if (IsVideoSourceRunning()) Stop();
+                Thread.Sleep(1000);
+                Start();
+                Restarting = false;
+            }
         }
 
         public static void UpdateCropGeometry()
@@ -262,6 +286,11 @@ namespace LiveSplit.VAS
             return mi;
         }
 
+        private static void HandleVideoError(object sender, VideoSourceErrorEventArgs e)
+        {
+            Restart();
+        }
+
         internal static int initCount = 0; // To stop wasting CPU when first starting.
 
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
@@ -303,54 +332,73 @@ namespace LiveSplit.VAS
             var fileImageBase = scan.CurrentFrame.Bitmap;
             var prevFileImageBase = !scan.HasPreviousFrame ? scan.PreviousFrame.Bitmap : null;
 
-            foreach (var cWatchZone in CompiledFeatures.CWatchZones)
-                CropScan(ref deltas, ref benchmarks, now, fileImageBase, prevFileImageBase, cWatchZone);
-
-            var scanEnd = TimeStamp.CurrentDateTime.Time;
-            DeltaManager.AddResult(index, scan, scanEnd, deltas, benchmarks);
-            NewResult(null, new DeltaManager(index, AverageFPS));
-
-            ScanningCount--;
-            scan.Dispose();
-
-            // It's on its own thread so running it here should be okay.
-            if (index % Math.Round(AverageFPS) == 0 || AverageFPS < 3d)
+            try
             {
-                int count = 0;
-                double sumFPS = 0d, minFPS = 9999d, maxFPS = 0d,
-                    sumScanTime = 0d, minScanTime = 9999d, maxScanTime = 0d,
-                    sumWaitTime = 0d, minWaitTime = 9999d, maxWaitTime = 0d;
-                foreach (var d in DeltaManager.History)
+                foreach (var cWatchZone in CompiledFeatures.CWatchZones)
+                    CropScan(ref deltas, ref benchmarks, now, fileImageBase, prevFileImageBase, cWatchZone);
+            }
+            catch (ArgumentException e)
+            {
+                LiveSplit.Options.Log.Error(e);
+                if (IsVideoSourceRunning() && !IsScannerLocked)
                 {
-                    if (d != null)
-                    {
-                        count++;
-                        var fd = d.FrameDuration.TotalSeconds; // Not handling div by 0. I'll be impressed if it actually happens.
-                        sumFPS += fd;
-                        minFPS = Math.Min(minFPS, fd);
-                        maxFPS = Math.Max(maxFPS, fd);
-                        var sd = d.ScanDuration.TotalSeconds;
-                        sumScanTime += sd;
-                        minScanTime = Math.Min(minScanTime, sd);
-                        maxScanTime = Math.Max(maxScanTime, sd);
-                        var wd = d.WaitDuration?.TotalSeconds ?? AverageWaitTime;
-                        sumWaitTime += wd;
-                        minWaitTime = Math.Min(minWaitTime, wd);
-                        maxWaitTime = Math.Max(maxWaitTime, wd);
-                    }
+                    ScanningCount--;
+                    Restart();
                 }
-                AverageFPS = 3000d / Math.Round(sumFPS / count * 3000d);
-                MaxFPS = 1 / minFPS;
-                MinFPS = 1 / maxFPS;
-                AverageScanTime = sumScanTime / count;
-                MinScanTime = minScanTime;
-                MaxScanTime = maxScanTime;
-                AverageWaitTime = sumWaitTime / count;
-                MinWaitTime = minWaitTime;
-                MaxWaitTime = maxWaitTime;
+            }
+            finally
+            {
+                var scanEnd = TimeStamp.CurrentDateTime.Time;
+                DeltaManager.AddResult(index, scan, scanEnd, deltas, benchmarks);
+                NewResult(null, new DeltaManager(index, AverageFPS));
 
-                // Todo: If AverageWaitTime is too high, shrink some of the large images before comparing.
-                //       Maybe benchmark individual features though? Some ErrorMetrics are more intense than others.
+                ScanningCount--;
+                scan.Dispose();
+
+                // It's on its own thread so running it here should be okay.
+                if (index % Math.Round(AverageFPS) == 0 || AverageFPS < 3d)
+                {
+                    int count = 0;
+                    double sumFPS = 0d, minFPS = 9999d, maxFPS = 0d,
+                        sumScanTime = 0d, minScanTime = 9999d, maxScanTime = 0d,
+                        sumWaitTime = 0d, minWaitTime = 9999d, maxWaitTime = 0d;
+                    foreach (var d in DeltaManager.History)
+                    {
+                        if (d != null)
+                        {
+                            count++;
+                            var fd = d.FrameDuration.TotalSeconds; // Not handling div by 0. I'll be impressed if it actually happens.
+                            sumFPS += fd;
+                            minFPS = Math.Min(minFPS, fd);
+                            maxFPS = Math.Max(maxFPS, fd);
+                            var sd = d.ScanDuration.TotalSeconds;
+                            sumScanTime += sd;
+                            minScanTime = Math.Min(minScanTime, sd);
+                            maxScanTime = Math.Max(maxScanTime, sd);
+                            var wd = d.WaitDuration?.TotalSeconds ?? AverageWaitTime;
+                            sumWaitTime += wd;
+                            minWaitTime = Math.Min(minWaitTime, wd);
+                            maxWaitTime = Math.Max(maxWaitTime, wd);
+                        }
+                    }
+                    AverageFPS = 3000d / Math.Round(sumFPS / count * 3000d);
+                    MaxFPS = 1 / minFPS;
+                    MinFPS = 1 / maxFPS;
+                    AverageScanTime = sumScanTime / count;
+                    MinScanTime = minScanTime;
+                    MaxScanTime = maxScanTime;
+                    AverageWaitTime = sumWaitTime / count;
+                    MinWaitTime = minWaitTime;
+                    MaxWaitTime = maxWaitTime;
+
+                    // Todo: If AverageWaitTime is too high, shrink some of the large images before comparing.
+                    //       Maybe benchmark individual features though? Some ErrorMetrics are more intense than others.
+                }
+            }
+
+            if (index >= DeltaManager.HistorySize && AverageFPS > 70d)
+            {
+                Restart();
             }
         }
 
