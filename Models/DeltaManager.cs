@@ -408,14 +408,14 @@ namespace LiveSplit.VAS.Models
 
         internal static void AddResult(int index, DateTime frameStart, DateTime frameEnd, DateTime scanEnd, double[] deltas, double[] benchmarks)
         {
-            const int SAFETY_THRESHOLD = 30;
             var currIndex = index % HistorySize;
             var prevIndex = (index - 1) % HistorySize;
 
             var dr = new DeltaResults(index, frameStart, frameEnd, scanEnd, deltas, benchmarks);
             History[currIndex] = dr;
 
-            if (index > SAFETY_THRESHOLD)
+            // HistorySize is used so scripts using methods like old can build all the values first.
+            if (index >= HistorySize)
             {
                 while ((History[prevIndex]?.Index ?? -1) != index - 1)
                 {
