@@ -28,14 +28,12 @@ namespace LiveSplit.UI.Components
         internal IDictionary<string, bool> BasicSettingsState;
         internal IDictionary<string, dynamic> CustomSettingsState;
 
-        public Options(string scriptPath = null)
+        public Options()
         {
             InitializeComponent();
             FillboxCaptureDevice();
 
-            ProfilePath = scriptPath;
-
-            txtGameProfile.DataBindings.Add("Text", this, "ScriptPath", false, DataSourceUpdateMode.OnPropertyChanged);
+            txtGameProfile.DataBindings.Add("Text", this, "ProfilePath", false, DataSourceUpdateMode.OnPropertyChanged);
 
             SetGameVersion(null);
             UpdateCustomSettingsVisibility();
@@ -52,7 +50,7 @@ namespace LiveSplit.UI.Components
             CustomSettingsState = new Dictionary<string, dynamic>();
         }
 
-        private bool FillboxCaptureDevice()
+        internal bool FillboxCaptureDevice()
         {
             var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
@@ -492,8 +490,7 @@ namespace LiveSplit.UI.Components
             {
                 var match = matches.First();
                 Scanner.SetVideoSource(match.MonikerString);
-                //Properties.Settings.Default.VideoDevice = boxCaptureDevice.Text;
-                //Properties.Settings.Default.Save();
+                VideoDevice = match.Name;
             }
             else
             {

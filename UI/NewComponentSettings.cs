@@ -40,10 +40,14 @@ namespace LiveSplit.UI.Components
         {
             InitializeComponent();
 
-            Options    = new Options(profilePath);
-            ScanRegion = new ScanRegion();
-            Features   = new Features();
-            Debug      = new Debug();
+            Options    = options;
+            ScanRegion = scanRegion;
+            Features   = features;
+            Debug      = debug;
+
+            this.tabScanRegion.SuspendLayout();
+            this.tabFeatures.SuspendLayout();
+            this.tabDebug.SuspendLayout();
 
             BasicSettings = Options.BasicSettings;
             BasicSettingsState = Options.BasicSettingsState;
@@ -113,15 +117,15 @@ namespace LiveSplit.UI.Components
             VideoDevice = SettingsHelper.ParseString(element["VideoDevice"], string.Empty);
             GameVersion = SettingsHelper.ParseString(element["GameVersion"], string.Empty);
 
+            Options.FillboxCaptureDevice();
+
             if (element["CropGeometry"] != null)
             {
-                var geo = new Geometry()
-                {
-                    X = SettingsHelper.ParseDouble(element["CropX"], 0),
-                    Y = SettingsHelper.ParseDouble(element["CropY"], 0),
-                    Width = SettingsHelper.ParseDouble(element["CropWidth"], 0),
-                    Height = SettingsHelper.ParseDouble(element["CropHeight"], 0)
-                };
+                var geo = Geometry.FromString(element["CropGeometry"].InnerText);
+                if (geo.HasSize)
+                    CropGeometry = geo;
+                else
+                    CropGeometry = Geometry.Blank;
             }
             /*
             try
@@ -217,6 +221,32 @@ namespace LiveSplit.UI.Components
         {
             Options.InitVASLSettings(settings, scriptLoaded);
         }
-                
+
+        public void SetGameVersion(string version)
+        {
+            Options.SetGameVersion(version);
+        }
+
+        private void tabControlCore_Selecting(object sender, TabControlCancelEventArgs e)
+        {
+            this.tabScanRegion.SuspendLayout();
+            this.tabFeatures.SuspendLayout();
+            this.tabDebug.SuspendLayout();
+            switch (e.TabPage.Name)
+            {
+                case "tabScanRegion":
+                    tabScanRegion.ResumeLayout(false);
+                    ScanRegion.Rerender();
+                    break;
+                case "tabFeatures":
+                    tabFeatures.ResumeLayout(false);
+                    break;
+                case "tabDebug":
+                    tabDebug.ResumeLayout(false);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

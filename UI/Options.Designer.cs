@@ -317,7 +317,6 @@
             // btnResetToDefault
             // 
             this.btnResetToDefault.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnResetToDefault.Enabled = false;
             this.btnResetToDefault.Location = new System.Drawing.Point(265, 3);
             this.btnResetToDefault.Name = "btnResetToDefault";
             this.btnResetToDefault.Size = new System.Drawing.Size(99, 23);
@@ -329,7 +328,6 @@
             // btnUncheckAll
             // 
             this.btnUncheckAll.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnUncheckAll.Enabled = false;
             this.btnUncheckAll.Location = new System.Drawing.Point(184, 3);
             this.btnUncheckAll.Name = "btnUncheckAll";
             this.btnUncheckAll.Size = new System.Drawing.Size(75, 23);
@@ -341,7 +339,6 @@
             // btnCheckAll
             // 
             this.btnCheckAll.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnCheckAll.Enabled = false;
             this.btnCheckAll.Location = new System.Drawing.Point(116, 3);
             this.btnCheckAll.Name = "btnCheckAll";
             this.btnCheckAll.Size = new System.Drawing.Size(62, 23);
@@ -356,7 +353,6 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.treeCustomSettings.CheckBoxes = true;
-            this.treeCustomSettings.Enabled = false;
             this.treeCustomSettings.Location = new System.Drawing.Point(90, 90);
             this.treeCustomSettings.Name = "treeCustomSettings";
             this.treeCustomSettings.ShowNodeToolTips = true;
