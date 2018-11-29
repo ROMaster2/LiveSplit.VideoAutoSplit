@@ -99,13 +99,13 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                this.m_ComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+                this.m_ComboBox.DropDownStyle = ComboBoxStyle.Simple;
                 return this.m_ComboBox;
             }
             set
             {
                 this.m_ComboBox = value;
-                this.m_ComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+                this.m_ComboBox.DropDownStyle = ComboBoxStyle.Simple;
             }
         }
         #endregion
