@@ -190,19 +190,19 @@ namespace LiveSplit.VAS
             VideoSource?.Stop();
             while (VideoSource?.IsRunning ?? false) Thread.Sleep(1);
             _VideoGeometry = Geometry.Blank;
+            Thread?.Abort();
         }
 
         public static void AsyncStart()
         {
-            if (!Thread?.IsAlive ?? true)
+            if (GameProfile != null && IsVideoSourceValid())
             {
-                ThreadStart t = new ThreadStart(Start);
-                Thread = new Thread(t);
-                Thread.Start();
-            }
-            else
-            {
-                Restart();
+                if (Thread == null || Thread.ThreadState != System.Threading.ThreadState.Running)
+                {
+                    ThreadStart t = new ThreadStart(Start);
+                    Thread = new Thread(t);
+                    Thread.Start();
+                }
             }
         }
 
