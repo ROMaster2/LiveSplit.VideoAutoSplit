@@ -435,7 +435,9 @@ namespace LiveSplit.VAS.Models
                         var MinWaitTime      = Scanner.MinWaitTime;
                         var MaxWaitTime      = Scanner.MaxWaitTime;
 
-                        throw new Exception("Previous frame could not be processed or is taking too long to process.");
+                        if (Scanner.IsVideoSourceRunning())
+                            Scanner.Restart();
+                        //throw new Exception("Previous frame could not be processed or is taking too long to process.");
                     }
                     Thread.Sleep(1);
                     i++;
