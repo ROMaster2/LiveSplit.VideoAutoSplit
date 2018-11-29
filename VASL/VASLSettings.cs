@@ -9,6 +9,7 @@ namespace LiveSplit.VAS.VASL
     {
         public string Id { get; }
         public string Label { get; }
+        public string Type { get; }
         public dynamic Value { get; set; }
         public dynamic DefaultValue { get; }
         public string Parent { get; }
@@ -21,6 +22,7 @@ namespace LiveSplit.VAS.VASL
             DefaultValue = default_value;
             Label = label;
             Parent = parent;
+            Type = ((object)default_value).GetType().ToString();
         }
 
         public override string ToString()
