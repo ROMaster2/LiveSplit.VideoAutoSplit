@@ -99,18 +99,14 @@ namespace LiveSplit.VAS.VASL
         // Update the script
         public void Update(LiveSplitState state, DeltaManager dm)
         {
-            if (!Scanner.IsVideoSourceRunning())
-            {
-                //TryConnect(state);
-                //DoExit(state); // This'll probably change
-            }
-            else
+            if (Scanner.IsVideoSourceRunning())
             {
                 if (_timer == null)
                     _timer = new TimerModel() { CurrentState = state };
+
                 if (!_init_completed)
                     DoInit(state, dm);
-                else
+                else if (dm != null)
                     DoUpdate(state, dm);
             }
         }
