@@ -417,9 +417,10 @@ namespace LiveSplit.VAS.Models
             // HistorySize is used so scripts using methods like old can build all the values first.
             if (index >= HistorySize)
             {
-                while ((History[prevIndex]?.Index ?? -1) != index - 1)
+                int i = 0;
+                while (History[prevIndex] == null || History[prevIndex].Index != index - 1)
                 {
-                    if (Scanner.CurrentIndex - HistorySize >= index)
+                    if (Scanner.CurrentIndex - HistorySize >= index || i >= 5000)
                     {
                         // DEBUGGING
                         var a = BenchmarkAverages;
@@ -437,6 +438,7 @@ namespace LiveSplit.VAS.Models
                         throw new Exception("Previous frame could not be processed or is taking too long to process.");
                     }
                     Thread.Sleep(1);
+                    i++;
                 }
             }
 
