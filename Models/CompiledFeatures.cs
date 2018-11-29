@@ -53,7 +53,16 @@ namespace LiveSplit.VAS.Models
         */
         public static void Compile(GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
         {
-            while (Scanner.IsScanning) { Thread.Sleep(1); }
+            int i = 0;
+            while (Scanner.IsScanning)
+            {
+                if (i > 5000)
+                {
+                    break; // Try anyway.
+                }
+                Thread.Sleep(1);
+                i++;
+            }
 
             if (CWatchZones != null)
             {
