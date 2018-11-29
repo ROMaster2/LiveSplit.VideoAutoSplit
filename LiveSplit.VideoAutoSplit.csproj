@@ -92,6 +92,7 @@
     <Compile Include="Factory.cs" />
     <Compile Include="Models\CompiledFeatures.cs" />
     <Compile Include="Models\DeltaManager.cs" />
+    <Compile Include="Models\DropDownTreeView.cs" />
     <Compile Include="Models\Features\Anchor.cs" />
     <Compile Include="Models\Features\GameProfile.cs" />
     <Compile Include="Models\Features\ScaleType.cs" />
@@ -127,11 +128,29 @@
     <Compile Include="UI\NewComponentSettings.Designer.cs">
       <DependentUpon>NewComponentSettings.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\Settings.cs">
+    <Compile Include="UI\Options.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\Settings.Designer.cs">
-      <DependentUpon>Settings.cs</DependentUpon>
+    <Compile Include="UI\Options.Designer.cs">
+      <DependentUpon>Options.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Debug.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Debug.Designer.cs">
+      <DependentUpon>Debug.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Features.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Features.Designer.cs">
+      <DependentUpon>Features.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ScanRegion.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ScanRegion.Designer.cs">
+      <DependentUpon>ScanRegion.cs</DependentUpon>
     </Compile>
     <Compile Include="VASL\VASLExceptions.cs" />
     <Compile Include="VASL\VASLGrammar.cs" />
@@ -152,8 +171,17 @@
     <EmbeddedResource Include="UI\NewComponentSettings.resx">
       <DependentUpon>NewComponentSettings.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Settings.resx">
-      <DependentUpon>Settings.cs</DependentUpon>
+    <EmbeddedResource Include="UI\Options.resx">
+      <DependentUpon>Options.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Debug.resx">
+      <DependentUpon>Debug.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Features.resx">
+      <DependentUpon>Features.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ScanRegion.resx">
+      <DependentUpon>ScanRegion.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
