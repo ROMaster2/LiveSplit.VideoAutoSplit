@@ -115,6 +115,13 @@ public class CompiledScript
             {
                 ret = _compiled_code.Execute(timer, old, current, vars, features, settings);
             }
+            catch (NullReferenceException ex)
+            {
+                if (features.OriginalIndex >= DeltaManager.HistorySize)
+                    throw new VASLRuntimeException(this, ex);
+                else
+                    ret = null;
+            }
             catch (Exception ex)
             {
                 throw new VASLRuntimeException(this, ex);
