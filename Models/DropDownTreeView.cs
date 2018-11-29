@@ -150,10 +150,10 @@ namespace LiveSplit.VAS.Models
 
                 // Set the bounds of the ComboBox, with a little adjustment to make it look right
                 this.m_CurrentNode.ComboBox.SetBounds(
-                    this.m_CurrentNode.Bounds.X - 1,
-                    this.m_CurrentNode.Bounds.Y - 2,
-                    this.m_CurrentNode.Bounds.Width + 25,
-                    this.m_CurrentNode.Bounds.Height);
+                    this.m_CurrentNode.TreeView.Width - 60,
+                    this.m_CurrentNode.Bounds.Y,
+                    60,
+                    20);
 
                 // Listen to the SelectedValueChanged event of the node's ComboBox
                 this.m_CurrentNode.ComboBox.SelectedValueChanged += new EventHandler(ComboBox_SelectedValueChanged);
