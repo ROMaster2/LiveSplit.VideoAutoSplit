@@ -647,7 +647,8 @@ namespace LiveSplit.VAS
 
         private void boxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Scanner.Stop();
+            if (Scanner.IsVideoSourceRunning())
+                Scanner.Stop();
         retry:
             var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             var matches = videoDevices.Where(v => v.Name == boxCaptureDevice.Text);
