@@ -724,6 +724,23 @@ namespace LiveSplit.VAS.Models
             return new Geometry(x, y, width, height);
         }
 
+        public static Geometry FromString(string str)
+        {
+            var split = str.Split('x');
+            var width = double.Parse(split[0]);
+            str = split[1];
+
+            var xPos = str.IndexOfAny(new char[] { '+', '-' });
+            var height = double.Parse(str.Substring(0, xPos));
+            str = str.Substring(xPos);
+
+            var yPos = str.IndexOfAny(new char[] { '+', '-' }, 1);
+            var x = double.Parse(str.Substring(0, yPos));
+            var y = double.Parse(str.Substring(yPos));
+
+            return new Geometry(x, y, width, height, Anchor.Undefined);
+        }
+
 
         // I do not trust these contains and related. They need testing.
 
