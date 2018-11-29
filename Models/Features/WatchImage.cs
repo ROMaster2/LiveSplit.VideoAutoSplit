@@ -94,6 +94,7 @@ namespace LiveSplit.VAS.Models
         }
 
         // TO REMOVE
+        /*
         public void SetMagickImage(bool extremePrecision)
         {
             var mi = new MagickImage((Bitmap)Image)
@@ -129,7 +130,7 @@ namespace LiveSplit.VAS.Models
             }
             MagickImage = mi;
         }
-
+        */
         public void Dispose()
         {
             if (_Image != null)

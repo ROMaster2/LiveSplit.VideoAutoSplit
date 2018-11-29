@@ -256,7 +256,7 @@ namespace LiveSplit.VAS
 
                     foreach (var wi in wz.WatchImages)
                     {
-                        wi.SetMagickImage(false);
+                        //wi.SetMagickImage(false);
                         wi.Index = i;
                         i++;
                     }
