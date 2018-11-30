@@ -374,7 +374,7 @@ namespace LiveSplit.VAS
                         if (d != null)
                         {
                             count++;
-                            var fd = d.FrameDuration.TotalSeconds; // Not handling div by 0. I'll be impressed if it actually happens.
+                            var fd = d.FrameDuration.TotalSeconds;
                             sumFPS += fd;
                             minFPS = Math.Min(minFPS, fd);
                             maxFPS = Math.Max(maxFPS, fd);
@@ -388,6 +388,7 @@ namespace LiveSplit.VAS
                             maxWaitTime = Math.Max(maxWaitTime, wd);
                         }
                     }
+                    count = Math.Max(count, 1); // Somehow we get NaNs...
                     AverageFPS = 3000d / Math.Round(sumFPS / count * 3000d);
                     MaxFPS = 1 / minFPS;
                     MinFPS = 1 / maxFPS;
