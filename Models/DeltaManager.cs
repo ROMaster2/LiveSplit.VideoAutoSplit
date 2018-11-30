@@ -45,9 +45,9 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public readonly int OriginalIndex;
-        public readonly int FrameIndex;
-        public readonly double FrameRate;
+        public int OriginalIndex { get; }
+        public int FrameIndex { get; }
+        public double FrameRate { get; }
 
         private int[] _FeatureIndexes = null;
         private int[] FeatureIndexes
