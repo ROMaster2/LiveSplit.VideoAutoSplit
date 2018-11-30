@@ -33,7 +33,6 @@ namespace LiveSplit.UI.Components
         internal IDictionary<string, bool> BasicSettingsState;
         internal IDictionary<string, dynamic> CustomSettingsState;
 
-        public GameProfile GameProfile { get { return Scanner.GameProfile; } set { Scanner.GameProfile = value; } }
         public Geometry CropGeometry { get { return Scanner.CropGeometry; } set { Scanner.CropGeometry = value; } }
 
         public NewComponentSettings(string profilePath = null)
@@ -45,9 +44,9 @@ namespace LiveSplit.UI.Components
             Features   = features;
             Debug      = debug;
 
-            this.tabScanRegion.SuspendLayout();
-            this.tabFeatures.SuspendLayout();
-            this.tabDebug.SuspendLayout();
+            tabScanRegion.SuspendLayout();
+            tabFeatures.SuspendLayout();
+            tabDebug.SuspendLayout();
 
             BasicSettings = Options.BasicSettings;
             BasicSettingsState = Options.BasicSettingsState;
@@ -127,15 +126,6 @@ namespace LiveSplit.UI.Components
                 else
                     CropGeometry = Geometry.Blank;
             }
-            /*
-            try
-            {
-                GameProfile = GameProfile.FromPath(ProfilePath);
-            }
-            catch (Exception e)
-            {
-                LiveSplit.Options.Log.Error(e); // Change, probably
-            }*/
         }
 
         private void ParseBasicSettingsFromXml(XmlElement element)
@@ -229,9 +219,10 @@ namespace LiveSplit.UI.Components
 
         private void tabControlCore_Selecting(object sender, TabControlCancelEventArgs e)
         {
-            this.tabScanRegion.SuspendLayout();
-            this.tabFeatures.SuspendLayout();
-            this.tabDebug.SuspendLayout();
+            tabScanRegion.SuspendLayout();
+            ScanRegion.Unrender();
+            tabFeatures.SuspendLayout();
+            tabDebug.SuspendLayout();
             switch (e.TabPage.Name)
             {
                 case "tabScanRegion":

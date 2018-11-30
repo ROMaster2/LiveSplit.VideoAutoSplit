@@ -57,17 +57,17 @@
             this.tabControlCore.Margin = new System.Windows.Forms.Padding(0);
             this.tabControlCore.Name = "tabControlCore";
             this.tabControlCore.SelectedIndex = 0;
-            this.tabControlCore.Size = new System.Drawing.Size(476, 512);
+            this.tabControlCore.Size = new System.Drawing.Size(476, 532);
             this.tabControlCore.TabIndex = 1;
             this.tabControlCore.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControlCore_Selecting);
             // 
-            // tabSettings
+            // tabOptions
             // 
             this.tabOptions.Controls.Add(this.options);
             this.tabOptions.Location = new System.Drawing.Point(4, 22);
             this.tabOptions.Margin = new System.Windows.Forms.Padding(0);
-            this.tabOptions.Name = "tabSettings";
-            this.tabOptions.Size = new System.Drawing.Size(468, 486);
+            this.tabOptions.Name = "tabOptions";
+            this.tabOptions.Size = new System.Drawing.Size(468, 506);
             this.tabOptions.TabIndex = 0;
             this.tabOptions.Text = "Settings";
             this.tabOptions.UseVisualStyleBackColor = true;
@@ -81,7 +81,7 @@
             this.options.Name = "options";
             this.options.Padding = new System.Windows.Forms.Padding(7);
             this.options.ProfilePath = null;
-            this.options.Size = new System.Drawing.Size(468, 486);
+            this.options.Size = new System.Drawing.Size(468, 506);
             this.options.TabIndex = 0;
             this.options.VideoDevice = null;
             // 
@@ -91,7 +91,7 @@
             this.tabScanRegion.Location = new System.Drawing.Point(4, 22);
             this.tabScanRegion.Margin = new System.Windows.Forms.Padding(0);
             this.tabScanRegion.Name = "tabScanRegion";
-            this.tabScanRegion.Size = new System.Drawing.Size(468, 486);
+            this.tabScanRegion.Size = new System.Drawing.Size(468, 506);
             this.tabScanRegion.TabIndex = 1;
             this.tabScanRegion.Text = "Scan Region";
             this.tabScanRegion.UseVisualStyleBackColor = true;
@@ -103,7 +103,7 @@
             this.scanRegion.Margin = new System.Windows.Forms.Padding(0);
             this.scanRegion.Name = "scanRegion";
             this.scanRegion.Padding = new System.Windows.Forms.Padding(7);
-            this.scanRegion.Size = new System.Drawing.Size(468, 486);
+            this.scanRegion.Size = new System.Drawing.Size(468, 506);
             this.scanRegion.TabIndex = 0;
             // 
             // tabFeatures
@@ -112,7 +112,7 @@
             this.tabFeatures.Location = new System.Drawing.Point(4, 22);
             this.tabFeatures.Margin = new System.Windows.Forms.Padding(0);
             this.tabFeatures.Name = "tabFeatures";
-            this.tabFeatures.Size = new System.Drawing.Size(468, 486);
+            this.tabFeatures.Size = new System.Drawing.Size(468, 506);
             this.tabFeatures.TabIndex = 2;
             this.tabFeatures.Text = "Features";
             this.tabFeatures.UseVisualStyleBackColor = true;
@@ -124,7 +124,7 @@
             this.features.Margin = new System.Windows.Forms.Padding(0);
             this.features.Name = "features";
             this.features.Padding = new System.Windows.Forms.Padding(7);
-            this.features.Size = new System.Drawing.Size(468, 486);
+            this.features.Size = new System.Drawing.Size(468, 506);
             this.features.TabIndex = 0;
             // 
             // tabDebug
@@ -133,7 +133,7 @@
             this.tabDebug.Location = new System.Drawing.Point(4, 22);
             this.tabDebug.Margin = new System.Windows.Forms.Padding(0);
             this.tabDebug.Name = "tabDebug";
-            this.tabDebug.Size = new System.Drawing.Size(468, 486);
+            this.tabDebug.Size = new System.Drawing.Size(468, 506);
             this.tabDebug.TabIndex = 4;
             this.tabDebug.Text = "Error Log";
             this.tabDebug.UseVisualStyleBackColor = true;
@@ -146,7 +146,7 @@
             this.debug.Margin = new System.Windows.Forms.Padding(0);
             this.debug.Name = "debug";
             this.debug.Padding = new System.Windows.Forms.Padding(7);
-            this.debug.Size = new System.Drawing.Size(468, 486);
+            this.debug.Size = new System.Drawing.Size(468, 506);
             this.debug.TabIndex = 0;
             // 
             // tabHotkeys
@@ -154,7 +154,7 @@
             this.tabHotkeys.Location = new System.Drawing.Point(4, 22);
             this.tabHotkeys.Margin = new System.Windows.Forms.Padding(0);
             this.tabHotkeys.Name = "tabHotkeys";
-            this.tabHotkeys.Size = new System.Drawing.Size(468, 486);
+            this.tabHotkeys.Size = new System.Drawing.Size(468, 506);
             this.tabHotkeys.TabIndex = 5;
             this.tabHotkeys.Text = "Hotkeys";
             this.tabHotkeys.UseVisualStyleBackColor = true;
@@ -165,7 +165,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tabControlCore);
             this.Name = "NewComponentSettings";
-            this.Size = new System.Drawing.Size(476, 512);
+            this.Size = new System.Drawing.Size(476, 532);
             this.tabControlCore.ResumeLayout(false);
             this.tabOptions.ResumeLayout(false);
             this.tabScanRegion.ResumeLayout(false);

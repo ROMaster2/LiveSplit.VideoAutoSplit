@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
+using Accord.Video;
 using Accord.Video.DirectShow;
 using ImageMagick;
 using LiveSplit.UI;
@@ -22,19 +23,17 @@ namespace LiveSplit.UI.Components
 {
     public partial class ScanRegion : UserControl
     {
-        private const double DEFAULT_MOVE_DISTANCE = 1;
-        private const double ALT_DISTANCE_MODIFIER = 10;
-        private const double SHIFT_DISTANCE_MODIFIER = 10;
-        private const double CONTROL_DISTANCE_MODIFIER = 0.1;
-
         private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
         private const FilterType DEFAULT_SCALE_FILTER = FilterType.Lanczos;
         private static readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
 
-        public Geometry CropGeometry { get { return Scanner.CropGeometry; } set { Scanner.CropGeometry = value; } }
-        public static Geometry VideoGeometry { get { return Scanner.VideoGeometry; } }
+        private DateTime LastUpdate = DateTime.UtcNow;
 
-        private static Geometry MIN_VALUES
+        private GameProfile GameProfile { get { return Scanner.GameProfile; } }
+        private Geometry CropGeometry { get { return Scanner.CropGeometry; } set { Scanner.CropGeometry = value; } }
+        private Geometry VideoGeometry { get { return Scanner.VideoGeometry; } }
+
+        private Geometry MIN_VALUES
         {
             get
             {
@@ -45,7 +44,7 @@ namespace LiveSplit.UI.Components
                     return new Geometry(-VideoGeometry.Width, -VideoGeometry.Height, 4, 4);
             }
         }
-        private static Geometry MAX_VALUES
+        private Geometry MAX_VALUES
         {
             get
             {
@@ -60,20 +59,30 @@ namespace LiveSplit.UI.Components
         public ScanRegion()
         {
             InitializeComponent();
+            FillboxPreviewType();
         }
 
         public void Rerender()
         {
-            SetAllNumValues(CropGeometry);
+            SetAllNumValues(CropGeometry, false);
+            FillboxPreviewFeature();
+            Scanner.SubscribeToFrameHandler(HandleNewFrame);
         }
 
-        private void SetAllNumValues(Geometry geo)
+        public void Unrender()
+        {
+            Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);
+            boxPreviewFeature.Items.Clear();
+            pictureBox.Image = new Bitmap(1,1);
+        }
+
+        private void SetAllNumValues(Geometry geo, bool updateGeo = true)
         {
             numX.Value      = (decimal)geo.X;
             numY.Value      = (decimal)geo.Y;
             numWidth.Value  = (decimal)geo.Width;
             numHeight.Value = (decimal)geo.Height;
-            UpdateCropGeometry(geo);
+            if (updateGeo) UpdateCropGeometry(geo);
         }
 
         private void UpdateCropGeometry(Geometry? geo = null)
@@ -87,9 +96,172 @@ namespace LiveSplit.UI.Components
                 newGeo.Height = (double)numHeight.Value;
             }
             CropGeometry = newGeo.Min(MAX_VALUES).Max(MIN_VALUES);
-            //RefreshThumbnail();
         }
 
+        private void FillboxPreviewType()
+        {
+            boxPreviewType.Items.Add("Full Frame");
+            boxPreviewType.Items.Add("Optimal Frame Crop"); // TrueCropGeometry
+            boxPreviewType.Items.Add("Screen*");
+            boxPreviewType.Items.Add("Feature*");
+            boxPreviewType.SelectedIndex = 0;
+        }
+
+        private void FillboxPreviewFeature()
+        {
+            boxPreviewFeature.Items.Add("<None>");
+            if (GameProfile != null)
+            {
+                foreach (var wi in Scanner.GameProfile.WatchImages)
+                {
+                    wi.SetName(wi.Screen, wi.WatchZone, wi.Watcher);
+                    boxPreviewFeature.Items.Add(wi);
+                }
+            }
+            boxPreviewFeature.SelectedIndex = 0;
+        }
+
+        // Would be better if something like this was in Geometry.cs
+        private Geometry GetScaledGeometry(Geometry refGeo)
+        {
+            var referenceWidth = refGeo.IsBlank ? CropGeometry.Width : refGeo.Width;
+            var referenceHeight = refGeo.IsBlank ? CropGeometry.Height : refGeo.Height;
+
+            // Tried to not have hardcoded, but Microsoft disagreed.
+            var parent = pictureBox.Parent;
+            var parentWidth = parent.Width;
+            var parentHeight = parent.Height - 100;
+            var xMargin = pictureBox.Margin.Left + pictureBox.Margin.Right;
+            var yMargin = pictureBox.Margin.Top + pictureBox.Margin.Bottom;
+            var xRatio = (parentWidth - xMargin) / referenceWidth;
+            var yRatio = (parentHeight - yMargin) / referenceHeight;
+
+            var ratio = Math.Min(Math.Min(1, xRatio), yRatio);
+            var width = Math.Max(referenceWidth * ratio, 4);
+            var height = Math.Max(referenceHeight * ratio, 4);
+            return new Geometry(width, height);
+        }
+
+        private void HandleNewFrame(object sender, NewFrameEventArgs e)
+        {
+            if (this.Visible)
+            if (DateTime.UtcNow.Subtract(LastUpdate) > TimeSpan.FromSeconds(0.1))
+            {
+                LastUpdate = DateTime.UtcNow;
+                var frame = e.Frame.DeepCopy();
+                Task.Run(() => RefreshThumbnail(frame));
+            }
+        }
+
+        private void RefreshThumbnail(Bitmap frame)
+        {
+            int featureIndex = -1;
+            WatchImage feature = null;
+            if (boxPreviewFeature.Visible)
+            boxPreviewFeature.Invoke((MethodInvoker)delegate
+            {
+                featureIndex = boxPreviewFeature.SelectedIndex;
+                if (featureIndex > 0)
+                    feature = (WatchImage)boxPreviewFeature.SelectedItem;
+            });
+            RefreshThumbnailAsync(frame, featureIndex, feature);
+        }
+
+        private async void RefreshThumbnailAsync(Bitmap frame, int featureIndex, WatchImage feature)
+        {
+            await Task.Delay(0);
+            Geometry minGeo = Geometry.Min(CropGeometry, GetScaledGeometry(Geometry.Blank));
+
+            MagickImage mi = new MagickImage(frame);
+            var tmp = VideoGeometry;
+
+            if (!VideoGeometry.Contains(CropGeometry))
+            {
+                mi.Extent(CropGeometry.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
+            }
+            else
+            {
+                mi.Crop(CropGeometry.ToMagick(), STANDARD_GRAVITY);
+            }
+            mi.RePage();
+
+            if (featureIndex > 0)
+            {
+                var wi = feature;
+                var tGeo = wi.WatchZone.CropGeometry;
+                tGeo.Update(-CropGeometry.X, -CropGeometry.Y);
+
+                var baseMGeo = new MagickGeometry(100, 100, (int)Math.Round(tGeo.Width), (int)Math.Round(tGeo.Height));
+
+                tGeo.Update(-100, -100, 200, 200);
+                mi.Extent(tGeo.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
+
+                using (var baseM = new MagickImage(
+                    MagickColor.FromRgba(0, 0, 0, 0),
+                    baseMGeo.Width,
+                    baseMGeo.Height))
+                using (var overlay = new MagickImage(
+                        MagickColor.FromRgba(170, 170, 170, 223),
+                        baseMGeo.Width + 200,
+                        baseMGeo.Height + 200))
+                {
+                    overlay.Composite(baseM, new PointD(baseMGeo.X, baseMGeo.Y), CompositeOperator.Alpha);
+                    mi.Composite(overlay, CompositeOperator.Atop);
+                }
+                mi.RePage();
+
+                minGeo = minGeo.Min(GetScaledGeometry(tGeo));
+
+                if (ckbShowComparison.Checked)
+                {
+                    using (var deltaImage = wi.MagickImage.Clone())
+                    {
+                        mi.ColorSpace = wi.Watcher.ColorSpace;
+                        deltaImage.ColorSpace = wi.Watcher.ColorSpace;
+                        mi.Crop(baseMGeo, STANDARD_GRAVITY);
+                        //mi.Write(@"E:\fuck0.png");
+                        //deltaImage.Write(@"E:\fuck1.png");
+                        mi.Alpha(AlphaOption.Off); // Why is this necessary? It wasn't necessary before.
+                        //mi.Write(@"E:\fuck2.png");
+                        if (wi.Watcher.Equalize)
+                        {
+                            deltaImage.Equalize();
+                            mi.Equalize();
+                        }
+                        deltaImage.RePage();
+                        mi.RePage();
+                        //mi.Write(@"E:\fuck3.png");
+                        //deltaImage.Write(@"E:\fuck4.png");
+                        lblDelta.Text = mi.Compare(deltaImage, ErrorMetric.PeakSignalToNoiseRatio).ToString("0.####");
+                        mi.Composite(deltaImage, CompositeOperator.Difference);
+                        //mi.Write(@"E:\fuck5.png");
+                        //deltaImage.Write(@"E:\fuck6.png");
+                    }
+
+                    minGeo = minGeo.Min(GetScaledGeometry(wi.WatchZone.CropGeometry));
+                }
+            }
+
+            var drawingSize = minGeo.Size.ToDrawing();
+            if (mi.Width > drawingSize.Width || mi.Height > drawingSize.Height)
+            {
+                var mGeo = minGeo.ToMagick();
+                mGeo.IgnoreAspectRatio = false;
+                //mi.ColorSpace = ColorSpace.Lab;
+                mi.FilterType = DEFAULT_SCALE_FILTER;
+                mi.Resize(mGeo);
+            }
+            UpdatepictureBox(drawingSize, mi.ToBitmap(System.Drawing.Imaging.ImageFormat.MemoryBmp));
+        }
+
+        private void UpdatepictureBox(Size minGeo, Bitmap bitmap)
+        {
+            pictureBox.Invoke((MethodInvoker)delegate
+            {
+                pictureBox.Size = minGeo;
+                pictureBox.Image = bitmap;
+            });
+        }
 
     }
 }

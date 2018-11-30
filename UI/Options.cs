@@ -122,7 +122,8 @@ namespace LiveSplit.UI.Components
             if (nodes == null)
                 nodes = treeCustomSettings.Nodes;
 
-            UpdateNodesInTree(node => {
+            UpdateNodesInTree(node =>
+            {
                 var setting = (VASLSetting)node.Tag;
                 dynamic value = func(setting);
 
@@ -138,7 +139,8 @@ namespace LiveSplit.UI.Components
             if (settingValues == null)
                 return;
 
-            UpdateNodesValues(setting => {
+            UpdateNodesValues(setting =>
+            {
                 string id = setting.Id;
 
                 if (settingValues.ContainsKey(id))
@@ -164,7 +166,7 @@ namespace LiveSplit.UI.Components
                 BasicSettingsState.Clear();
                 CustomSettingsState.Clear();
             }
-            
+
             treeCustomSettings.BeginUpdate();
             treeCustomSettings.Nodes.Clear();
 
@@ -201,8 +203,6 @@ namespace LiveSplit.UI.Components
                 values.Add(setting.Id, value);
             }
 
-            // Todo later, maybe
-            /*
             foreach (var item in flat)
             {
                 if (!item.Value.Checked)
@@ -210,7 +210,6 @@ namespace LiveSplit.UI.Components
                     UpdateGrayedOut(item.Value);
                 }
             }
-            */
 
             if (scriptLoaded)
                 CustomSettingsState = values;
@@ -230,7 +229,8 @@ namespace LiveSplit.UI.Components
         {
             if (node.ForeColor != SystemColors.GrayText)
             {
-                UpdateNodesInTree(n => {
+                UpdateNodesInTree(n =>
+                {
                     n.ForeColor = node.Checked ? SystemColors.WindowText : SystemColors.GrayText;
                     return n.Checked || !node.Checked;
                 }, node.Nodes);
