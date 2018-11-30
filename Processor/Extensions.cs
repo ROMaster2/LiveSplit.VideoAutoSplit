@@ -105,5 +105,9 @@ namespace LiveSplit.VAS
             return result;
         }
 
+        public static System.Drawing.Bitmap DeepCopy(this System.Drawing.Bitmap bitmap)
+        {
+            return bitmap.Clone(new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height), bitmap.PixelFormat);
+        }
     }
 }
