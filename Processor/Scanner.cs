@@ -25,7 +25,7 @@ namespace LiveSplit.VAS
 {
     static class Scanner
     {
-        public static Thread Thread;
+        public static Thread FrameHandlerThread;
 
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
@@ -189,18 +189,18 @@ namespace LiveSplit.VAS
             DeltaManager.History = new DeltaResults[DeltaManager.HistorySize];
             VideoSource?.WaitForStop();
             _VideoGeometry = Geometry.Blank;
-            Thread?.Abort();
+            FrameHandlerThread?.Abort();
         }
 
         public static void AsyncStart()
         {
             if (GameProfile != null && IsVideoSourceValid())
             {
-                if (Thread == null || Thread.ThreadState != System.Threading.ThreadState.Running)
+                if (FrameHandlerThread == null || FrameHandlerThread.ThreadState != System.Threading.ThreadState.Running)
                 {
                     ThreadStart t = new ThreadStart(Start);
-                    Thread = new Thread(t);
-                    Thread.Start();
+                    FrameHandlerThread = new Thread(t);
+                    FrameHandlerThread.Start();
                 }
             }
         }
