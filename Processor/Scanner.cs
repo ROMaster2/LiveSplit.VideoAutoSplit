@@ -53,7 +53,7 @@ namespace LiveSplit.VAS
                 {
                     VideoSource.Start();
                     SubscribeToFrameHandler(SetFrameSize);
-                    while (!_VideoGeometry.HasSize) Thread.Sleep(1);
+                    //while (!_VideoGeometry.HasSize) Thread.Sleep(1);
                 }
                 return _VideoGeometry;
             }
