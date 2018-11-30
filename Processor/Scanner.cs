@@ -363,7 +363,7 @@ namespace LiveSplit.VAS
                 scan.Dispose();
 
                 // It's on its own thread so running it here should be okay.
-                if (index % Math.Round(AverageFPS) == 0 || AverageFPS < 3d)
+                if (index % Math.Ceiling(AverageFPS) == 0)
                 {
                     int count = 0;
                     double sumFPS = 0d, minFPS = 9999d, maxFPS = 0d,
