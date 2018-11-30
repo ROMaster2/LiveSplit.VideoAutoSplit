@@ -228,7 +228,7 @@ namespace LiveSplit.VAS
                 LiveSplit.Options.Log.Error("VAS: Fatal error encountered, restarting scanner...");
                 Restarting = true;
                 if (IsScannerLocked) Thread.Sleep(1);
-                if (IsVideoSourceRunning()) Stop();
+                Stop();
                 Thread.Sleep(1000);
                 Start();
                 Restarting = false;
