@@ -437,6 +437,8 @@ namespace LiveSplit.VAS.Models
 
                         if (Scanner.IsVideoSourceRunning())
                             Scanner.Restart();
+                        else
+                            break;
                         //throw new Exception("Previous frame could not be processed or is taking too long to process.");
                     }
                     Thread.Sleep(1);
