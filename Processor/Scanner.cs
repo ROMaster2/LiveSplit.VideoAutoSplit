@@ -342,7 +342,15 @@ namespace LiveSplit.VAS
                 if (IsVideoSourceRunning() && !IsScannerLocked)
                 {
                     ScanningCount--;
-                    Restart();
+                    //Restart();
+                }
+            }
+            catch (InvalidOperationException e)
+            {
+                LiveSplit.Options.Log.Error(e);
+                if (IsVideoSourceRunning() && !IsScannerLocked)
+                {
+                    ScanningCount--;
                 }
             }
             finally
