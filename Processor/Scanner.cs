@@ -187,8 +187,7 @@ namespace LiveSplit.VAS
             UnsubscribeFromFrameHandler(NewFrameEventHandler);
             CurrentIndex = 0;
             DeltaManager.History = new DeltaResults[DeltaManager.HistorySize];
-            VideoSource?.Stop();
-            while (VideoSource?.IsRunning ?? false) Thread.Sleep(1);
+            VideoSource?.WaitForStop();
             _VideoGeometry = Geometry.Blank;
             Thread?.Abort();
         }
