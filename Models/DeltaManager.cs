@@ -14,10 +14,10 @@ namespace LiveSplit.VAS.Models
 
     public class DeltaManager
     {
-        public static int HistorySize { get; set; }   = 256; // Todo: Allow VASL script to set these.
-        public static int DefaultOffset { get; set; } = 100; // 100 milliseconds.
+        public static int HistorySize { get; private set; }   = 256; // Todo: Allow VASL script to set these.
+        public static int DefaultOffset { get; private set; } = 100; // 100 milliseconds.
 
-        public static DeltaResults[] History = new DeltaResults[HistorySize];
+        public static DeltaResults[] History { get; internal set; } = new DeltaResults[HistorySize];
 
         // In progress
         private static DeltaResults _SplitReference = null;
