@@ -21,17 +21,22 @@ using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class ScanRegion : UserControl
+    public partial class ScanRegionUI : UserControl
     {
+        private readonly VASComponent ParentComponent;
+
+        private GameProfile GameProfile { get { return ParentComponent.GameProfile; } }
+
+        // Temporary. Remove later.
+        private Geometry CropGeometry { get { return ParentComponent.CropGeometry; } set { ParentComponent.CropGeometry = value; } }
+
+        private Geometry VideoGeometry => Scanner.VideoGeometry;
+
         private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
         private const FilterType DEFAULT_SCALE_FILTER = FilterType.Lanczos;
         private static readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
 
         private DateTime LastUpdate = DateTime.UtcNow;
-
-        private GameProfile GameProfile { get { return Scanner.GameProfile; } }
-        private Geometry CropGeometry { get { return Scanner.CropGeometry; } set { Scanner.CropGeometry = value; } }
-        private Geometry VideoGeometry { get { return Scanner.VideoGeometry; } }
 
         private Geometry MIN_VALUES
         {
@@ -56,9 +61,12 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        public ScanRegion()
+        public ScanRegionUI(VASComponent parentComponent)
         {
             InitializeComponent();
+
+            ParentComponent = parentComponent;
+
             FillboxPreviewType();
         }
 
@@ -112,7 +120,7 @@ namespace LiveSplit.UI.Components
             boxPreviewFeature.Items.Add("<None>");
             if (GameProfile != null)
             {
-                foreach (var wi in Scanner.GameProfile.WatchImages)
+                foreach (var wi in GameProfile.WatchImages)
                 {
                     wi.SetName(wi.Screen, wi.WatchZone, wi.Watcher);
                     boxPreviewFeature.Items.Add(wi);

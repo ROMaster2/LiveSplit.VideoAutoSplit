@@ -18,24 +18,24 @@ using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class Options : UserControl
+    public partial class SettingsUI : UserControl
     {
-        public string ProfilePath { get; set; }
-        public string VideoDevice { get; set; }
-        public string GameVersion { get; set; }
+        private readonly VASComponent ParentComponent;
 
-        internal IDictionary<string, CheckBox> BasicSettings;
-        internal IDictionary<string, bool> BasicSettingsState;
-        internal IDictionary<string, dynamic> CustomSettingsState;
+        internal readonly Dictionary<string, CheckBox> BasicSettings;
 
-        public Options()
+        private string ProfilePath { get { return ParentComponent.ProfilePath; } set { ParentComponent.ProfilePath = value; } }
+        private string VideoDevice { get { return ParentComponent.VideoDevice; } set { ParentComponent.VideoDevice = value; } }
+        private string GameVersion { get { return ParentComponent.GameVersion; } set { ParentComponent.GameVersion = value; } }
+        private IDictionary<string, bool> BasicSettingsState => ParentComponent.BasicSettingsState;
+        private IDictionary<string, dynamic> CustomSettingsState => ParentComponent.CustomSettingsState;
+
+        public SettingsUI(VASComponent parentComponent)
         {
             InitializeComponent();
-            FillboxCaptureDevice();
 
-            txtGameProfile.DataBindings.Add("Text", this, "ProfilePath", false, DataSourceUpdateMode.OnPropertyChanged);
+            ParentComponent = parentComponent;
 
-            SetGameVersion(null);
             UpdateCustomSettingsVisibility();
 
             BasicSettings = new Dictionary<string, CheckBox>
@@ -46,8 +46,17 @@ namespace LiveSplit.UI.Components
                 ["Reset"] = ckbReset,
             };
 
-            BasicSettingsState = new Dictionary<string, bool>();
-            CustomSettingsState = new Dictionary<string, dynamic>();
+            ParentComponent.ProfileChanged += (sender, gameProfile) => txtGameProfile.Text = ProfilePath;
+        }
+
+        public void Rerender()
+        {
+            FillboxCaptureDevice();
+        }
+
+        public void Derender()
+        {
+
         }
 
         internal bool FillboxCaptureDevice()
@@ -61,7 +70,7 @@ namespace LiveSplit.UI.Components
                 int selectedIndex = boxCaptureDevice.SelectedIndex;
                 boxCaptureDevice.Items.Clear();
 
-                if (!string.IsNullOrWhiteSpace(VideoDevice))
+                if (!string.IsNullOrEmpty(VideoDevice))
                 {
                     var savedDevices = videoDevices.Where(d => d.Name == VideoDevice);
                     if (savedDevices.Count() > 0)
@@ -74,10 +83,6 @@ namespace LiveSplit.UI.Components
                 for (var i = 0; i < videoDevices.Count; i++)
                 {
                     boxCaptureDevice.Items.Add(videoDevices[i].Name);
-                    if (i == selectedIndex)
-                    {
-                        VideoDevice = videoDevices[i].Name;
-                    }
                 }
 
                 if (boxCaptureDevice.SelectedIndex != selectedIndex)
@@ -90,11 +95,6 @@ namespace LiveSplit.UI.Components
                 boxCaptureDevice.Items.Clear();
                 return false;
             }
-        }
-
-        public void SetGameVersion(string version)
-        {
-            GameVersion = boxGameVersion.Text = string.IsNullOrEmpty(version) ? string.Empty : version;
         }
 
         private void UpdateCustomSettingsVisibility()
@@ -161,16 +161,8 @@ namespace LiveSplit.UI.Components
 
         internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
-            if (string.IsNullOrWhiteSpace(ProfilePath))
-            {
-                BasicSettingsState.Clear();
-                CustomSettingsState.Clear();
-            }
-
             treeCustomSettings.BeginUpdate();
             treeCustomSettings.Nodes.Clear();
-
-            var values = new Dictionary<string, dynamic>();
 
             var flat = new Dictionary<string, DropDownTreeNode>();
 
@@ -183,7 +175,6 @@ namespace LiveSplit.UI.Components
                 var node = new DropDownTreeNode(setting.Label)
                 {
                     Tag = setting,
-                    //ContextMenuStrip = this.treeContextMenu2,
                     ToolTipText = setting.ToolTip
                 };
                 node.ComboBox.Text = value.ToString();
@@ -196,11 +187,9 @@ namespace LiveSplit.UI.Components
                 else if (flat.ContainsKey(setting.Parent))
                 {
                     flat[setting.Parent].Nodes.Add(node);
-                    //flat[setting.Parent].ContextMenuStrip = this.treeContextMenu;
                 }
 
                 flat.Add(setting.Id, node);
-                values.Add(setting.Id, value);
             }
 
             foreach (var item in flat)
@@ -210,9 +199,6 @@ namespace LiveSplit.UI.Components
                     UpdateGrayedOut(item.Value);
                 }
             }
-
-            if (scriptLoaded)
-                CustomSettingsState = values;
 
             treeCustomSettings.ExpandAll();
             treeCustomSettings.EndUpdate();
@@ -481,6 +467,10 @@ namespace LiveSplit.UI.Components
 
         private void boxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // May need to tweak more
+            if ((string)boxCaptureDevice.SelectedItem == VideoDevice)
+                return;
+
             if (Scanner.IsVideoSourceRunning())
                 Scanner.Stop();
             retry:
@@ -512,6 +502,11 @@ namespace LiveSplit.UI.Components
                 }
             }
             Scanner.AsyncStart();
+        }
+
+        private void SettingsUI_VisibleChanged(object sender, EventArgs e)
+        {
+            Rerender();
         }
     }
 }

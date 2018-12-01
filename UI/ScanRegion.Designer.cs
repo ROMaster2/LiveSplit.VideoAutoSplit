@@ -1,6 +1,6 @@
 ﻿namespace LiveSplit.UI.Components
 {
-    partial class ScanRegion
+    partial class ScanRegionUI
     {
         /// <summary> 
         /// Required designer variable.

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using System.IO.Compression;
+using LiveSplit.Options;
 
 namespace LiveSplit.VAS.Models
 {
@@ -57,20 +58,8 @@ namespace LiveSplit.VAS.Models
             using (StreamReader reader = new StreamReader(stream))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(GameProfile));
-                GameProfile gp = null;
-
-                // Todo: ACTUAL exception handling.
-                try
-                {
-                    gp = (GameProfile)serializer.Deserialize(reader);
-                    gp.ReSyncRelationships();
-                }
-                catch (Exception e) {
-                    System.Diagnostics.Debug.WriteLine("Game Profile failed to load.");
-                    System.Diagnostics.Debug.WriteLine(e.ToString());
-                    return null;
-                }
-
+                GameProfile gp = (GameProfile)serializer.Deserialize(reader);
+                gp.ReSyncRelationships();
                 return gp;
             }
         }

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using Accord.Video.DirectShow;
+using LiveSplit.Model;
 using LiveSplit.UI;
 using LiveSplit.UI.Components;
 using LiveSplit.VAS;
@@ -21,213 +22,61 @@ namespace LiveSplit.UI.Components
 {
     public partial class NewComponentSettings : UserControl
     {
-        private Options    Options;
-        private ScanRegion ScanRegion;
-        private Features   Features;
-        private Debug      Debug;
+        private readonly VASComponent ParentComponent;
 
-        public string ProfilePath { get { return Options.ProfilePath; } set { Options.ProfilePath = value; } }
-        public string VideoDevice { get { return Options.VideoDevice; } set { Options.VideoDevice = value; } }
-        public string GameVersion { get { return Options.GameVersion; } set { Options.GameVersion = value; } }
-        internal IDictionary<string, CheckBox> BasicSettings;
-        internal IDictionary<string, bool> BasicSettingsState;
-        internal IDictionary<string, dynamic> CustomSettingsState;
+        internal SettingsUI   SettingsUI;
+        internal ScanRegionUI ScanRegionUI;
+        internal FeaturesUI   FeaturesUI;
+        internal DebugUI      DebugUI;
 
-        public Geometry CropGeometry { get { return Scanner.CropGeometry; } set { Scanner.CropGeometry = value; } }
+        private string ProfilePath => ParentComponent.ProfilePath;
+        private string VideoDevice => ParentComponent.VideoDevice;
+        private string GameVersion => ParentComponent.GameVersion;
+        private IDictionary<string, bool> BasicSettingsState => ParentComponent.BasicSettingsState;
+        private IDictionary<string, dynamic> CustomSettingsState => ParentComponent.CustomSettingsState;
 
-        public NewComponentSettings(string profilePath = null)
+        public NewComponentSettings(VASComponent parentComponent)
         {
             InitializeComponent();
 
-            Options    = options;
-            ScanRegion = scanRegion;
-            Features   = features;
-            Debug      = debug;
+            ParentComponent = parentComponent;
+
+            SettingsUI   = new SettingsUI(ParentComponent);
+            ScanRegionUI = new ScanRegionUI(ParentComponent);
+            FeaturesUI   = new FeaturesUI(ParentComponent);
+            DebugUI      = new DebugUI(ParentComponent);
+            SetChildControlSettings(SettingsUI, tabSettings, "Settings");
+            SetChildControlSettings(ScanRegionUI, tabScanRegion, "ScanRegion");
+            SetChildControlSettings(FeaturesUI, tabFeatures, "Features");
+            SetChildControlSettings(DebugUI, tabDebug, "Debug");
 
             tabScanRegion.SuspendLayout();
             tabFeatures.SuspendLayout();
             tabDebug.SuspendLayout();
-
-            BasicSettings = Options.BasicSettings;
-            BasicSettingsState = Options.BasicSettingsState;
-            CustomSettingsState = Options.CustomSettingsState;
         }
 
-        public XmlNode GetSettings(XmlDocument document)
+        public void SetChildControlSettings(UserControl userControl, TabPage tab, string name)
         {
-            XmlElement settingsNode = document.CreateElement("Settings");
-
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Version", "0.1")); // Todo: Make const
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "ProfilePath", ProfilePath));
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "VideoDevice", VideoDevice));
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "GameVersion", GameVersion));
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "CropGeometry", CropGeometry));
-            AppendBasicSettingsToXml(document, settingsNode);
-            AppendCustomSettingsToXml(document, settingsNode);
-
-            return settingsNode;
-        }
-
-        private void AppendBasicSettingsToXml(XmlDocument document, XmlNode settingsNode)
-        {
-            foreach (var state in BasicSettings)
-            {
-                if (BasicSettingsState.ContainsKey(state.Key.ToLower()))
-                {
-                    var value = BasicSettingsState[state.Key.ToLower()];
-                    settingsNode.AppendChild(SettingsHelper.ToElement(document, state.Key, value));
-                }
-            }
-        }
-
-        private void AppendCustomSettingsToXml(XmlDocument document, XmlNode parent)
-        {
-            XmlElement vaslParent = document.CreateElement("CustomSettings");
-
-            foreach (var state in CustomSettingsState)
-            {
-                var obj = (object)state.Value;
-                XmlElement element = SettingsHelper.ToElement(document, "Setting", state.Value);
-                XmlAttribute id   = SettingsHelper.ToAttribute(document, "id", state.Key);
-                XmlAttribute type = SettingsHelper.ToAttribute(document, "type", obj.GetType().ToString());
-
-                element.Attributes.Append(id);
-                element.Attributes.Append(type);
-                vaslParent.AppendChild(element);
-            }
-
-            parent.AppendChild(vaslParent);
-        }
-
-        public void SetSettings(XmlNode settings)
-        {
-            var element = (XmlElement)settings;
-            if (!element.IsEmpty)
-            {
-                ParseStandardOptionsFromXml(element);
-                ParseBasicSettingsFromXml(element);
-                ParseCustomSettingsFromXml(element);
-            }
-        }
-
-        private void ParseStandardOptionsFromXml(XmlElement element)
-        {
-            ProfilePath = SettingsHelper.ParseString(element["ProfilePath"], string.Empty);
-            VideoDevice = SettingsHelper.ParseString(element["VideoDevice"], string.Empty);
-            GameVersion = SettingsHelper.ParseString(element["GameVersion"], string.Empty);
-
-            Options.FillboxCaptureDevice();
-
-            if (element["CropGeometry"] != null)
-            {
-                var geo = Geometry.FromString(element["CropGeometry"].InnerText);
-                if (geo.HasSize)
-                    CropGeometry = geo;
-                else
-                    CropGeometry = Geometry.Blank;
-            }
-        }
-
-        private void ParseBasicSettingsFromXml(XmlElement element)
-        {
-            foreach (var setting in BasicSettings)
-            {
-                if (element[setting.Key] != null)
-                {
-                    var value = bool.Parse(element[setting.Key].InnerText);
-
-                    if (setting.Value.Enabled)
-                        setting.Value.Checked = value;
-
-                    BasicSettingsState[setting.Key.ToLower()] = value;
-                }
-            }
-        }
-
-        private void ParseCustomSettingsFromXml(XmlElement data)
-        {
-            XmlElement customSettingsNode = data["CustomSettings"];
-
-            if (customSettingsNode != null && customSettingsNode.HasChildNodes)
-            {
-                foreach (XmlElement element in customSettingsNode.ChildNodes)
-                {
-                    if (element.Name != "Setting")
-                        continue;
-
-                    string id = element.Attributes["id"].Value;
-                    string type = element.Attributes["type"].Value;
-
-                    if (id != null)
-                    {
-                        dynamic value;
-                        switch (type)
-                        {
-                            case "bool":
-                                value = SettingsHelper.ParseBool(element);
-                                break;
-                            case "float":
-                            case "double":
-                                value = SettingsHelper.ParseDouble(element);
-                                break;
-                            case "byte":
-                            case "sbyte":
-                            case "short":
-                            case "ushort":
-                            case "int":
-                            case "uint":
-                            case "long":
-                            case "ulong":
-                                value = SettingsHelper.ParseInt(element);
-                                break;
-                            case "char":
-                            case "string":
-                                value = SettingsHelper.ParseString(element);
-                                break;
-                            case "timespan":
-                                value = SettingsHelper.ParseTimeSpan(element);
-                                break;
-                            default:
-                                throw new NotSupportedException("Data type is either incorrect or unsupported.");
-                        }
-                        CustomSettingsState[id] = value;
-                    }
-                }
-            }
-            Options.UpdateNodesValues(CustomSettingsState, null);
-        }
-
-        public void SetVASLSettings(VASLSettings settings)
-        {
-            InitVASLSettings(settings, true);
-        }
-
-        public void ResetVASLSettings()
-        {
-            InitVASLSettings(new VASLSettings(), false);
-        }
-
-        private void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
-        {
-            Options.InitVASLSettings(settings, scriptLoaded);
-        }
-
-        public void SetGameVersion(string version)
-        {
-            Options.SetGameVersion(version);
+            tab.Controls.Add(userControl);
+            userControl.Dock = DockStyle.Fill;
+            userControl.Location = new Point(0, 0);
+            userControl.Margin = new Padding(0);
+            userControl.Name = name;
+            userControl.Padding = new Padding(7);
+            userControl.Size = new System.Drawing.Size(468, 506);
         }
 
         private void tabControlCore_Selecting(object sender, TabControlCancelEventArgs e)
         {
             tabScanRegion.SuspendLayout();
-            ScanRegion.Unrender();
+            ScanRegionUI.Unrender();
             tabFeatures.SuspendLayout();
             tabDebug.SuspendLayout();
             switch (e.TabPage.Name)
             {
                 case "tabScanRegion":
                     tabScanRegion.ResumeLayout(false);
-                    ScanRegion.Rerender();
+                    ScanRegionUI.Rerender();
                     break;
                 case "tabFeatures":
                     tabFeatures.ResumeLayout(false);
@@ -239,5 +88,11 @@ namespace LiveSplit.UI.Components
                     break;
             }
         }
+
+        internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        {
+            SettingsUI.InitVASLSettings(settings, scriptLoaded);
+        }
+
     }
 }

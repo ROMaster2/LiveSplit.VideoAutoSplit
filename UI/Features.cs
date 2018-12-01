@@ -10,11 +10,45 @@ using System.Windows.Forms;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class Features : UserControl
+    public partial class FeaturesUI : UserControl
     {
-        public Features()
+        private readonly VASComponent ParentComponent;
+
+        public FeaturesUI(VASComponent parentComponent)
         {
             InitializeComponent();
+
+            ParentComponent = parentComponent;
+        }
+
+        private void Rerender()
+        {
+
+        }
+
+        private void SetLabels()
+        {
+
+        }
+
+        private void AddFeatureRow()
+        {
+            this.label1 = new System.Windows.Forms.Label();
+        }
+
+    }
+
+    internal class FeatureRow : Control
+    {
+        //public Label Name { get; }
+        public CheckBox CheckBox { get; }
+        public Label Confidence { get; }
+        public Label Maximum { get; }
+        public Label Minumum { get; }
+
+        public FeatureRow()
+        {
+
         }
     }
 }

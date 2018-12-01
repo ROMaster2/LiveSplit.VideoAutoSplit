@@ -48,8 +48,6 @@ namespace LiveSplit.VAS.VASL
             IEnumerator IEnumerable.GetEnumerator() => GetMethods().GetEnumerator();
         }
 
-        public event EventHandler<string> GameVersionChanged;
-
         private string _game_version = string.Empty;
         public string GameVersion
         {
@@ -59,8 +57,8 @@ namespace LiveSplit.VAS.VASL
             }
             set
             {
-                if (value != _game_version)
-                    GameVersionChanged?.Invoke(this, value);
+                //if (value != _game_version)
+                    //GameVersionChanged?.Invoke(this, value);
                 _game_version = value;
             }
         }

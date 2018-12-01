@@ -1,29 +1,18 @@
 ﻿using Accord.Video;
 using Accord.Video.DirectShow;
 using ImageMagick;
+using LiveSplit.Model;
+using LiveSplit.VAS.Models;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Forms;
-using LiveSplit.VAS;
-using LiveSplit.VAS.VASL;
-using LiveSplit.VAS.Models;
-using LiveSplit.UI.Components;
-using System.IO;
-using System.Linq;
-using System.Diagnostics;
-using LiveSplit.Model;
-
-using Size = System.Drawing.Size;
 
 namespace LiveSplit.VAS
 {
-    static class Scanner
+    public class Scanner
     {
         public static Thread FrameHandlerThread;
 

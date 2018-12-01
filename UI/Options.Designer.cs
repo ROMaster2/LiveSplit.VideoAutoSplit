@@ -1,6 +1,6 @@
 ﻿namespace LiveSplit.UI.Components
 {
-    partial class Options
+    partial class SettingsUI
     {
         /// <summary> 
         /// Required designer variable.
@@ -362,15 +362,16 @@
             this.treeCustomSettings.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.settingsTree_AfterCheck);
             this.treeCustomSettings.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.settingsTree_NodeMouseClick);
             // 
-            // Options
+            // SettingsUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tlpCore);
             this.Margin = new System.Windows.Forms.Padding(0);
-            this.Name = "Options";
+            this.Name = "SettingsUI";
             this.Padding = new System.Windows.Forms.Padding(7);
             this.Size = new System.Drawing.Size(468, 486);
+            this.VisibleChanged += new System.EventHandler(this.SettingsUI_VisibleChanged);
             this.tlpCore.ResumeLayout(false);
             this.tlpCore.PerformLayout();
             this.tlpCaptureDevice.ResumeLayout(false);

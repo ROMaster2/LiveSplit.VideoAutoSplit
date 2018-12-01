@@ -10,15 +10,15 @@ using System.Windows.Forms;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class Debug : UserControl
+    public partial class DebugUI : UserControl
     {
-        public string ErrorLog { get; set; }
+        private readonly VASComponent ParentComponent;
 
-        public Debug()
+        public DebugUI(VASComponent parentComponent)
         {
             InitializeComponent();
 
-
+            ParentComponent = parentComponent;
         }
     }
 }

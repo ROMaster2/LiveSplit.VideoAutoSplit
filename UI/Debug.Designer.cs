@@ -1,6 +1,6 @@
 ﻿namespace LiveSplit.UI.Components
 {
-    partial class Debug
+    partial class DebugUI
     {
         /// <summary> 
         /// Required designer variable.

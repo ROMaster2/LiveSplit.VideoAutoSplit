@@ -33,10 +33,10 @@ namespace LiveSplit.VAS.VASL
 
     public class VASLSettings
     {
-        public Dictionary<string, VASLSetting> Settings { get; set; }
-        public List<VASLSetting> OrderedSettings { get; }
+        public IDictionary<string, VASLSetting> Settings { get; set; }
+        public IList<VASLSetting> OrderedSettings { get; }
 
-        public Dictionary<string, VASLSetting> BasicSettings { get; }
+        public IDictionary<string, VASLSetting> BasicSettings { get; }
 
         public VASLSettingsBuilder Builder;
         public VASLSettingsReader Reader;
