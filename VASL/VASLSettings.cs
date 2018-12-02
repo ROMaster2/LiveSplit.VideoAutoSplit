@@ -15,14 +15,14 @@ namespace LiveSplit.VAS.VASL
         public string Parent { get; }
         public string ToolTip { get; set; }
 
-        public VASLSetting(string id, dynamic default_value, string label, string parent)
+        public VASLSetting(string id, dynamic defaultValue, string label, string parent)
         {
             Id = id;
-            Value = default_value;
-            DefaultValue = default_value;
+            Value = defaultValue;
+            DefaultValue = defaultValue;
             Label = label;
             Parent = parent;
-            Type = ((object)default_value).GetType().ToString();
+            Type = ((object)defaultValue).GetType().ToString();
         }
 
         public override string ToString()
@@ -50,7 +50,7 @@ namespace LiveSplit.VAS.VASL
             Reader = new VASLSettingsReader(this);
         }
 
-        public void AddSetting(string name, dynamic default_value, string description, string parent)
+        public void AddSetting(string name, dynamic defaultValue, string description, string parent)
         {
             if (description == null)
                 description = name;
@@ -59,7 +59,7 @@ namespace LiveSplit.VAS.VASL
             if (Settings.ContainsKey(name))
                 throw new ArgumentException($"Setting '{name}' was already added");
 
-            var setting = new VASLSetting(name, default_value, description, parent);
+            var setting = new VASLSetting(name, defaultValue, description, parent);
             Settings.Add(name, setting);
             OrderedSettings.Add(setting);
         }

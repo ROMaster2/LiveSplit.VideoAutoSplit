@@ -13,7 +13,7 @@ namespace LiveSplit.VAS.VASL
 {
     public class VASLMethod
     {
-        public VASLScript.Methods ScriptMethods { get; set; }
+        public VASLScript.MethodList ScriptMethods { get; set; }
 
         public string Name { get; }
 
@@ -23,9 +23,9 @@ namespace LiveSplit.VAS.VASL
 
         public Module Module { get; }
 
-        private dynamic _compiled_code;
+        private dynamic CompiledCode;
 
-        public VASLMethod(string code, string name = null, int script_line = 0)
+        public VASLMethod(string code, string name = null, int scriptLine = 0)
         {
             if (code == null)
                 throw new ArgumentNullException(nameof(code));
@@ -41,7 +41,7 @@ namespace LiveSplit.VAS.VASL
 
             using (var provider = new Microsoft.CSharp.CSharpCodeProvider(options))
             {
-                var user_code_start_marker = "// USER_CODE_START";
+                var userCodeStartMarker = "// USER_CODE_START";
                 string source = $@"
 using System;
 using System.Collections.Generic;
@@ -64,19 +64,19 @@ public class CompiledScript
     {{
         Log.Info(s);
     }}
-    public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, dynamic features, dynamic settings)
+    public dynamic Execute(LiveSplitState timer, dynamic vars, dynamic features, dynamic settings)
     {{
-        { user_code_start_marker }
+        { userCodeStartMarker }
 	    { code }
 	    return null;
     }}
 }}";
 
-                if (script_line > 0)
+                if (scriptLine > 0)
                 {
-                    var user_code_index = source.IndexOf(user_code_start_marker);
-                    var compiled_code_line = source.Take(user_code_index).Count(c => c == '\n') + 2;
-                    LineOffset = script_line - compiled_code_line;
+                    var userCodeIndex = source.IndexOf(userCodeStartMarker);
+                    var compiledCodeLine = source.Take(userCodeIndex).Count(c => c == '\n') + 2;
+                    LineOffset = scriptLine - compiledCodeLine;
                 }
 
                 var parameters = new CompilerParameters() {
@@ -100,19 +100,17 @@ public class CompiledScript
 
                 Module = res.CompiledAssembly.ManifestModule;
                 var type = res.CompiledAssembly.GetType("CompiledScript");
-                _compiled_code = Activator.CreateInstance(type);
+                CompiledCode = Activator.CreateInstance(type);
             }
         }
 
-        public dynamic Call(LiveSplitState timer, ExpandoObject vars, ref string version,
-            dynamic settings, ExpandoObject old = null, ExpandoObject current = null, DeltaManager features = null)
+        public dynamic Call(LiveSplitState timer, ExpandoObject vars, string gameVersion,
+            dynamic settings, DeltaManager features = null)
         {
-            // dynamic args can't be ref or out, this is a workaround
-            _compiled_code.version = version;
             dynamic ret;
             try
             {
-                ret = _compiled_code.Execute(timer, old, current, vars, features, settings);
+                ret = CompiledCode.Execute(timer, vars, features, settings);
             }
             catch (NullReferenceException ex)
             {
@@ -125,7 +123,6 @@ public class CompiledScript
             {
                 throw new VASLRuntimeException(this, ex);
             }
-            version = _compiled_code.version;
             return ret;
         }
     }

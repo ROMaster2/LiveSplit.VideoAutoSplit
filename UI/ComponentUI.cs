@@ -1,26 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+﻿using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
-using Accord.Video.DirectShow;
-using LiveSplit.Model;
-using LiveSplit.UI;
-using LiveSplit.UI.Components;
-using LiveSplit.VAS;
-using LiveSplit.VAS.Models;
-using LiveSplit.VAS.UI;
 using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class NewComponentSettings : UserControl
+    public partial class ComponentUI : UserControl
     {
         private readonly VASComponent ParentComponent;
 
@@ -35,7 +20,7 @@ namespace LiveSplit.UI.Components
         private IDictionary<string, bool> BasicSettingsState => ParentComponent.BasicSettingsState;
         private IDictionary<string, dynamic> CustomSettingsState => ParentComponent.CustomSettingsState;
 
-        public NewComponentSettings(VASComponent parentComponent)
+        public ComponentUI(VASComponent parentComponent)
         {
             InitializeComponent();
 
@@ -55,15 +40,11 @@ namespace LiveSplit.UI.Components
             tabDebug.SuspendLayout();
         }
 
+        // This could be better...
         public void SetChildControlSettings(UserControl userControl, TabPage tab, string name)
         {
             tab.Controls.Add(userControl);
             userControl.Dock = DockStyle.Fill;
-            userControl.Location = new Point(0, 0);
-            userControl.Margin = new Padding(0);
-            userControl.Name = name;
-            userControl.Padding = new Padding(7);
-            userControl.Size = new System.Drawing.Size(468, 506);
         }
 
         private void tabControlCore_Selecting(object sender, TabControlCancelEventArgs e)

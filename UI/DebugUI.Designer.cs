@@ -55,6 +55,7 @@
             this.btnExport.TabIndex = 3;
             this.btnExport.Text = "Export";
             this.btnExport.UseVisualStyleBackColor = true;
+            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // btnClear
             // 
@@ -65,8 +66,9 @@
             this.btnClear.TabIndex = 2;
             this.btnClear.Text = "Clear";
             this.btnClear.UseVisualStyleBackColor = true;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
-            // Debug
+            // DebugUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -74,7 +76,7 @@
             this.Controls.Add(this.btnExport);
             this.Controls.Add(this.txtDebug);
             this.Margin = new System.Windows.Forms.Padding(0);
-            this.Name = "Debug";
+            this.Name = "DebugUI";
             this.Padding = new System.Windows.Forms.Padding(7);
             this.Size = new System.Drawing.Size(468, 486);
             this.ResumeLayout(false);

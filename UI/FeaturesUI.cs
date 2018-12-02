@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LiveSplit.VAS.Models;
 
 namespace LiveSplit.UI.Components
 {
@@ -23,7 +24,12 @@ namespace LiveSplit.UI.Components
 
         private void Rerender()
         {
+            ParentComponent.Script.ScriptUpdateFinished += UpdateRows;
+        }
 
+        private void Derender()
+        {
+            ParentComponent.Script.ScriptUpdateFinished -= UpdateRows;
         }
 
         private void SetLabels()
@@ -31,9 +37,14 @@ namespace LiveSplit.UI.Components
 
         }
 
+        private void UpdateRows(object sender, DeltaManager dm)
+        {
+
+        }
+
         private void AddFeatureRow()
         {
-            this.label1 = new System.Windows.Forms.Label();
+            label1 = new Label();
         }
 
     }

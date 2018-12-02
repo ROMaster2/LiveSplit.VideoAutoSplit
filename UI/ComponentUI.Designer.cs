@@ -1,6 +1,6 @@
 ﻿namespace LiveSplit.UI.Components
 {
-    partial class NewComponentSettings
+    partial class ComponentUI
     {
         /// <summary> 
         /// Required designer variable.

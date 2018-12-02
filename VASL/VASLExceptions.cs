@@ -38,46 +38,46 @@ namespace LiveSplit.VAS.VASL
 
     public class VASLRuntimeException : Exception
     {
-        public VASLRuntimeException(VASLMethod method, Exception inner_exception)
-            : base(GetMessage(method, inner_exception), inner_exception)
+        public VASLRuntimeException(VASLMethod method, Exception innerException)
+            : base(GetMessage(method, innerException), innerException)
         { }
 
-        static string GetMessage(VASLMethod method, Exception inner_exception)
+        static string GetMessage(VASLMethod method, Exception innerException)
         {
             if (method == null)
                 throw new ArgumentNullException(nameof(method));
-            if (inner_exception == null)
-                throw new ArgumentNullException(nameof(inner_exception));
+            if (innerException == null)
+                throw new ArgumentNullException(nameof(innerException));
 
-            var stack_trace = new StackTrace(inner_exception, true);
-            var stack_trace_sb = new StringBuilder();
-            foreach (var frame in stack_trace.GetFrames())
+            var stackTrace = new StackTrace(innerException, true);
+            var stackTraceSb = new StringBuilder();
+            foreach (var frame in stackTrace.GetFrames())
             {
-                var frame_method = frame.GetMethod();
-                var frame_module = frame_method.Module;
+                var frameMethod = frame.GetMethod();
+                var frameModule = frameMethod.Module;
 
-                var frame_VASL_method = method;
+                var frameVASLMethod = method;
                 if (method.ScriptMethods != null)
                 {
-                    frame_VASL_method = method.ScriptMethods.FirstOrDefault(m => frame_module == m.Module);
-                    if (frame_VASL_method == null)
+                    frameVASLMethod = method.ScriptMethods.FirstOrDefault(m => frameModule == m.Module);
+                    if (frameVASLMethod == null)
                         continue;
                 }
-                else if (frame_module != method.Module)
+                else if (frameModule != method.Module)
                     continue;
 
-                var frame_line = frame.GetFileLineNumber();
-                if (frame_line > 0)
+                var frameLine = frame.GetFileLineNumber();
+                if (frameLine > 0)
                 {
-                    var line = frame_line + frame_VASL_method.LineOffset;
-                    stack_trace_sb.Append($"\n   at VASL line {line} in '{frame_VASL_method.Name}'");
+                    var line = frameLine + frameVASLMethod.LineOffset;
+                    stackTraceSb.Append($"\n   at VASL line {line} in '{frameVASLMethod.Name}'");
                 }
             }
 
-            var exception_name = inner_exception.GetType().FullName;
-            var method_name = method.Name ?? "(no name)";
-            var exception_message = inner_exception.Message;
-            return $"Exception thrown: '{exception_name}' in '{method_name}' method:\n{exception_message}\n{stack_trace_sb.ToString()}";
+            var exceptionName = innerException.GetType().FullName;
+            var methodName = method.Name ?? "(no name)";
+            var exceptionMessage = innerException.Message;
+            return $"Exception thrown: '{exceptionName}' in '{methodName}' method:\n{exceptionMessage}\n{stackTraceSb.ToString()}";
         }
     }
 }

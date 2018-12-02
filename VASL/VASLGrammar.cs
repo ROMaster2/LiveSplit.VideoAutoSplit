@@ -6,19 +6,18 @@ namespace LiveSplit.VAS.VASL
     [Language("VASL", "0.1", "Video Auto Split Language grammar")]
     public class VASLGrammar : Grammar
     {
-        public VASLGrammar()
-            : base(true)
+        public VASLGrammar() : base(true)
         {
             var code       = new CustomTerminal("code", MatchCodeTerminal);
-            var string_lit = TerminalFactory.CreateCSharpString("string");
+            var stringLit = TerminalFactory.CreateCSharpString("string");
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             var number     = TerminalFactory.CreateCSharpNumber("number");
             number.Options |= NumberOptions.AllowSign;
 
-            var single_line_comment = new CommentTerminal("SingleLineComment", "//", "\r", "\n", "\u2085", "\u2028", "\u2029");
-            var delimited_comment   = new CommentTerminal("DelimitedComment", "/*", "*/");
-            NonGrammarTerminals.Add(single_line_comment);
-            NonGrammarTerminals.Add(delimited_comment);
+            var singleLineComment = new CommentTerminal("SingleLineComment", "//", "\r", "\n", "\u2085", "\u2028", "\u2029");
+            var delimitedComment  = new CommentTerminal("DelimitedComment", "/*", "*/");
+            NonGrammarTerminals.Add(singleLineComment);
+            NonGrammarTerminals.Add(delimitedComment);
 
             // Todo: Aliases
 
@@ -30,29 +29,30 @@ namespace LiveSplit.VAS.VASL
             var reset     = new KeyTerm("reset",     "reset");
             var startup   = new KeyTerm("startup",   "startup");
             var shutdown  = new KeyTerm("shutdown",  "shutdown");
+            var undoSplit = new KeyTerm("undoSplit", "undoSplit");
             var isLoading = new KeyTerm("isLoading", "isLoading");
             var gameTime  = new KeyTerm("gameTime",  "gameTime");
             var comma     = ToTerm(",", "comma");
             var semi      = ToTerm(";", "semi");
 
-            var root        = new NonTerminal("root");
-            var version     = new NonTerminal("version");
-            var method_list = new NonTerminal("methodList");
-            var var_list    = new NonTerminal("varList");
-            var var         = new NonTerminal("var");
-            var method      = new NonTerminal("method");
-            var method_type = new NonTerminal("methodType");
+            var root       = new NonTerminal("root");
+            var version    = new NonTerminal("version");
+            var methodList = new NonTerminal("methodList");
+            var varList    = new NonTerminal("varList");
+            var var        = new NonTerminal("var");
+            var method     = new NonTerminal("method");
+            var methodType = new NonTerminal("methodType");
 
-            root.Rule        = method_list;
-            version.Rule     = (comma + string_lit) | Empty;
-            method_list.Rule = MakeStarRule(method_list, method);
-            var_list.Rule    = MakeStarRule(var_list, semi, var);
-            method.Rule      = (method_type + "{" + code + "}") | Empty;
-            method_type.Rule = init | exit | update | start | split | isLoading | gameTime | reset | startup | shutdown;
+            root.Rule        = methodList;
+            version.Rule     = (comma + stringLit) | Empty;
+            methodList.Rule = MakeStarRule(methodList, method);
+            varList.Rule    = MakeStarRule(varList, semi, var);
+            method.Rule      = (methodType + "{" + code + "}") | Empty;
+            methodType.Rule = init | exit | update | start | split | isLoading | gameTime | reset | startup | shutdown | undoSplit;
 
             Root = root;
 
-            MarkTransient(var_list, method_list, method_type);
+            MarkTransient(varList, methodList, methodType);
 
             LanguageFlags = LanguageFlags.NewLineBeforeEOF;
         }
