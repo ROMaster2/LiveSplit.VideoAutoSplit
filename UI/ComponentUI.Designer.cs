@@ -33,7 +33,6 @@
             this.tabScanRegion = new System.Windows.Forms.TabPage();
             this.tabFeatures = new System.Windows.Forms.TabPage();
             this.tabDebug = new System.Windows.Forms.TabPage();
-            this.tabHotkeys = new System.Windows.Forms.TabPage();
             this.tabControlCore.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -43,7 +42,6 @@
             this.tabControlCore.Controls.Add(this.tabScanRegion);
             this.tabControlCore.Controls.Add(this.tabFeatures);
             this.tabControlCore.Controls.Add(this.tabDebug);
-            this.tabControlCore.Controls.Add(this.tabHotkeys);
             this.tabControlCore.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlCore.Location = new System.Drawing.Point(0, 0);
             this.tabControlCore.Margin = new System.Windows.Forms.Padding(0);
@@ -93,23 +91,14 @@
             this.tabDebug.Text = "Error Log";
             this.tabDebug.UseVisualStyleBackColor = true;
             // 
-            // tabHotkeys
-            // 
-            this.tabHotkeys.Location = new System.Drawing.Point(4, 22);
-            this.tabHotkeys.Margin = new System.Windows.Forms.Padding(0);
-            this.tabHotkeys.Name = "tabHotkeys";
-            this.tabHotkeys.Size = new System.Drawing.Size(468, 506);
-            this.tabHotkeys.TabIndex = 5;
-            this.tabHotkeys.Text = "Hotkeys";
-            this.tabHotkeys.UseVisualStyleBackColor = true;
-            // 
-            // NewComponentSettings
+            // ComponentUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tabControlCore);
-            this.Name = "NewComponentSettings";
+            this.Name = "ComponentUI";
             this.Size = new System.Drawing.Size(476, 532);
+            this.Load += new System.EventHandler(this.ComponentUI_Load);
             this.tabControlCore.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -122,6 +111,5 @@
         private System.Windows.Forms.TabPage tabScanRegion;
         private System.Windows.Forms.TabPage tabFeatures;
         private System.Windows.Forms.TabPage tabDebug;
-        private System.Windows.Forms.TabPage tabHotkeys;
     }
 }

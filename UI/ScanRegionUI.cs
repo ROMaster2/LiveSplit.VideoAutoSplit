@@ -21,7 +21,7 @@ using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class ScanRegionUI : UserControl
+    public partial class ScanRegionUI : AbstractUI
     {
         private readonly VASComponent ParentComponent;
 
@@ -70,18 +70,23 @@ namespace LiveSplit.UI.Components
             FillboxPreviewType();
         }
 
-        public void Rerender()
+        override public void Rerender()
         {
             SetAllNumValues(CropGeometry, false);
             FillboxPreviewFeature();
             Scanner.SubscribeToFrameHandler(HandleNewFrame);
         }
 
-        public void Unrender()
+        override public void Derender()
         {
             Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);
             boxPreviewFeature.Items.Clear();
             pictureBox.Image = new Bitmap(1,1);
+        }
+
+        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        {
+
         }
 
         private void SetAllNumValues(Geometry geo, bool updateGeo = true)

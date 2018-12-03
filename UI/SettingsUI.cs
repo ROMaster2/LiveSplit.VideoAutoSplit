@@ -12,7 +12,7 @@ using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class SettingsUI : UserControl
+    public partial class SettingsUI : AbstractUI
     {
         private readonly VASComponent ParentComponent;
 
@@ -43,14 +43,66 @@ namespace LiveSplit.UI.Components
             ParentComponent.ProfileChanged += (sender, gameProfile) => txtGameProfile.Text = ProfilePath;
         }
 
-        public void Rerender()
+        override public void Rerender()
         {
             FillboxCaptureDevice();
         }
 
-        public void Derender()
+        override public void Derender()
         {
+            boxCaptureDevice.Items.Clear();
+        }
 
+        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        {
+            treeCustomSettings.BeginUpdate();
+            treeCustomSettings.Nodes.Clear();
+
+            var flat = new Dictionary<string, DropDownTreeNode>();
+
+            foreach (VASLSetting setting in settings.OrderedSettings)
+            {
+                var value = setting.Value;
+                if (CustomSettingsState.ContainsKey(setting.Id))
+                    value = CustomSettingsState[setting.Id];
+
+                var node = new DropDownTreeNode(setting.Label)
+                {
+                    Tag = setting,
+                    ToolTipText = setting.ToolTip
+                };
+                node.ComboBox.Text = value.ToString();
+                setting.Value = value;
+
+                if (setting.Parent == null)
+                {
+                    treeCustomSettings.Nodes.Add(node);
+                }
+                else if (flat.ContainsKey(setting.Parent))
+                {
+                    flat[setting.Parent].Nodes.Add(node);
+                }
+
+                flat.Add(setting.Id, node);
+            }
+
+            foreach (var item in flat)
+            {
+                if (!item.Value.Checked)
+                {
+                    UpdateGrayedOut(item.Value);
+                }
+            }
+
+            treeCustomSettings.ExpandAll();
+            treeCustomSettings.EndUpdate();
+
+            // Scroll up to the top
+            if (treeCustomSettings.Nodes.Count > 0)
+                treeCustomSettings.Nodes[0].EnsureVisible();
+
+            UpdateCustomSettingsVisibility();
+            InitBasicSettings(settings);
         }
 
         internal bool FillboxCaptureDevice()
@@ -151,58 +203,6 @@ namespace LiveSplit.UI.Components
 
             if (node.ComboBox.Text != value.ToString())
                 node.ComboBox.Text = value.ToString();
-        }
-
-        internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
-        {
-            treeCustomSettings.BeginUpdate();
-            treeCustomSettings.Nodes.Clear();
-
-            var flat = new Dictionary<string, DropDownTreeNode>();
-
-            foreach (VASLSetting setting in settings.OrderedSettings)
-            {
-                var value = setting.Value;
-                if (CustomSettingsState.ContainsKey(setting.Id))
-                    value = CustomSettingsState[setting.Id];
-
-                var node = new DropDownTreeNode(setting.Label)
-                {
-                    Tag = setting,
-                    ToolTipText = setting.ToolTip
-                };
-                node.ComboBox.Text = value.ToString();
-                setting.Value = value;
-
-                if (setting.Parent == null)
-                {
-                    treeCustomSettings.Nodes.Add(node);
-                }
-                else if (flat.ContainsKey(setting.Parent))
-                {
-                    flat[setting.Parent].Nodes.Add(node);
-                }
-
-                flat.Add(setting.Id, node);
-            }
-
-            foreach (var item in flat)
-            {
-                if (!item.Value.Checked)
-                {
-                    UpdateGrayedOut(item.Value);
-                }
-            }
-
-            treeCustomSettings.ExpandAll();
-            treeCustomSettings.EndUpdate();
-
-            // Scroll up to the top
-            if (treeCustomSettings.Nodes.Count > 0)
-                treeCustomSettings.Nodes[0].EnsureVisible();
-
-            UpdateCustomSettingsVisibility();
-            InitBasicSettings(settings);
         }
 
         private void UpdateGrayedOut(DropDownTreeNode node)

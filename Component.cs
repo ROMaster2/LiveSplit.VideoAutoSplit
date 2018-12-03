@@ -33,11 +33,23 @@ namespace LiveSplit.UI.Components
             {
                 if (_ProfilePath != value)
                 {
-                    if (_ProfilePath != string.Empty)
+                    // This is so the event logger for ProfileCleanup doesn't run at start.
+                    if (!string.IsNullOrEmpty(_ProfilePath))
                     {
                         ProfileCleanup();
                     }
-                    _ProfilePath = value;
+                    try
+                    {
+                        _ProfilePath = value;
+                        ProfileChanged?.Invoke(this, GameProfile); // Invokes getter
+                    }
+                    catch (Exception e)
+                    {
+                        LogEvent("Test1234"); // Testing to see if it appears when it's not supposed to.
+                        LogEvent(e);
+                        _ProfilePath = null;
+                        ProfileCleanup();
+                    }
                 }
             }
         }
@@ -51,10 +63,9 @@ namespace LiveSplit.UI.Components
                 {
                     try
                     {
-                        LogEvent("Loading new profile: " + ProfilePath);
+                        LogEvent("Loading new game profile: " + ProfilePath);
 
                         _GameProfile = GameProfile.FromPath(ProfilePath);
-                        ProfileChanged?.Invoke(this, _GameProfile);
                         // Todo: Unset GameVersion if the existing one isn't in the new profile. Maybe.
 
                         if (File.Exists(ProfilePath))
@@ -71,7 +82,10 @@ namespace LiveSplit.UI.Components
                         FSWatcher.EnableRaisingEvents = true;
 
                         LogEvent("Game profile successfully loaded!");
-                        TryStartScanner();
+
+                        // Todo: Log this separately. Just don't want to atm.
+                        VASLSettings settings = Script.RunStartup(State);
+                        SetVASLSettings(settings);
                     }
                     catch (Exception e)
                     {
@@ -109,23 +123,6 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        // To expand upon
-        private string _VideoDevice = string.Empty;
-        public string VideoDevice {
-            get
-            {
-                return _VideoDevice;
-            }
-            internal set
-            {
-                if (_VideoDevice != value)
-                {
-                    _VideoDevice = value;
-                    VideoDeviceChanged?.Invoke(this, _VideoDevice);
-                }
-            }
-        }
-
         private string _GameVersion = string.Empty;
         public string GameVersion
         {
@@ -139,6 +136,24 @@ namespace LiveSplit.UI.Components
                 {
                     _GameVersion = value;
                     GameVersionChanged?.Invoke(this, _GameVersion);
+                }
+            }
+        }
+
+        // To expand upon
+        private string _VideoDevice = string.Empty;
+        public string VideoDevice {
+            get
+            {
+                return _VideoDevice;
+            }
+            internal set
+            {
+                if (_VideoDevice != value)
+                {
+                    _VideoDevice = value;
+                    VideoDeviceChanged?.Invoke(this, _VideoDevice);
+                    TryStartScanner();
                 }
             }
         }
@@ -271,7 +286,6 @@ namespace LiveSplit.UI.Components
         private void ParseStandardSettingsFromXml(XmlElement element)
         {
             ProfilePath = SettingsHelper.ParseString(element["ProfilePath"], string.Empty);
-            VideoDevice = SettingsHelper.ParseString(element["VideoDevice"], string.Empty);
             GameVersion = SettingsHelper.ParseString(element["GameVersion"], string.Empty);
 
             // Hacky? Probably. Geometry should have proper XML support.
@@ -280,6 +294,8 @@ namespace LiveSplit.UI.Components
             {
                 CropGeometry = geo;
             }
+
+            VideoDevice = SettingsHelper.ParseString(element["VideoDevice"], string.Empty);
         }
 
         private void ParseBasicSettingsFromXml(XmlElement element)
@@ -317,7 +333,7 @@ namespace LiveSplit.UI.Components
                         continue;
                     }
 
-                    string id = element.Attributes["id"].Value;
+                    string id = element.Attributes["id"]?.Value;
                     //string type = element.Attributes["type"].Value;
                     string type = "string"; // Temporary until coercion by the script is done.
 
@@ -362,6 +378,8 @@ namespace LiveSplit.UI.Components
 
         #endregion Load Settings
 
+        #region VASL Settings
+
         private void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
             if (!scriptLoaded)
@@ -369,23 +387,23 @@ namespace LiveSplit.UI.Components
                 BasicSettingsState.Clear();
                 CustomSettingsState.Clear();
             }
-
-            var values = new Dictionary<string, dynamic>();
-
-            foreach (VASLSetting setting in settings.OrderedSettings)
+            else
             {
-                var value = setting.Value;
-                if (CustomSettingsState.ContainsKey(setting.Id))
-                    value = CustomSettingsState[setting.Id];
+                var values = new Dictionary<string, dynamic>();
 
-                setting.Value = value;
+                foreach (var setting in settings.OrderedSettings)
+                {
+                    var value = setting.Value;
+                    if (CustomSettingsState.ContainsKey(setting.Id))
+                        value = CustomSettingsState[setting.Id];
 
-                values.Add(setting.Id, value);
-            }
+                    setting.Value = value;
 
-            if (scriptLoaded)
+                    values.Add(setting.Id, value);
+                }
+
                 CustomSettingsState = values;
-
+            }
             ComponentUI.InitVASLSettings(settings, scriptLoaded);
         }
 
@@ -398,6 +416,8 @@ namespace LiveSplit.UI.Components
         {
             InitVASLSettings(new VASLSettings(), false);
         }
+
+        #endregion VASL Settings
 
         internal void RunScript(object sender, DeltaManager dm)
         {
@@ -413,20 +433,19 @@ namespace LiveSplit.UI.Components
 
         private void TryStartScanner()
         {
-            if (!string.IsNullOrEmpty(VideoDevice) && Script != null)
+            try
             {
-                try
+                Scanner.Stop();
+                if (!string.IsNullOrEmpty(VideoDevice))
                 {
-                    VASLSettings settings = Script.RunStartup(State);
-                    SetVASLSettings(settings);
                     Scanner.AsyncStart();
                 }
-                catch (Exception e)
-                {
-                    //LogEvent("Failed to load VASL settings:");
-                    LogEvent(e);
-                    ProfileCleanup();
-                }
+            }
+            catch (Exception e)
+            {
+                //LogEvent("Failed to load VASL settings:");
+                LogEvent(e);
+                ProfileCleanup();
             }
         }
 
@@ -473,6 +492,11 @@ namespace LiveSplit.UI.Components
         {
             Log.Info("[VAS] " + message);
             EventLog = message;
+        }
+
+        internal void ClearEventLog()
+        {
+            _EventLog = string.Empty;
         }
 
         public override void Update(IInvalidator i, LiveSplitState s, float w, float h, LayoutMode m) { }

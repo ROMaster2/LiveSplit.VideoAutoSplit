@@ -8,10 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using LiveSplit.VAS.Models;
+using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class FeaturesUI : UserControl
+    public partial class FeaturesUI : AbstractUI
     {
         private readonly VASComponent ParentComponent;
 
@@ -22,14 +23,19 @@ namespace LiveSplit.UI.Components
             ParentComponent = parentComponent;
         }
 
-        private void Rerender()
+        override public void Rerender()
         {
             ParentComponent.Script.ScriptUpdateFinished += UpdateRows;
         }
 
-        private void Derender()
+        override public void Derender()
         {
             ParentComponent.Script.ScriptUpdateFinished -= UpdateRows;
+        }
+
+        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        {
+
         }
 
         private void SetLabels()

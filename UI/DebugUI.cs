@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
+using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class DebugUI : UserControl
+    public partial class DebugUI : AbstractUI
     {
         private readonly VASComponent ParentComponent;
 
@@ -19,9 +20,14 @@ namespace LiveSplit.UI.Components
             ParentComponent.EventLogUpdated += (sender, str) => txtDebug.Text += str;
         }
 
+        override public void Rerender() { }
+        override public void Derender() { }
+        override internal void InitVASLSettings(VASLSettings s, bool l) { }
+
         private void btnClear_Click(object sender, EventArgs e)
         {
             txtDebug.Clear();
+            ParentComponent.ClearEventLog();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
