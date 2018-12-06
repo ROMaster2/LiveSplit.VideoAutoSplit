@@ -3,31 +3,39 @@ using System.IO;
 using System.Windows.Forms;
 using LiveSplit.VAS.VASL;
 
-namespace LiveSplit.UI.Components
+namespace LiveSplit.VAS.UI
 {
     public partial class DebugUI : AbstractUI
     {
-        private readonly VASComponent ParentComponent;
-
-        public DebugUI(VASComponent parentComponent)
+        public DebugUI(VASComponent component) : base(component)
         {
             InitializeComponent();
-
-            ParentComponent = parentComponent;
-
-            txtDebug.Text = ParentComponent.EventLog;
-
-            ParentComponent.EventLogUpdated += (sender, str) => txtDebug.Text += str;
         }
 
-        override public void Rerender() { }
-        override public void Derender() { }
-        override internal void InitVASLSettings(VASLSettings s, bool l) { }
+        override public void Rerender()
+        {
+            txtDebug.Text = Component.EventLog;
+
+            Component.EventLogUpdated += UpdatetxtDebug;
+        }
+
+        override public void Derender()
+        {
+            Component.EventLogUpdated -= UpdatetxtDebug;
+        }
+
+        private void UpdatetxtDebug(object sender, string str)
+        {
+            txtDebug.Invoke((MethodInvoker)delegate
+            {
+                txtDebug.Text += str;
+            });
+        }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
             txtDebug.Clear();
-            ParentComponent.ClearEventLog();
+            Component.ClearEventLog();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -43,9 +51,13 @@ namespace LiveSplit.UI.Components
             {
                 if (ofd.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(ofd.FileName))
                 {
-                    File.WriteAllText(ofd.FileName, txtDebug.Text);
+                    var finalLog = Component.EventLog + "\r\nLog saved at " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n";
+                    File.WriteAllText(ofd.FileName, finalLog);
                 }
             }
         }
+
+        // This form contains no settings.
+        override internal void InitVASLSettings(VASLSettings s, bool l) { }
     }
 }

@@ -116,7 +116,7 @@
     <Compile Include="UI\Aligner.Designer.cs">
       <DependentUpon>Aligner.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\BaseUI.cs">
+    <Compile Include="UI\AbstractUI.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UI\ComponentUI.cs">

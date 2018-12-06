@@ -88,6 +88,15 @@ namespace LiveSplit.VAS.Models
             }
         }
 
+        public string FullName
+        {
+            get
+            {
+                return Screen.Name + "/" + WatchZone.Name + "/" + Watcher.Name + " - " + FileName;
+            }
+        }
+
+        // TO REMOVE
         public void SetName(Screen screen, WatchZone watchZone, Watcher watcher)
         {
             _Name = screen.Name + "/" + watchZone.Name + "/" + watcher.Name + " - " + FileName;

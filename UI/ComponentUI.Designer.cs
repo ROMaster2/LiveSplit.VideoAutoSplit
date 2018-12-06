@@ -1,4 +1,4 @@
-﻿namespace LiveSplit.UI.Components
+﻿namespace LiveSplit.VAS.UI
 {
     partial class ComponentUI
     {

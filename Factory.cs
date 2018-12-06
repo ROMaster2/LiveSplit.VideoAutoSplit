@@ -1,6 +1,7 @@
 ﻿using System;
 using LiveSplit.Model;
 using LiveSplit.UI.Components;
+using LiveSplit.VAS;
 
 [assembly: ComponentFactory(typeof(Factory))]
 
@@ -9,7 +10,7 @@ namespace LiveSplit.UI.Components
     public class Factory : IComponentFactory
     {
         public string ComponentName => "Video Auto Splitter";
-        public string Description => "Allows scripting of splitting behavior based on events from a video feed.";
+        public string Description => "Allows scripting of splitting behavior based on events from a video stream.";
         public ComponentCategory Category => ComponentCategory.Control;
         public Version Version => Version.Parse("0.1.0");
 

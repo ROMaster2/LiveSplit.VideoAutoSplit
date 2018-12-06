@@ -6,29 +6,24 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Accord.Video.DirectShow;
-using LiveSplit.VAS;
 using LiveSplit.VAS.Models;
 using LiveSplit.VAS.VASL;
 
-namespace LiveSplit.UI.Components
+namespace LiveSplit.VAS.UI
 {
     public partial class SettingsUI : AbstractUI
     {
-        private readonly VASComponent ParentComponent;
-
         internal readonly Dictionary<string, CheckBox> BasicSettings;
 
-        private string ProfilePath { get { return ParentComponent.ProfilePath; } set { ParentComponent.ProfilePath = value; } }
-        private string VideoDevice { get { return ParentComponent.VideoDevice; } set { ParentComponent.VideoDevice = value; } }
-        private string GameVersion { get { return ParentComponent.GameVersion; } set { ParentComponent.GameVersion = value; } }
-        private IDictionary<string, bool> BasicSettingsState => ParentComponent.BasicSettingsState;
-        private IDictionary<string, dynamic> CustomSettingsState => ParentComponent.CustomSettingsState;
+        private string ProfilePath { get { return Component.ProfilePath; } set { Component.ProfilePath = value; } }
+        private string VideoDevice { get { return Component.VideoDevice; } set { Component.VideoDevice = value; } }
+        private string GameVersion { get { return Component.GameVersion; } set { Component.GameVersion = value; } }
+        private IDictionary<string, bool> BasicSettingsState => Component.BasicSettingsState;
+        private IDictionary<string, dynamic> CustomSettingsState => Component.CustomSettingsState;
 
-        public SettingsUI(VASComponent parentComponent)
+        public SettingsUI(VASComponent component) : base(component)
         {
             InitializeComponent();
-
-            ParentComponent = parentComponent;
 
             UpdateCustomSettingsVisibility();
 
@@ -40,7 +35,7 @@ namespace LiveSplit.UI.Components
                 ["Reset"] = ckbReset,
             };
 
-            ParentComponent.ProfileChanged += (sender, gameProfile) => txtGameProfile.Text = ProfilePath;
+            Component.ProfileChanged += (sender, gameProfile) => txtGameProfile.Text = ProfilePath;
         }
 
         override public void Rerender()
@@ -131,7 +126,7 @@ namespace LiveSplit.UI.Components
                     boxCaptureDevice.Items.Add(videoDevices[i].Name);
                 }
 
-                if (boxCaptureDevice.SelectedIndex != selectedIndex)
+                //if (boxCaptureDevice.SelectedIndex != selectedIndex)
                     boxCaptureDevice.SelectedIndex = selectedIndex;
                 return true;
             }

@@ -14,9 +14,9 @@ namespace LiveSplit.VAS.VASL
 {
     public class VASLScript
     {
-        private readonly VASComponent ParentComponent;
+        private readonly VASComponent Component;
 
-        private string GameVersion => ParentComponent.GameVersion;
+        private string GameVersion => Component.GameVersion;
 
         public ExpandoObject Vars { get; }
 
@@ -31,10 +31,10 @@ namespace LiveSplit.VAS.VASL
 
         public event EventHandler<DeltaManager> ScriptUpdateFinished;
 
-        public VASLScript(string script, VASComponent parentComponent = null)
+        public VASLScript(string script, VASComponent component = null)
         {
             Methods = ParseScript(script);
-            ParentComponent = parentComponent;
+            Component = component;
 
             Settings = new VASLSettings();
             Vars = new ExpandoObject();

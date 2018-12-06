@@ -6,11 +6,13 @@ using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.Model;
 using LiveSplit.Options;
-using LiveSplit.VAS;
+using LiveSplit.UI;
+using LiveSplit.UI.Components;
 using LiveSplit.VAS.Models;
+using LiveSplit.VAS.UI;
 using LiveSplit.VAS.VASL;
 
-namespace LiveSplit.UI.Components
+namespace LiveSplit.VAS
 {
     public class VASComponent : LogicComponent
     {
@@ -111,6 +113,7 @@ namespace LiveSplit.UI.Components
                         LogEvent("Loading VASL script within profile...");
                         _Script = new VASLScript(gp.RawScript, this);
                         LogEvent("VASL script successfully loaded!");
+                        TryStartScanner();
                     }
                     catch (Exception e)
                     {
@@ -431,6 +434,18 @@ namespace LiveSplit.UI.Components
             }
         }
 
+        // TEMPORARY
+        private void ScannerTemp()
+        {
+            Scanner.GameProfile = GameProfile;
+
+            var videoDevices = new Accord.Video.DirectShow.FilterInfoCollection(Accord.Video.DirectShow.FilterCategory.VideoInputDevice);
+            var device = videoDevices.Find(x => x.Name == VideoDevice);
+            Scanner.SetVideoSource(device.MonikerString);
+
+            Scanner.NewResult += RunScript;
+        }
+
         private void TryStartScanner()
         {
             try
@@ -438,6 +453,7 @@ namespace LiveSplit.UI.Components
                 Scanner.Stop();
                 if (!string.IsNullOrEmpty(VideoDevice))
                 {
+                    ScannerTemp();
                     Scanner.AsyncStart();
                 }
             }
@@ -482,6 +498,7 @@ namespace LiveSplit.UI.Components
             LogEvent("Closing...");
         }
 
+        // Todo: Use TraceListener instead?
         internal void LogEvent(Exception e)
         {
             Log.Error(e);

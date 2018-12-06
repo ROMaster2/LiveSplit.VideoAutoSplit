@@ -12,23 +12,18 @@ using System.Xml;
 using Accord.Video;
 using Accord.Video.DirectShow;
 using ImageMagick;
-using LiveSplit.UI;
-using LiveSplit.UI.Components;
-using LiveSplit.VAS;
 using LiveSplit.VAS.Models;
 using LiveSplit.VAS.UI;
 using LiveSplit.VAS.VASL;
 
-namespace LiveSplit.UI.Components
+namespace LiveSplit.VAS.UI
 {
     public partial class ScanRegionUI : AbstractUI
     {
-        private readonly VASComponent ParentComponent;
-
-        private GameProfile GameProfile { get { return ParentComponent.GameProfile; } }
+        private GameProfile GameProfile { get { return Component.GameProfile; } }
 
         // Temporary. Remove later.
-        private Geometry CropGeometry { get { return ParentComponent.CropGeometry; } set { ParentComponent.CropGeometry = value; } }
+        private Geometry CropGeometry { get { return Component.CropGeometry; } set { Component.CropGeometry = value; } }
 
         private Geometry VideoGeometry => Scanner.VideoGeometry;
 
@@ -61,13 +56,9 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        public ScanRegionUI(VASComponent parentComponent)
+        public ScanRegionUI(VASComponent component) : base(component)
         {
             InitializeComponent();
-
-            ParentComponent = parentComponent;
-
-            FillboxPreviewType();
         }
 
         override public void Rerender()

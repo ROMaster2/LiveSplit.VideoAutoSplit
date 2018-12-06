@@ -1,37 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Windows.Forms;
 using LiveSplit.VAS.VASL;
-using LiveSplit;
 
-namespace LiveSplit.UI.Components
+namespace LiveSplit.VAS.UI
 {
     public partial class ComponentUI : UserControl
     {
-        private readonly VASComponent ParentComponent;
+        private VASComponent Component { get; }
 
-        internal SettingsUI   SettingsUI;
-        internal ScanRegionUI ScanRegionUI;
-        internal FeaturesUI   FeaturesUI;
-        internal DebugUI      DebugUI;
+        // Children are hardcoded until a better solution is found.
+        // tbh it's probably easier to read anyway.
+        internal SettingsUI   SettingsUI   { get; }
+        internal ScanRegionUI ScanRegionUI { get; }
+        internal FeaturesUI   FeaturesUI   { get; }
+        internal DebugUI      DebugUI      { get; }
 
-        private string ProfilePath => ParentComponent.ProfilePath;
-        private string VideoDevice => ParentComponent.VideoDevice;
-        private string GameVersion => ParentComponent.GameVersion;
-        private IDictionary<string, bool> BasicSettingsState => ParentComponent.BasicSettingsState;
-        private IDictionary<string, dynamic> CustomSettingsState => ParentComponent.CustomSettingsState;
-
-        public ComponentUI(VASComponent parentComponent)
+        internal ComponentUI(VASComponent component)
         {
             InitializeComponent();
 
-            ParentComponent = parentComponent;
+            Component = component;
 
-            SettingsUI   = new SettingsUI(ParentComponent);
-            ScanRegionUI = new ScanRegionUI(ParentComponent);
-            FeaturesUI   = new FeaturesUI(ParentComponent);
-            DebugUI      = new DebugUI(ParentComponent);
+            SettingsUI   = new SettingsUI(Component);
+            ScanRegionUI = new ScanRegionUI(Component);
+            FeaturesUI   = new FeaturesUI(Component);
+            DebugUI      = new DebugUI(Component);
             SetChildControlSettings(SettingsUI, tabSettings, "Settings");
             SetChildControlSettings(ScanRegionUI, tabScanRegion, "ScanRegion");
             SetChildControlSettings(FeaturesUI, tabFeatures, "Features");
@@ -42,13 +35,6 @@ namespace LiveSplit.UI.Components
             tabDebug.SuspendLayout();
         }
 
-        public void SetChildControlSettings(UserControl userControl, TabPage tab, string name)
-        {
-            tab.Controls.Add(userControl);
-            userControl.Dock = DockStyle.Fill;
-            userControl.Name = name;
-        }
-
         internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
             SettingsUI.InitVASLSettings(settings, scriptLoaded);
@@ -57,9 +43,19 @@ namespace LiveSplit.UI.Components
             DebugUI.InitVASLSettings(settings, scriptLoaded);
         }
 
+        private void SetChildControlSettings(UserControl userControl, TabPage tab, string name)
+        {
+            tab.Controls.Add(userControl);
+            userControl.Dock = DockStyle.Fill;
+            userControl.Name = name;
+        }
+
+        // Some of the interfaces are very 'active', so they should only be enabled when the users is actually using them.
+        #region Renderers
+
         private void ComponentUI_Load(object sender, EventArgs e)
         {
-            var grandParent = (TabControl)this.Parent.Parent;
+            var grandParent = (TabControl)Parent.Parent;
             grandParent.Selecting += Parent_Selecting;
             grandParent.HandleDestroyed += Parent_HandleDestroyed;
             Render();
@@ -77,13 +73,13 @@ namespace LiveSplit.UI.Components
             RenderUI(DebugUI, forceDerender);
         }
 
+        // Bad naming consistancy
         private void RenderUI(AbstractUI ui, bool forceDerender)
         {
-            var grandParent = (TabControl)this.Parent.Parent;
-            var parent = (TabPage)this.Parent;
-            if (grandParent.SelectedTab == parent &&
-                tabControlCore.SelectedTab == ui.PageParent &&
-                !forceDerender)
+            var grandParent = (TabControl)Parent.Parent;
+            var parent = (TabPage)Parent;
+
+            if (grandParent.SelectedTab == parent && tabControlCore.SelectedTab == ui.PageParent && !forceDerender)
             {
                 ui.ResumeLayout(false);
                 ui.Rerender();
@@ -95,5 +91,6 @@ namespace LiveSplit.UI.Components
             }
         }
 
+        #endregion Renderers
     }
 }
