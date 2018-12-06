@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using LiveSplit.VAS.Models;
 using LiveSplit.VAS.VASL;
@@ -19,12 +21,12 @@ namespace LiveSplit.VAS.UI
 
         override public void Rerender()
         {
-            Component.Script.ScriptUpdateFinished += UpdateRows;
+            Component.Script.ScriptUpdateFinished += UpdateRowsAsync;
         }
 
         override public void Derender()
         {
-            Component.Script.ScriptUpdateFinished -= UpdateRows;
+            Component.Script.ScriptUpdateFinished -= UpdateRowsAsync;
         }
 
         override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
@@ -36,12 +38,12 @@ namespace LiveSplit.VAS.UI
 
                 if (features.Count > 0)
                 {
-                    tlpFeatures.RowCount = 1 + features.Count;
+                    tlpFeatures.RowCount = 2 + features.Count;
                     for (int i = 1; i < tlpFeatures.RowCount - 1; i++)
                     {
-                        var feature = features[i];
+                        var feature = features[i - 1];
                         var featureRow = new FeatureRow(feature.FullName, 60); // Todo: Add getting framerate.
-                        tlpFeatures.RowStyles.Add(new RowStyle(SizeType.Absolute, 21F));
+                        tlpFeatures.RowStyles.Insert(i, new RowStyle(SizeType.Absolute, 21F));
                         tlpFeatures.Controls.Add(featureRow, 0, i);
                         // Todo: Add hook for manual enable/disable.
                     }
@@ -63,12 +65,12 @@ namespace LiveSplit.VAS.UI
                     // What does this and the VASL script do with case-sensitivity?
                     variables = variables.Distinct().ToArray();
 
-                    tlpVariables.RowCount = 1 + variables.Length;
-                    for (int i = 1; i < tlpVariables.RowCount; i++)
+                    tlpVariables.RowCount = 2 + variables.Length;
+                    for (int i = 1; i < tlpVariables.RowCount - 1; i++)
                     {
-                        var variable = variables[i];
+                        var variable = variables[i - 1];
                         var variableRow = new VariableRow(variable, 60); // Todo: Add getting framerate.
-                        tlpVariables.RowStyles.Add(new RowStyle(SizeType.Absolute, 21F));
+                        tlpVariables.RowStyles.Insert(i, new RowStyle(SizeType.Absolute, 21F));
                         tlpVariables.Controls.Add(variableRow, 0, i);
                     }
                 }
@@ -78,7 +80,7 @@ namespace LiveSplit.VAS.UI
 
         private void ClearRows()
         {
-            for (int i = tlpFeatures.RowCount - 1; i > 0; i--)
+            for (int i = tlpFeatures.RowCount - 2; i > 0; i--)
             {
                 if (tlpFeatures.Controls.ContainsKey(i.ToString()))
                 {
@@ -86,9 +88,9 @@ namespace LiveSplit.VAS.UI
                 }
                 tlpFeatures.RowStyles.RemoveAt(i);
             }
-            tlpFeatures.RowCount = 1;
+            tlpFeatures.RowCount = 2;
 
-            for (int i = tlpVariables.RowCount - 1; i > 0; i--)
+            for (int i = tlpVariables.RowCount - 2; i > 0; i--)
             {
                 if (tlpVariables.Controls.ContainsKey(i.ToString()))
                 {
@@ -96,7 +98,12 @@ namespace LiveSplit.VAS.UI
                 }
                 tlpVariables.RowStyles.RemoveAt(i);
             }
-            tlpVariables.RowCount = 1;
+            tlpVariables.RowCount = 2;
+        }
+
+        private void UpdateRowsAsync(object sender, DeltaManager dm)
+        {
+            Task.Run(() => UpdateRows(sender, dm));
         }
 
         private void UpdateRows(object sender, DeltaManager dm)
@@ -105,12 +112,13 @@ namespace LiveSplit.VAS.UI
             // but this might be a bit CPU intensive, and we're trying to
             // save as much of that as possible.
             // Then again, why not make a Dictionary? Later, probably.
+            var deltas = (double[])DeltaManager.History[dm.FrameIndex].Deltas.Clone();
 
             tlpCore.Invoke((MethodInvoker)delegate
             {
                 for (int i = 1; i < tlpFeatures.RowCount - 1; i++)
                 {
-                    var value = dm[i - 1].current;
+                    var value = deltas[i - 1];
                     var varState = true;
                     var featureRow = (FeatureRow)tlpFeatures.Controls[i];
                     featureRow.Invoke((MethodInvoker)delegate { featureRow.Update(value, varState); });
@@ -128,6 +136,79 @@ namespace LiveSplit.VAS.UI
 
     }
     
+    internal class VariableRow : TableLayoutPanel
+    {
+        public Label    lblName     { get; }
+        public Label    lblValue    { get; private set; }
+        public Label    lblMaximum  { get; private set; }
+        public Label    lblMinimum  { get; private set; }
+
+        private Queue<double> ValueQueue;
+        private int QueueSize;
+
+        private static readonly Label lblNumeric = new Label()
+        {
+            Anchor = AnchorStyles.Right,
+            AutoSize = true,
+            Text = "",
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        public VariableRow(string name, int queueSize)
+        {
+            ColumnCount = 4;
+            ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
+            ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
+            ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
+            RowCount = 1;
+            RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            Dock = DockStyle.Fill;
+            Margin = new Padding(0);
+            Name = name; // Might break
+
+            lblName = new Label()
+            {
+                Anchor = AnchorStyles.Left,
+                AutoSize = true,
+                Text = name,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            lblValue   = lblNumeric.Clone();
+            lblMaximum = lblNumeric.Clone();
+            lblMinimum = lblNumeric.Clone();
+
+            ValueQueue = new Queue<double>(queueSize);
+            QueueSize = queueSize;
+
+            Controls.Add(lblName,     0, 0);
+            Controls.Add(lblValue,    1, 0);
+            Controls.Add(lblMaximum,  2, 0);
+            Controls.Add(lblMinimum,  3, 0);
+        }
+
+        public virtual void Update(dynamic value)
+        {
+            if (value is double || value is int || value is short || value is byte || value is long || value is float)
+            {
+                lblValue.Text = value.ToString("F4"); // Todo: Formatting based on ErrorMetric.
+
+                ValueQueue.Enqueue(value);
+                if (ValueQueue.Count >= QueueSize)
+                {
+                    ValueQueue.Dequeue();
+                }
+
+                lblMaximum.Text = ValueQueue.Max().ToString("F4");
+                lblMinimum.Text = ValueQueue.Min().ToString("F4");
+            }
+            else
+            {
+                lblValue.Text = value.ToString();
+            }
+        }
+    }
+
     internal class FeatureRow : VariableRow
     {
         public CheckBox ckbEnabled { get; private set; }
@@ -140,7 +221,7 @@ namespace LiveSplit.VAS.UI
             ckbEnabled = new CheckBox()
             {
                 CheckState = CheckState.Indeterminate,
-                Padding = new Padding(2, 0, 0, 0)
+                Padding = new Padding(0, 2, 0, 0)
             };
             ckbEnabled.Click += ckbEnabled_Click;
 
@@ -165,67 +246,4 @@ namespace LiveSplit.VAS.UI
         }
     }
 
-    internal class VariableRow : TableLayoutPanel
-    {
-        public Label    lblName     { get; }
-        public Label    lblValue    { get; private set; }
-        public Label    lblMaximum  { get; private set; }
-        public Label    lblMinimum  { get; private set; }
-
-        private Stack<double> ValueStack;
-
-        private static readonly Label lblNumeric = new Label()
-        {
-            Anchor = AnchorStyles.Right,
-            AutoSize = true,
-            Text = "null",
-            TextAlign = ContentAlignment.MiddleRight
-        };
-
-        public VariableRow(string name, int stackSize)
-        {
-            ColumnCount = 4;
-            ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
-            ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
-            ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
-            RowCount = 1;
-            RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            Dock = DockStyle.Fill;
-            Margin = new Padding(0);
-            Name = name; // Might break
-
-            lblName = new Label()
-            {
-                Anchor = AnchorStyles.Left,
-                AutoSize = true,
-                Text = name,
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-            lblValue   = lblNumeric.Clone();
-            lblMaximum = lblNumeric.Clone();
-            lblMinimum = lblNumeric.Clone();
-
-            ValueStack = new Stack<double>(stackSize);
-
-            Controls.Add(lblName,     0, 0);
-            Controls.Add(lblValue,    1, 0);
-            Controls.Add(lblMaximum,  2, 0);
-            Controls.Add(lblMinimum,  3, 0);
-        }
-
-        public virtual void Update(dynamic value)
-        {
-            lblValue.Text = value.ToString(); // Todo: Formatting based on ErrorMetric.
-
-            if (value is double || value is int || value is short || value is byte || value is long || value is float)
-            {
-                ValueStack.Push(value);
-                //ValueStack.Pop(); // Is this fine if the size is pre-defined?
-
-                lblMaximum.Text = ValueStack.Max().ToString();
-                lblMinimum.Text = ValueStack.Min().ToString();
-            }
-        }
-    }
 }
