@@ -29,6 +29,9 @@ namespace LiveSplit.VAS.UI
             Component.Script.ScriptUpdateFinished -= UpdateRowsAsync;
         }
 
+        // Because two rows exist for different purposes, the first for headers and last for layout balance,
+        // indexing became terrible.
+        // I didn't want it to be spaghetti but I am italian, so...
         override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
             ClearRows();
@@ -38,11 +41,11 @@ namespace LiveSplit.VAS.UI
 
                 if (features.Count > 0)
                 {
-                    tlpFeatures.RowCount = 2 + features.Count;
+                    tlpFeatures.RowCount += features.Count;
                     for (int i = 1; i < tlpFeatures.RowCount - 1; i++)
                     {
                         var feature = features[i - 1];
-                        var featureRow = new FeatureRow(feature.FullName, 60); // Todo: Add getting framerate.
+                        var featureRow = new VariableRow(feature.FullName, 60); // Todo: Add getting framerate.
                         tlpFeatures.RowStyles.Insert(i, new RowStyle(SizeType.Absolute, 21F));
                         tlpFeatures.Controls.Add(featureRow, 0, i);
                         // Todo: Add hook for manual enable/disable.
@@ -59,19 +62,20 @@ namespace LiveSplit.VAS.UI
                     string[] variables = new string[varsResults.Count];
                     for (int i = 0; i < varsResults.Count; i++)
                     {
-                        variables[i] = varsResults[i].Value.Substring(5);
+                        variables[i] = varsResults[i].Value;
                     }
 
                     // What does this and the VASL script do with case-sensitivity?
                     variables = variables.Distinct().ToArray();
 
-                    tlpVariables.RowCount = 2 + variables.Length;
-                    for (int i = 1; i < tlpVariables.RowCount - 1; i++)
+                    var offset = tlpFeatures.RowCount - 1;
+                    tlpFeatures.RowCount += variables.Length;
+                    for (int i = 0; i < variables.Length; i++)
                     {
-                        var variable = variables[i - 1];
+                        var variable = variables[i];
                         var variableRow = new VariableRow(variable, 60); // Todo: Add getting framerate.
-                        tlpVariables.RowStyles.Insert(i, new RowStyle(SizeType.Absolute, 21F));
-                        tlpVariables.Controls.Add(variableRow, 0, i);
+                        tlpFeatures.RowStyles.Insert(i + offset, new RowStyle(SizeType.Absolute, 21F));
+                        tlpFeatures.Controls.Add(variableRow, 0, i + offset);
                     }
                 }
 
@@ -89,16 +93,6 @@ namespace LiveSplit.VAS.UI
                 tlpFeatures.RowStyles.RemoveAt(i);
             }
             tlpFeatures.RowCount = 2;
-
-            for (int i = tlpVariables.RowCount - 2; i > 0; i--)
-            {
-                if (tlpVariables.Controls.ContainsKey(i.ToString()))
-                {
-                    tlpVariables.Controls[i].Dispose();
-                }
-                tlpVariables.RowStyles.RemoveAt(i);
-            }
-            tlpVariables.RowCount = 2;
         }
 
         private void UpdateRowsAsync(object sender, DeltaManager dm)
@@ -114,21 +108,22 @@ namespace LiveSplit.VAS.UI
             // Then again, why not make a Dictionary? Later, probably.
             var deltas = (double[])DeltaManager.History[dm.FrameIndex].Deltas.Clone();
 
-            tlpCore.Invoke((MethodInvoker)delegate
+            this.Invoke((MethodInvoker)delegate
             {
-                for (int i = 1; i < tlpFeatures.RowCount - 1; i++)
+                var deltaCount = deltas.Length;
+                for (int i = 1; i < deltaCount + 1; i++)
                 {
                     var value = deltas[i - 1];
-                    var varState = true;
-                    var featureRow = (FeatureRow)tlpFeatures.Controls[i];
+                    var varState = !double.IsNaN(value);
+                    var featureRow = (VariableRow)tlpFeatures.Controls[i];
                     featureRow.Invoke((MethodInvoker)delegate { featureRow.Update(value, varState); });
                 }
 
                 var vars = (IDictionary<string, object>)Component.Script.Vars;
-                for (int i = 1; i < tlpVariables.RowCount - 1; i++)
+                for (int i = deltaCount + 1; i < tlpFeatures.RowCount - 1; i++)
                 {
-                    var variableRow = (VariableRow)tlpVariables.Controls[i];
-                    var value = vars[variableRow.Name]; // Probably not a good idea...
+                    var variableRow = (VariableRow)tlpFeatures.Controls[i];
+                    var value = vars[variableRow.Name.Substring(5)];
                     variableRow.Invoke((MethodInvoker)delegate { variableRow.Update(value); });
                 }
             });
@@ -139,6 +134,7 @@ namespace LiveSplit.VAS.UI
     internal class VariableRow : TableLayoutPanel
     {
         public Label    lblName     { get; }
+        public CheckBox ckbEnabled  { get; private set; }
         public Label    lblValue    { get; private set; }
         public Label    lblMaximum  { get; private set; }
         public Label    lblMinimum  { get; private set; }
@@ -156,8 +152,9 @@ namespace LiveSplit.VAS.UI
 
         public VariableRow(string name, int queueSize)
         {
-            ColumnCount = 4;
+            ColumnCount = 5;
             ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 44F));
             ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
             ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
             ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 68F));
@@ -174,7 +171,13 @@ namespace LiveSplit.VAS.UI
                 Text = name,
                 TextAlign = ContentAlignment.MiddleLeft
             };
-            lblValue   = lblNumeric.Clone();
+            ckbEnabled = new CheckBox()
+            {
+                CheckState = CheckState.Indeterminate,
+                Padding = new Padding(0, 2, 0, 0)
+            };
+            ckbEnabled.Click += ckbEnabled_Click;
+            lblValue = lblNumeric.Clone();
             lblMaximum = lblNumeric.Clone();
             lblMinimum = lblNumeric.Clone();
 
@@ -182,12 +185,13 @@ namespace LiveSplit.VAS.UI
             QueueSize = queueSize;
 
             Controls.Add(lblName,     0, 0);
-            Controls.Add(lblValue,    1, 0);
-            Controls.Add(lblMaximum,  2, 0);
-            Controls.Add(lblMinimum,  3, 0);
+            Controls.Add(ckbEnabled,  1, 0);
+            Controls.Add(lblValue,    2, 0);
+            Controls.Add(lblMaximum,  3, 0);
+            Controls.Add(lblMinimum,  4, 0);
         }
 
-        public virtual void Update(dynamic value)
+        public virtual void Update(dynamic value, bool? varEnabled = null)
         {
             if (value is double || value is int || value is short || value is byte || value is long || value is float)
             {
@@ -206,44 +210,24 @@ namespace LiveSplit.VAS.UI
             {
                 lblValue.Text = value.ToString();
             }
-        }
-    }
 
-    internal class FeatureRow : VariableRow
-    {
-        public CheckBox ckbEnabled { get; private set; }
-
-        public FeatureRow(string name, int stackSize) : base(name, stackSize)
-        {
-            ColumnCount = 5;
-            ColumnStyles.Insert(1, new ColumnStyle(SizeType.Absolute, 44F));
-
-            ckbEnabled = new CheckBox()
+            if (varEnabled.HasValue)
             {
-                CheckState = CheckState.Indeterminate,
-                Padding = new Padding(0, 2, 0, 0)
-            };
-            ckbEnabled.Click += ckbEnabled_Click;
-
-            Controls.Add(ckbEnabled, 1, 0);
-        }
-
-        public void Update(double value, bool varEnabled)
-        {
-            base.Update(value);
-            ckbEnabled.Checked = varEnabled;
-        }
-
-        // How do you hide base methods?
-        public override void Update(dynamic value)
-        {
-            throw new MethodAccessException("Use Update(value, varState) instead.");
+                ckbEnabled.Checked = varEnabled.Value;
+            }
         }
 
         internal void ckbEnabled_Click(object sender, EventArgs e)
         {
             throw new NotImplementedException("Todo lol");
         }
+
+        // Mostly for debugging
+        public override string ToString()
+        {
+            return Name;
+        }
+
     }
 
 }
