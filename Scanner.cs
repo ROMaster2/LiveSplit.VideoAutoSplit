@@ -3,6 +3,7 @@ using Accord.Video.DirectShow;
 using ImageMagick;
 using LiveSplit.Model;
 using LiveSplit.VAS.Models;
+using LiveSplit.VAS.Models.Delta;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -14,27 +15,36 @@ namespace LiveSplit.VAS
 {
     public class Scanner
     {
-        public static Thread FrameHandlerThread;
+        private VASComponent Component;
 
-        public static GameProfile GameProfile = null;
-        private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
+        public Thread FrameHandlerThread;
 
-        public static Frame CurrentFrame = Frame.Blank;
-        public static int CurrentIndex = 0;
-        public static bool IsScannerLocked = false;
-        public static int ScanningCount = 0;
-        public static bool IsScanning { get { return ScanningCount > 0; } }
-        public static bool Restarting { get; set; } = false;
+        public GameProfile GameProfile { get; internal set; }
+        private VideoCaptureDevice VideoSource = new VideoCaptureDevice();
+        public CompiledFeatures CompiledFeatures { get; private set; }
+        public DeltaManager DeltaManager { get; private set; }
 
-        private static NewFrameEventHandler NewFrameEventHandler;
-        private static VideoSourceErrorEventHandler VideoSourceErrorEventHandler;
-        public static event DeltaResultsHandler NewResult;
+        public Frame CurrentFrame = Frame.Blank;
+        public int CurrentIndex = 0;
+        public bool IsScannerLocked = false;
+        public int ScanningCount = 0;
+        public bool IsScanning { get { return ScanningCount > 0; } }
+        public bool Restarting { get; set; } = false;
+
+        private NewFrameEventHandler NewFrameEventHandler;
+        private VideoSourceErrorEventHandler VideoSourceErrorEventHandler;
+        public event EventHandler<DeltaOutput> NewResult;
 
         // Todo: Add something for downscaling before comparing for large images.
-        public static int OverloadedCount = 0;
+        public int OverloadedCount = 0;
 
-        private static Geometry _VideoGeometry = Geometry.Blank;
-        public static Geometry VideoGeometry
+        public Scanner(VASComponent component)
+        {
+            Component = component;
+        }
+
+        private Geometry _VideoGeometry = Geometry.Blank;
+        public Geometry VideoGeometry
         {
             get
             {
@@ -49,7 +59,7 @@ namespace LiveSplit.VAS
         }
 
         // Hacky but it saves on CPU for the scanner.
-        private static void SetFrameSize(object sender, NewFrameEventArgs e)
+        private void SetFrameSize(object sender, NewFrameEventArgs e)
         {
             if (!_VideoGeometry.HasSize)
             {
@@ -58,8 +68,8 @@ namespace LiveSplit.VAS
             }
         }
 
-        private static Geometry _CropGeometry = Geometry.Blank;
-        public static Geometry CropGeometry
+        private Geometry _CropGeometry = Geometry.Blank;
+        public Geometry CropGeometry
         {
             get
             {
@@ -77,8 +87,8 @@ namespace LiveSplit.VAS
         }
 
         // Bad name.
-        private static Geometry _TrueCropGeometry = Geometry.Blank;
-        public static Geometry TrueCropGeometry
+        private Geometry _TrueCropGeometry = Geometry.Blank;
+        public Geometry TrueCropGeometry
         {
             get
             {
@@ -116,72 +126,72 @@ namespace LiveSplit.VAS
         }
 
         // Good/bad idea?
-        public static double AverageFPS      { get; internal set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
-        public static double MinFPS          { get; internal set; } = 60;
-        public static double MaxFPS          { get; internal set; } = 60;
-        public static double AverageScanTime { get; internal set; } = double.NaN;
-        public static double MinScanTime     { get; internal set; } = double.NaN;
-        public static double MaxScanTime     { get; internal set; } = double.NaN;
-        public static double AverageWaitTime { get; internal set; } = double.NaN;
-        public static double MinWaitTime     { get; internal set; } = double.NaN;
-        public static double MaxWaitTime     { get; internal set; } = double.NaN;
+        public double AverageFPS      { get; internal set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
+        public double MinFPS          { get; internal set; } = 60;
+        public double MaxFPS          { get; internal set; } = 60;
+        public double AverageScanTime { get; internal set; } = double.NaN;
+        public double MinScanTime     { get; internal set; } = double.NaN;
+        public double MaxScanTime     { get; internal set; } = double.NaN;
+        public double AverageWaitTime { get; internal set; } = double.NaN;
+        public double MinWaitTime     { get; internal set; } = double.NaN;
+        public double MaxWaitTime     { get; internal set; } = double.NaN;
 
-        public static bool IsVideoSourceValid() // Not really but good enough.
+        public bool IsVideoSourceValid() // Not really but good enough.
         {
             return !string.IsNullOrEmpty(VideoSource.Source);
         }
 
-        public static bool IsVideoSourceRunning()
+        public bool IsVideoSourceRunning()
         {
             return VideoSource.IsRunning;
         }
 
-        public static void SubscribeToFrameHandler(NewFrameEventHandler method)
+        public void SubscribeToFrameHandler(NewFrameEventHandler method)
         {
             VideoSource.NewFrame += method;
         }
 
-        public static void UnsubscribeFromFrameHandler(NewFrameEventHandler method)
+        public void UnsubscribeFromFrameHandler(NewFrameEventHandler method)
         {
             VideoSource.NewFrame -= method;
         }
 
-        public static void SubscribeToErrorHandler(VideoSourceErrorEventHandler method)
+        public void SubscribeToErrorHandler(VideoSourceErrorEventHandler method)
         {
             VideoSource.VideoSourceError += method;
         }
 
-        public static void UnsubscribeFromErrorHandler(VideoSourceErrorEventHandler method)
+        public void UnsubscribeFromErrorHandler(VideoSourceErrorEventHandler method)
         {
             VideoSource.VideoSourceError -= method;
         }
 
-        public static void SetVideoSource(string monikerString)
+        public void SetVideoSource(string monikerString)
         {
             _VideoGeometry = Geometry.Blank;
             VideoSource.Source = monikerString;
         }
 
-        public static Geometry ResetCropGeometry()
+        public Geometry ResetCropGeometry()
         {
             _CropGeometry = Geometry.Blank;
             UpdateCropGeometry();
             return CropGeometry;
         }
 
-        public static void Stop()
+        public void Stop()
         {
             IsScannerLocked = true;
             VideoSource?.SignalToStop();
             UnsubscribeFromFrameHandler(NewFrameEventHandler);
             CurrentIndex = 0;
-            DeltaManager.History = new DeltaResults[DeltaManager.HistorySize];
+            DeltaManager = null;
             VideoSource?.WaitForStop();
             _VideoGeometry = Geometry.Blank;
             FrameHandlerThread?.Abort();
         }
 
-        public static void AsyncStart()
+        public void AsyncStart()
         {
             if (GameProfile != null && IsVideoSourceValid())
             {
@@ -194,7 +204,7 @@ namespace LiveSplit.VAS
             }
         }
 
-        public static void Start()
+        public void Start()
         {
             UpdateCropGeometry();
             if (GameProfile != null && IsVideoSourceValid())
@@ -210,7 +220,7 @@ namespace LiveSplit.VAS
             }
         }
 
-        public static void Restart()
+        public void Restart()
         {
             if (!Restarting)
             {
@@ -224,7 +234,7 @@ namespace LiveSplit.VAS
             }
         }
 
-        public static void UpdateCropGeometry()
+        public void UpdateCropGeometry()
         {
             _TrueCropGeometry = Geometry.Blank;
             if (GameProfile != null)
@@ -255,7 +265,7 @@ namespace LiveSplit.VAS
                     s.CropGeometry = CropGeometry;
                 }
 
-                CompiledFeatures.Compile(GameProfile);
+                CompiledFeatures = new CompiledFeatures(this, GameProfile);
                 IsScannerLocked = false;
             }
         }
@@ -263,7 +273,10 @@ namespace LiveSplit.VAS
         // Does this dispose properly?
         private static IMagickImage GetComposedImage(Bitmap input, int channelIndex, ColorSpace colorSpace)
         {
-            if (input == null) return null;
+            if (input == null)
+            {
+                return null;
+            }
 
             IMagickImage mi = new MagickImage(input);
             mi.ColorSpace = colorSpace;
@@ -274,14 +287,14 @@ namespace LiveSplit.VAS
             return mi;
         }
 
-        private static void HandleVideoError(object sender, VideoSourceErrorEventArgs e)
+        private void HandleVideoError(object sender, VideoSourceErrorEventArgs e)
         {
             Restart();
         }
 
-        internal static int initCount = 0; // To stop wasting CPU when first starting.
+        internal int initCount = 0; // To stop wasting CPU when first starting.
 
-        public static void HandleNewFrame(object sender, NewFrameEventArgs e)
+        public void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             var now = TimeStamp.CurrentDateTime.Time;
             initCount++;
@@ -312,7 +325,7 @@ namespace LiveSplit.VAS
 
         // Todo: prevFile isn't necessary. Instead store the features of the current scan to be used on the next.
         // That could cause sync problems so it needs to be investigated.
-        private static void NewRun(Scan scan, int index)
+        private void NewRun(Scan scan, int index)
         {
             var deltas = new double[CompiledFeatures.FeatureCount];
             var benchmarks = new double[CompiledFeatures.FeatureCount];
@@ -352,8 +365,10 @@ namespace LiveSplit.VAS
             finally
             {
                 var scanEnd = TimeStamp.CurrentDateTime.Time;
+
                 DeltaManager.AddResult(index, scan, scanEnd, deltas, benchmarks);
-                NewResult(null, new DeltaManager(index, AverageFPS));
+
+                NewResult(null, new DeltaOutput(DeltaManager, index, AverageFPS));
 
                 ScanningCount--;
                 scan.Dispose();
@@ -367,7 +382,7 @@ namespace LiveSplit.VAS
                         sumWaitTime = 0d, minWaitTime = 9999d, maxWaitTime = 0d;
                     foreach (var d in DeltaManager.History)
                     {
-                        if (d != null)
+                        if (!d.IsBlank)
                         {
                             count++;
                             var fd = d.FrameDuration.TotalSeconds;
@@ -378,7 +393,7 @@ namespace LiveSplit.VAS
                             sumScanTime += sd;
                             minScanTime = Math.Min(minScanTime, sd);
                             maxScanTime = Math.Max(maxScanTime, sd);
-                            var wd = d.WaitDuration?.TotalSeconds ?? AverageWaitTime;
+                            var wd = d.WaitDuration.TotalSeconds;
                             sumWaitTime += wd;
                             minWaitTime = Math.Min(minWaitTime, wd);
                             maxWaitTime = Math.Max(maxWaitTime, wd);
@@ -400,7 +415,7 @@ namespace LiveSplit.VAS
                 }
             }
 
-            if (index >= DeltaManager.HistorySize && AverageFPS > 70d)
+            if (index >= DeltaManager.History.Count && AverageFPS > 70d)
             {
                 Restart();
             }
@@ -417,7 +432,7 @@ namespace LiveSplit.VAS
             if (!cWatchZone.IsPaused(now))
             {
                 using (var fileImageCropped = fileImageBase.Clone(cWatchZone.Rectangle, PixelFormat.Format24bppRgb))
-                using (var prevFileImageCropped = cWatchZone.UseDupeCheck(now) ?
+                using (var prevFileImageCropped = cWatchZone.UsesDupeCheck(now) ?
                     prevFileImageBase?.Clone(cWatchZone.Rectangle, PixelFormat.Format24bppRgb) : null)
                 {
                     foreach (var cWatcher in cWatchZone.CWatches)

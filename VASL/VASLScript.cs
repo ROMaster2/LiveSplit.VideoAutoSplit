@@ -8,17 +8,13 @@ using Irony.Parsing;
 using LiveSplit.Model;
 using LiveSplit.Options;
 using LiveSplit.UI.Components;
-using LiveSplit.VAS.Models;
+using LiveSplit.VAS.Models.Delta;
 
 namespace LiveSplit.VAS.VASL
 {
     public class VASLScript
     {
-        private readonly VASComponent Component;
-
-        private string GameVersion => Component.GameVersion;
-
-        public ExpandoObject Vars { get; }
+        private string GameVersion;
 
         private readonly bool UsesGameTime;
         private bool InitCompleted;
@@ -29,12 +25,13 @@ namespace LiveSplit.VAS.VASL
 
         private MethodList Methods;
 
-        public event EventHandler<DeltaManager> ScriptUpdateFinished;
+        public ExpandoObject Vars { get; }
 
-        public VASLScript(string script, VASComponent component = null)
+        public event EventHandler<DeltaOutput> ScriptUpdateFinished;
+
+        public VASLScript(string rawScript)
         {
-            Methods = ParseScript(script);
-            Component = component;
+            Methods = ParseScript(rawScript);
 
             Settings = new VASLSettings();
             Vars = new ExpandoObject();
@@ -49,21 +46,28 @@ namespace LiveSplit.VAS.VASL
             UsesGameTime = !Methods.isLoading.IsEmpty || !Methods.gameTime.IsEmpty;
         }
 
-        // Update the script
-        public void Update(LiveSplitState state, DeltaManager dm)
+        public void UpdateGameVersion(string gameVersion)
         {
-            if (Scanner.IsVideoSourceRunning())
+            throw new NotImplementedException("todo lol");
+        }
+
+        // Update the script
+        public void Update(LiveSplitState state, DeltaOutput d)
+        {
+            if (Timer == null)
             {
-                if (Timer == null)
-                    Timer = new TimerModel() { CurrentState = state };
-
-                if (!InitCompleted)
-                    DoInit(state, dm);
-                else if (dm != null)
-                    DoUpdate(state, dm);
-
-                ScriptUpdateFinished?.Invoke(this, dm);
+                Timer = new TimerModel() { CurrentState = state };
             }
+
+            if (!InitCompleted)
+            {
+                DoInit(state, d);
+            }
+            else
+            {
+                DoUpdate(state, d);
+            }
+            ScriptUpdateFinished?.Invoke(this, d);
         }
 
         // Run startup and return settings defined in VASL script.
@@ -83,11 +87,11 @@ namespace LiveSplit.VAS.VASL
 
         // This is executed each time after connecting to the game (usually just once,
         // unless an error occurs before the method finishes).
-        private void DoInit(LiveSplitState state, DeltaManager dm)
+        private void DoInit(LiveSplitState state, DeltaOutput d)
         {
             Debug("Initializing");
 
-            RunMethod(Methods.init, state, dm);
+            RunMethod(Methods.init, state, d);
 
             InitCompleted = true;
             Debug("Init completed, running main methods");
@@ -100,9 +104,9 @@ namespace LiveSplit.VAS.VASL
         }
 
         // This is executed repeatedly as long as the game is connected and initialized.
-        private void DoUpdate(LiveSplitState state, DeltaManager dm)
+        private void DoUpdate(LiveSplitState state, DeltaOutput d)
         {
-            if (!(RunMethod(Methods.update, state, dm) ?? true))
+            if (!(RunMethod(Methods.update, state, d) ?? true))
             {
                 // If Update explicitly returns false, don't run anything else
                 return;
@@ -115,7 +119,7 @@ namespace LiveSplit.VAS.VASL
                     if (!state.IsGameTimeInitialized)
                         Timer.InitializeGameTime();
 
-                    var isPaused = RunMethod(Methods.isLoading, state, dm);
+                    var isPaused = RunMethod(Methods.isLoading, state, d);
                     if (isPaused != null)
                     {
                         var prevPauseState = state.IsGameTimePaused;
@@ -124,7 +128,7 @@ namespace LiveSplit.VAS.VASL
 
                         if (prevPauseState != isPaused)
                         {
-                            var offsetTime = DeltaManager.History[dm.FrameIndex].ProcessDuration;
+                            var offsetTime = d.History[d.FrameIndex].ProcessDuration;
 
                             if (isPaused)
                                 state.GameTimePauseTime -= offsetTime;
@@ -133,18 +137,18 @@ namespace LiveSplit.VAS.VASL
                         }
                     }
 
-                    var gameTime = RunMethod(Methods.gameTime, state, dm);
+                    var gameTime = RunMethod(Methods.gameTime, state, d);
                     if (gameTime != null)
                         state.SetGameTime(gameTime);
                 }
 
-                if (RunMethod(Methods.reset, state, dm) ?? false && Settings.GetBasicSettingValue("reset"))
+                if (RunMethod(Methods.reset, state, d) ?? false && Settings.GetBasicSettingValue("reset"))
                 {
                     Timer.Reset();
                 }
                 else if (Settings.GetBasicSettingValue("split"))
                 {
-                    var offset = RunMethod(Methods.split, state, dm);
+                    var offset = RunMethod(Methods.split, state, d);
 
                     // The below will be added once LiveSplit supports offseting
                     // Could add it now, but that would require a version update,
@@ -158,9 +162,9 @@ namespace LiveSplit.VAS.VASL
                             if (dm.SplitIndex != null)
                             {
                                 var now = Timer.CurrentState.CurrentTime.RealTime.Value;
-                                var diff = DeltaManager.History[dm.FrameIndex].FrameEnd.Ticks - DeltaManager.SplitTime.Value.Ticks;
+                                var diff = d.History[dm.FrameIndex].FrameEnd.Ticks - d.SplitTime.Value.Ticks;
                                 var test = now - diff;
-                                Timer.Split(DeltaManager.SplitTime - Timer.CurrentState.CurrentTime.RealTime);
+                                Timer.Split(d.SplitTime - Timer.CurrentState.CurrentTime.RealTime);
                             }
                             else
                                 Timer.Split(); // Legacy
@@ -175,7 +179,7 @@ namespace LiveSplit.VAS.VASL
             }
             else if (state.CurrentPhase == TimerPhase.NotRunning)
             {
-                if (RunMethod(Methods.start, state, dm) ?? false)
+                if (RunMethod(Methods.start, state, d) ?? false)
                 {
                     if (Settings.GetBasicSettingValue("start"))
                         Timer.Start();
@@ -183,16 +187,16 @@ namespace LiveSplit.VAS.VASL
             }
         }
 
-        private dynamic RunMethod(VASLMethod method, LiveSplitState state, DeltaManager dm)
+        private dynamic RunMethod(VASLMethod method, LiveSplitState state, DeltaOutput d)
         {
-            var result = method.Call(state, Vars, GameVersion, Settings.Reader, dm);
+            var result = method.Call(state, Vars, GameVersion, Settings.Reader, d);
             return result;
         }
 
         // Run method without counting on being connected to the game (startup/shutdown).
         private void RunNoProcessMethod(VASLMethod method, LiveSplitState state, bool isStartup = false)
         {
-            method.Call(state, Vars, GameVersion, isStartup ? Settings.Builder : (object)Settings.Reader);
+            method.Call(state, Vars, GameVersion, isStartup ? Settings.Builder : (object)Settings.Reader, null);
         }
 
         private void Debug(string output, params object[] args)

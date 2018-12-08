@@ -460,15 +460,15 @@ namespace LiveSplit.VAS.UI
             if ((string)boxCaptureDevice.SelectedItem == VideoDevice)
                 return;
 
-            if (Scanner.IsVideoSourceRunning())
-                Scanner.Stop();
+            if (Component.Scanner.IsVideoSourceRunning())
+                Component.Scanner.Stop();
             retry:
             var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             var matches = videoDevices.Where(v => v.Name == boxCaptureDevice.Text);
             if (matches.Count() > 0)
             {
                 var match = matches.First();
-                Scanner.SetVideoSource(match.MonikerString);
+                Component.Scanner.SetVideoSource(match.MonikerString);
                 VideoDevice = match.Name;
             }
             else
@@ -490,7 +490,7 @@ namespace LiveSplit.VAS.UI
                     FillboxCaptureDevice();
                 }
             }
-            Scanner.AsyncStart();
+            Component.Scanner.AsyncStart();
         }
 
         private void SettingsUI_VisibleChanged(object sender, EventArgs e)

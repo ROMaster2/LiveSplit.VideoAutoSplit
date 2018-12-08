@@ -7,7 +7,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using LiveSplit.VAS.Models;
+using LiveSplit.VAS.Models.Delta;
 
 namespace LiveSplit.VAS.VASL
 {
@@ -105,16 +105,16 @@ public class CompiledScript
         }
 
         public dynamic Call(LiveSplitState timer, ExpandoObject vars, string gameVersion,
-            dynamic settings, DeltaManager features = null)
+            dynamic settings, DeltaOutput d)
         {
             dynamic ret;
             try
             {
-                ret = CompiledCode.Execute(timer, vars, features, settings);
+                ret = CompiledCode.Execute(timer, vars, d, settings);
             }
             catch (NullReferenceException ex)
             {
-                if (features.OriginalIndex >= DeltaManager.HistorySize)
+                if (d?.OriginalIndex >= d?.HistorySize)
                     throw new VASLRuntimeException(this, ex);
                 else
                     ret = null;

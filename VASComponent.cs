@@ -9,6 +9,7 @@ using LiveSplit.Options;
 using LiveSplit.UI;
 using LiveSplit.UI.Components;
 using LiveSplit.VAS.Models;
+using LiveSplit.VAS.Models.Delta;
 using LiveSplit.VAS.UI;
 using LiveSplit.VAS.VASL;
 
@@ -111,7 +112,7 @@ namespace LiveSplit.VAS
                     {
                         var gp = GameProfile; // Invoke getter
                         LogEvent("Loading VASL script within profile...");
-                        _Script = new VASLScript(gp.RawScript, this);
+                        _Script = new VASLScript(gp.RawScript);
                         LogEvent("VASL script successfully loaded!");
                         TryStartScanner();
                     }
@@ -207,7 +208,7 @@ namespace LiveSplit.VAS
             BasicSettingsState = new Dictionary<string, bool>();
             CustomSettingsState = new Dictionary<string, dynamic>();
 
-            Scanner = new Scanner();
+            Scanner = new Scanner(this);
 
             FSWatcher = new FileSystemWatcher();
             FSWatcher.Changed += async (sender, args) => {
@@ -434,11 +435,11 @@ namespace LiveSplit.VAS
 
         #endregion VASL Settings
 
-        internal void RunScript(object sender, DeltaManager dm)
+        internal void RunScript(object sender, DeltaOutput d)
         {
             try
             {
-                Script.Update(State, dm);
+                Script.Update(State, d);
             }
             catch (Exception e)
             {

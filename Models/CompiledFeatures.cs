@@ -8,75 +8,28 @@ using LiveSplit.Model;
 
 namespace LiveSplit.VAS.Models
 {
-    public static class CompiledFeatures
+    public struct CompiledFeatures
     {
         private const int INIT_PIXEL_LIMIT = 16777216;
 
-        public static CWatchZone[] CWatchZones { get; private set; }
-        public static int FeatureCount { get; private set; }
-        private static bool HasDupeCheck { get; set; }
-        public static int PixelLimit { get; private set; }
-        public static int PixelCount { get; private set; }
-        public static IReadOnlyDictionary<string, int> IndexNames { get; private set; }
-        internal static IDictionary<int, long> PauseIndex { get; private set; }
-        /*
-        private static Geometry _TrueCropGeometry;
-        public static Geometry TrueCropGeometry
-        {
-            get
-            {
-                if (!_TrueCropGeometry.HasSize)
-                {
-                    double x = 32768d;
-                    double y = 32768d;
-                    double width = -32768d;
-                    double height = -32768d;
-                    foreach (var wz in Scanner.GameProfile.Screens[0].WatchZones)
-                    {
-                        var geo = wz.Geometry;
-                        geo.RemoveAnchor(wz.Screen.Geometry);
-                        x = Math.Min(x, geo.X);
-                        y = Math.Min(y, geo.Y);
-                        width = Math.Max(width, geo.X + geo.Width);
-                        height = Math.Max(height, geo.Y + geo.Height);
-                    }
-                    width -= x;
-                    height -= y;
-                    var sGeo = new Geometry(x, y, width, height);
-                    sGeo.ResizeTo(CropGeometry, GameProfile.Screens[0].Geometry);
-                    sGeo.Update(CropGeometry.X, CropGeometry.Y);
-                    _TrueCropGeometry = sGeo;
-                }
-                return _TrueCropGeometry;
-            }
-        }
-        */
-        public static void Compile(GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
-        {
-            int i = 0;
-            while (Scanner.IsScanning)
-            {
-                if (i > 5000)
-                {
-                    break; // Try anyway.
-                }
-                Thread.Sleep(1);
-                i++;
-            }
+        private Scanner Scanner;
 
-            if (CWatchZones != null)
-            {
-                foreach (var cWatchZone in CWatchZones)
-                {
-                    cWatchZone.Dispose();
-                }
-            }
+        public CWatchZone[] CWatchZones { get; private set; }
+        public int FeatureCount { get; private set; }
+        private bool HasDupeCheck { get; set; }
+        public int PixelLimit { get; private set; }
+        public int PixelCount { get; private set; }
+        public IReadOnlyDictionary<string, int> IndexNames { get; private set; }
+
+        public CompiledFeatures(Scanner parent, GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
+        {
+            Scanner = parent;
+
             HasDupeCheck = false;
             PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
             PixelCount = 0;
 
             var nameDictionary = new Dictionary<string, int>();
-            var pauseDictionary = new Dictionary<int, long>();
 
             var cWatchZones = new CWatchZone[gameProfile.WatchZones.Count];
             var indexCount = 0;
@@ -118,7 +71,6 @@ namespace LiveSplit.VAS.Models
 
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
 
-                            pauseDictionary.Add(indexCount, -DateTime.MaxValue.Ticks);
                             AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
                             PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
                             indexCount++;
@@ -132,7 +84,6 @@ namespace LiveSplit.VAS.Models
 
                         CWatches[i2] = new CWatcher(new CWatchImage[] { new CWatchImage(watcher.Name, indexCount) }, watcher);
 
-                        pauseDictionary.Add(indexCount, -DateTime.MaxValue.Ticks);
                         AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, string.Empty);
                         PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
                         indexCount++;
@@ -147,11 +98,8 @@ namespace LiveSplit.VAS.Models
             }
 
             IndexNames = nameDictionary;
-            PauseIndex = pauseDictionary;
             FeatureCount = indexCount;
             CWatchZones = cWatchZones;
-
-            ValidateIndexNames();
         }
 
         private static void AddIndexName(IDictionary<string, int> dictionary, int index, string name1, string name2, string name3)
@@ -179,7 +127,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        private static void ValidateIndexNames()
+        private void ValidateIndexNames()
         {
             var indexes = IndexNames.Values;
             for (int i = 0; i < FeatureCount; i++)
@@ -198,7 +146,7 @@ namespace LiveSplit.VAS.Models
         }
 
         // Todo: Test this more...and clean it up.
-        private static void PreciseResize(ref MagickImage mi, Geometry wzGeo, Geometry gameGeo, Geometry cropGeo, ColorSpace cs)
+        private void PreciseResize(ref MagickImage mi, Geometry wzGeo, Geometry gameGeo, Geometry cropGeo, ColorSpace cs)
         {
             var underlay = new MagickImage(MagickColors.Transparent, (int)gameGeo.Width, (int)gameGeo.Height) { ColorSpace = cs };
             var point = wzGeo.LocationWithoutAnchor(gameGeo);
@@ -237,24 +185,62 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public static void PauseFeature(int index, DateTime untilTime)
+        // Temporary hack, will fix later.
+        public void PauseFeature(int index, DateTime untilTime)
         {
-            PauseIndex[index] = untilTime.Ticks;
+            foreach (var cWatchZone in CWatchZones)
+            {
+                foreach (var cWatcher in cWatchZone.CWatches)
+                {
+                    foreach (var cWatchImage in cWatcher.CWatchImages)
+                    {
+                        if (cWatchImage.Index == index)
+                        {
+                            cWatchImage.Pause(untilTime);
+                        }
+                    }
+                }
+            }
         }
 
-        public static void ResumeFeature(int index, DateTime untilTime)
+        public void ResumeFeature(int index, DateTime untilTime)
         {
-            PauseIndex[index] = -untilTime.Ticks;
+            foreach (var cWatchZone in CWatchZones)
+            {
+                foreach (var cWatcher in cWatchZone.CWatches)
+                {
+                    foreach (var cWatchImage in cWatcher.CWatchImages)
+                    {
+                        if (cWatchImage.Index == index)
+                        {
+                            cWatchImage.Resume(untilTime);
+                        }
+                    }
+                }
+            }
         }
 
-        public static bool IsPaused(DateTime dateTime)
+        public bool IsPaused(DateTime dateTime)
         {
             return CWatchZones.All(wz => wz.IsPaused(dateTime));
         }
 
-        public static bool UseDupeCheck(DateTime dateTime)
+        public bool UseDupeCheck(DateTime dateTime)
         {
-            return HasDupeCheck && CWatchZones.Any(wz => wz.UseDupeCheck(dateTime));
+            return HasDupeCheck && CWatchZones.Any(wz => wz.UsesDupeCheck(dateTime));
+        }
+
+        public IEnumerable<CWatchZone> GetEnumerator()
+        {
+            return CWatchZones;
+        }
+
+        public CWatchZone this[int i]
+        {
+            get
+            {
+                return CWatchZones[i];
+            }
         }
     }
 
@@ -272,11 +258,32 @@ namespace LiveSplit.VAS.Models
         public Geometry Geometry { get; }
         public Rectangle Rectangle { get; }
         public CWatcher[] CWatches { get; }
-        private bool HasDupeCheck { get; set; }
+        private bool HasDupeCheck { get; }
+
+        public bool UsesDupeCheck(DateTime dateTime)
+        {
+            return HasDupeCheck && CWatches.Any(w => w.IsDuplicateFrame && !w.IsPaused(dateTime));
+        }
 
         public bool IsPaused(DateTime dateTime)
         {
             return CWatches.All(w => w.IsPaused(dateTime));
+        }
+
+        public void Pause(DateTime? dateTime = null)
+        {
+            foreach (var cWatcher in CWatches)
+            {
+                cWatcher.Pause(dateTime);
+            }
+        }
+
+        public void Resume(DateTime? dateTime = null)
+        {
+            foreach (var cWatcher in CWatches)
+            {
+                cWatcher.Resume(dateTime);
+            }
         }
 
         public void Dispose()
@@ -287,9 +294,17 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public bool UseDupeCheck(DateTime dateTime)
+        public IEnumerable<CWatcher> GetEnumerator()
         {
-            return HasDupeCheck && CWatches.Any(w => w.IsDuplicateFrame && !w.IsPaused(dateTime));
+            return CWatches;
+        }
+
+        public CWatcher this[int i]
+        {
+            get
+            {
+                return CWatches[i];
+            }
         }
     }
 
@@ -346,11 +361,40 @@ namespace LiveSplit.VAS.Models
             return CWatchImages.All(wi => wi.IsPaused(dateTime));
         }
 
+        public void Pause(DateTime? dateTime = null)
+        {
+            foreach (var cWatchImage in CWatchImages)
+            {
+                cWatchImage.Pause(dateTime);
+            }
+        }
+
+        public void Resume(DateTime? dateTime = null)
+        {
+            foreach (var cWatchImage in CWatchImages)
+            {
+                cWatchImage.Resume(dateTime);
+            }
+        }
+
         public void Dispose()
         {
             foreach (var cWatchImage in CWatchImages)
             {
                 cWatchImage.Dispose();
+            }
+        }
+
+        public IEnumerable<CWatchImage> GetEnumerator()
+        {
+            return CWatchImages;
+        }
+
+        public CWatchImage this[int i]
+        {
+            get
+            {
+                return CWatchImages[i];
             }
         }
     }
@@ -364,7 +408,9 @@ namespace LiveSplit.VAS.Models
             Index = index;
             MagickImage = magickImage;
             HasAlpha = MagickImage.HasAlpha;
-            TransparencyRate = MagickImage.TransparencyRate();
+            TransparencyRate = MagickImage.GetTransparencyRate();
+
+            PauseTicks = DateTime.MaxValue.Ticks;
         }
 
         // Dummy for Dupe Frame checking
@@ -375,6 +421,8 @@ namespace LiveSplit.VAS.Models
             MagickImage = null;
             HasAlpha = false;
             TransparencyRate = 0;
+
+            PauseTicks = DateTime.MaxValue.Ticks;
         }
 
         public string Name { get; }
@@ -383,24 +431,27 @@ namespace LiveSplit.VAS.Models
         public bool HasAlpha { get; }
         public double TransparencyRate { get; }
 
+        private long PauseTicks;
+
         public bool IsPaused(DateTime dateTime)
         {
-            long value = CompiledFeatures.PauseIndex[Index];
-            long now = dateTime.Ticks;
-            return value > 0L ? value > now : -value < now;
+            var now = dateTime.Ticks;
+            return PauseTicks > 0L ? PauseTicks > now : -PauseTicks < now;
+        }
+
+        public void Pause(DateTime? dateTime = null)
+        {
+            PauseTicks = dateTime?.Ticks ?? DateTime.MaxValue.Ticks;
+        }
+
+        public void Resume(DateTime? dateTime = null)
+        {
+            PauseTicks = -dateTime?.Ticks ?? DateTime.MinValue.Ticks;
         }
 
         public void Dispose()
         {
             MagickImage?.Dispose();
-        }
-
-        internal bool Testing
-        {
-            get
-            {
-                return IsPaused(TimeStamp.CurrentDateTime.Time);
-            }
         }
     }
 }

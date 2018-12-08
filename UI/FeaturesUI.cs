@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using LiveSplit.VAS.Models;
+using LiveSplit.VAS.Models.Delta;
 using LiveSplit.VAS.VASL;
 
 using System.Text.RegularExpressions;
@@ -95,18 +95,18 @@ namespace LiveSplit.VAS.UI
             tlpFeatures.RowCount = 2;
         }
 
-        private void UpdateRowsAsync(object sender, DeltaManager dm)
+        private void UpdateRowsAsync(object sender, DeltaOutput d)
         {
-            Task.Run(() => UpdateRows(sender, dm));
+            Task.Run(() => UpdateRows(sender, d));
         }
 
-        private void UpdateRows(object sender, DeltaManager dm)
+        private void UpdateRows(object sender, DeltaOutput d)
         {
             // It might be a bad idea to assume it's in the correct order,
             // but this might be a bit CPU intensive, and we're trying to
             // save as much of that as possible.
             // Then again, why not make a Dictionary? Later, probably.
-            var deltas = (double[])DeltaManager.History[dm.FrameIndex].Deltas.Clone();
+            var deltas = (double[])d.History[d.FrameIndex].Deltas.Clone();
 
             this.Invoke((MethodInvoker)delegate
             {

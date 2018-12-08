@@ -21,6 +21,7 @@ namespace LiveSplit.VAS.UI
     public partial class ScanRegionUI : AbstractUI
     {
         private GameProfile GameProfile { get { return Component.GameProfile; } }
+        private Scanner Scanner => Component.Scanner;
 
         // Temporary. Remove later.
         private Geometry CropGeometry { get { return Component.CropGeometry; } set { Component.CropGeometry = value; } }

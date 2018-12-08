@@ -6,70 +6,46 @@ using System.Threading.Tasks;
 using LiveSplit.Model;
 using LiveSplit.VAS.Models;
 
-namespace LiveSplit.VAS.Models
+namespace LiveSplit.VAS.Models.Delta
 {
-    public class DeltaResults : EventArgs
+    public struct DeltaResult
     {
-        public readonly int Index;
-        public readonly DateTime FrameStart;
-        public readonly DateTime FrameEnd;
-        public readonly DateTime ScanEnd;
-        public DateTime? WaitEnd;
-        public readonly double[] Deltas;
-        public readonly double[] Benchmarks;
+        public int Index           { get; }
+        public DateTime FrameStart { get; }
+        public DateTime FrameEnd   { get; }
+        public DateTime ScanEnd    { get; }
+        public DateTime WaitEnd    { get; }
+        public double[] Deltas     { get; }
+        public double[] Benchmarks { get; }
 
-        public DeltaResults(int index, DateTime frameStart, DateTime frameEnd, DateTime scanEnd, double[] deltas, double[] benchmarks)
+        public DeltaResult(
+            int index,
+            DateTime frameStart,
+            DateTime frameEnd,
+            DateTime scanEnd,
+            DateTime waitEnd,
+            double[] deltas,
+            double[] benchmarks)
         {
             Index = index;
             FrameStart = frameStart;
             FrameEnd = frameEnd;
             ScanEnd = scanEnd;
-            WaitEnd = null;
+            WaitEnd = waitEnd;
             Deltas = deltas;
             Benchmarks = benchmarks;
         }
 
-        public DeltaResults(int index, Scan scan, DateTime scanEnd, double[] deltas, double[] benchmarks)
-        {
-            Index = index;
-            FrameStart = scan.PreviousFrame.DateTime;
-            FrameEnd = scan.CurrentFrame.DateTime;
-            ScanEnd = scanEnd;
-            WaitEnd = null;
-            Deltas = deltas;
-            Benchmarks = benchmarks;
-        }
+        public static readonly DeltaResult Blank =
+            new DeltaResult(-1, DateTime.Now, DateTime.Now, DateTime.Now, DateTime.Now, null, null);
 
-        public TimeSpan FrameDuration
-        {
-            get
-            {
-                return FrameEnd - FrameStart;
-            }
-        }
+        public bool IsBlank => Index == -1;
 
-        public TimeSpan ScanDuration
-        {
-            get
-            {
-                return ScanEnd - FrameEnd;
-            }
-        }
+        public TimeSpan FrameDuration   => FrameEnd - FrameStart;
+        public TimeSpan ScanDuration    => ScanEnd  - FrameEnd;
+        public TimeSpan WaitDuration    => WaitEnd  - ScanEnd;
+        public TimeSpan ProcessDuration => WaitEnd  - FrameEnd;
 
-        public TimeSpan? WaitDuration
-        {
-            get
-            {
-                return WaitEnd - ScanEnd;
-            }
-        }
-
-        public TimeSpan? ProcessDuration
-        {
-            get
-            {
-                return WaitEnd - FrameEnd;
-            }
-        }
+        // Todo: Add method(s) for getting Frame timestamps rounded to the framerate.
     }
 }
