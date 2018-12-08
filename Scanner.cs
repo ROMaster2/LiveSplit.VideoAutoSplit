@@ -19,7 +19,7 @@ namespace LiveSplit.VAS
 
         public Thread FrameHandlerThread;
 
-        public GameProfile GameProfile { get; internal set; }
+        public GameProfile GameProfile => Component.GameProfile;
         private VideoCaptureDevice VideoSource = new VideoCaptureDevice();
         public CompiledFeatures CompiledFeatures { get; private set; }
         public DeltaManager DeltaManager { get; private set; }
@@ -210,6 +210,7 @@ namespace LiveSplit.VAS
             if (GameProfile != null && IsVideoSourceValid())
             {
                 CurrentIndex = 0;
+                DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
                 VideoSource.Start();
 
                 initCount = 0;
@@ -265,7 +266,7 @@ namespace LiveSplit.VAS
                     s.CropGeometry = CropGeometry;
                 }
 
-                CompiledFeatures = new CompiledFeatures(this, GameProfile);
+                CompiledFeatures = new CompiledFeatures(GameProfile, CropGeometry);
                 IsScannerLocked = false;
             }
         }
@@ -297,6 +298,7 @@ namespace LiveSplit.VAS
         public void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             var now = TimeStamp.CurrentDateTime.Time;
+            var test = !CompiledFeatures.IsPaused(now);
             initCount++;
             if (!IsScannerLocked &&
                 (initCount > 255 || initCount % 10 == 0) &&

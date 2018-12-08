@@ -14,7 +14,7 @@ namespace LiveSplit.VAS.VASL
 {
     public class VASLScript
     {
-        private string GameVersion;
+        private string GameVersion = "";
 
         private readonly bool UsesGameTime;
         private bool InitCompleted;

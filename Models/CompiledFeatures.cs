@@ -12,7 +12,7 @@ namespace LiveSplit.VAS.Models
     {
         private const int INIT_PIXEL_LIMIT = 16777216;
 
-        private Scanner Scanner;
+        private Geometry CropGeometry;
 
         public CWatchZone[] CWatchZones { get; private set; }
         public int FeatureCount { get; private set; }
@@ -21,10 +21,9 @@ namespace LiveSplit.VAS.Models
         public int PixelCount { get; private set; }
         public IReadOnlyDictionary<string, int> IndexNames { get; private set; }
 
-        public CompiledFeatures(Scanner parent, GameProfile gameProfile, int pixelLimit = INIT_PIXEL_LIMIT)
+        public CompiledFeatures(GameProfile gameProfile, Geometry cropGeometry, int pixelLimit = INIT_PIXEL_LIMIT)
         {
-            Scanner = parent;
-
+            CropGeometry = cropGeometry;
             HasDupeCheck = false;
             PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
             PixelCount = 0;
@@ -152,7 +151,7 @@ namespace LiveSplit.VAS.Models
             var point = wzGeo.LocationWithoutAnchor(gameGeo);
             underlay.Composite(mi, new PointD(point.X, point.Y), CompositeOperator.Copy);
             underlay.RePage();
-            var mGeo = Scanner.CropGeometry.ToMagick(false);
+            var mGeo = CropGeometry.ToMagick(false);
             mGeo.IgnoreAspectRatio = true;
             underlay.Resize(mGeo);
             underlay.RePage();
@@ -410,7 +409,7 @@ namespace LiveSplit.VAS.Models
             HasAlpha = MagickImage.HasAlpha;
             TransparencyRate = MagickImage.GetTransparencyRate();
 
-            PauseTicks = DateTime.MaxValue.Ticks;
+            PauseTicks = DateTime.MinValue.Ticks;
         }
 
         // Dummy for Dupe Frame checking
@@ -422,7 +421,7 @@ namespace LiveSplit.VAS.Models
             HasAlpha = false;
             TransparencyRate = 0;
 
-            PauseTicks = DateTime.MaxValue.Ticks;
+            PauseTicks = DateTime.MinValue.Ticks;
         }
 
         public string Name { get; }
@@ -436,7 +435,8 @@ namespace LiveSplit.VAS.Models
         public bool IsPaused(DateTime dateTime)
         {
             var now = dateTime.Ticks;
-            return PauseTicks > 0L ? PauseTicks > now : -PauseTicks < now;
+            var test = PauseTicks;
+            return PauseTicks >= 0L ? PauseTicks > now : -PauseTicks < now;
         }
 
         public void Pause(DateTime? dateTime = null)

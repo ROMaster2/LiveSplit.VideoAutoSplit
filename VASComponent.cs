@@ -216,7 +216,7 @@ namespace LiveSplit.VAS
                 ProfileCleanup();
             };
 
-            //Scanner.NewResult += (sender, dm) => UpdateProfile(sender, dm);
+            Scanner.NewResult += (sender, dm) => RunScript(sender, dm);
         }
 
         public override Control GetSettingsControl(LayoutMode mode) => ComponentUI;
@@ -450,13 +450,9 @@ namespace LiveSplit.VAS
         // TEMPORARY
         private void ScannerTemp()
         {
-            Scanner.GameProfile = GameProfile;
-
             var videoDevices = new Accord.Video.DirectShow.FilterInfoCollection(Accord.Video.DirectShow.FilterCategory.VideoInputDevice);
             var device = videoDevices.Find(x => x.Name == VideoDevice);
             Scanner.SetVideoSource(device.MonikerString);
-
-            Scanner.NewResult += RunScript;
         }
 
         private void TryStartScanner()

@@ -44,12 +44,15 @@ namespace LiveSplit.VAS.Models.Delta
 
         public IEnumerator<DeltaResult> GetEnumerator()
         {
-            return (IEnumerator<DeltaResult>)History.GetEnumerator();
+            foreach (var result in History)
+            {
+                yield return result;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return History.GetEnumerator();
+            return GetEnumerator();
         }
     }
 }
