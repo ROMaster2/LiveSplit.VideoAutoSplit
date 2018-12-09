@@ -113,7 +113,7 @@ namespace LiveSplit.VAS.UI
 
                 if (!string.IsNullOrEmpty(VideoDevice))
                 {
-                    var savedDevices = videoDevices.Where(d => d.Name == VideoDevice);
+                    var savedDevices = videoDevices.Where(d => d.ToString() == VideoDevice);
                     if (savedDevices.Count() > 0)
                     {
                         var savedDevice = savedDevices.First();
@@ -123,7 +123,7 @@ namespace LiveSplit.VAS.UI
 
                 for (var i = 0; i < videoDevices.Count; i++)
                 {
-                    boxCaptureDevice.Items.Add(videoDevices[i].Name);
+                    boxCaptureDevice.Items.Add(videoDevices[i]);
                 }
 
                 //if (boxCaptureDevice.SelectedIndex != selectedIndex)
@@ -457,19 +457,19 @@ namespace LiveSplit.VAS.UI
         private void boxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
         {
             // May need to tweak more
-            if ((string)boxCaptureDevice.SelectedItem == VideoDevice)
+            if (boxCaptureDevice.SelectedItem.ToString() == VideoDevice)
                 return;
 
             if (Component.Scanner.IsVideoSourceRunning())
                 Component.Scanner.Stop();
             retry:
             var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-            var matches = videoDevices.Where(v => v.Name == boxCaptureDevice.Text);
+            var matches = videoDevices.Where(v => v.ToString() == boxCaptureDevice.Text);
             if (matches.Count() > 0)
             {
                 var match = matches.First();
-                Component.Scanner.SetVideoSource(match.MonikerString);
-                VideoDevice = match.Name;
+                //Component.Scanner.SetVideoSource(match.MonikerString);
+                VideoDevice = match.ToString();
             }
             else
             {

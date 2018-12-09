@@ -12,18 +12,18 @@ namespace LiveSplit.VAS.Models
     {
         private const int INIT_PIXEL_LIMIT = 16777216;
 
-        private Geometry CropGeometry;
+        private Geometry CaptureGeometry;
 
-        public CWatchZone[] CWatchZones { get; private set; }
-        public int FeatureCount { get; private set; }
-        private bool HasDupeCheck { get; set; }
-        public int PixelLimit { get; private set; }
-        public int PixelCount { get; private set; }
-        public IReadOnlyDictionary<string, int> IndexNames { get; private set; }
+        public CWatchZone[] CWatchZones { get; }
+        public int FeatureCount { get; }
+        private bool HasDupeCheck { get; }
+        public int PixelLimit { get; }
+        public int PixelCount { get; }
+        public IReadOnlyDictionary<string, int> IndexNames { get; }
 
         public CompiledFeatures(GameProfile gameProfile, Geometry cropGeometry, int pixelLimit = INIT_PIXEL_LIMIT)
         {
-            CropGeometry = cropGeometry;
+            CaptureGeometry = cropGeometry;
             HasDupeCheck = false;
             PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
             PixelCount = 0;
@@ -151,7 +151,7 @@ namespace LiveSplit.VAS.Models
             var point = wzGeo.LocationWithoutAnchor(gameGeo);
             underlay.Composite(mi, new PointD(point.X, point.Y), CompositeOperator.Copy);
             underlay.RePage();
-            var mGeo = CropGeometry.ToMagick(false);
+            var mGeo = CaptureGeometry.ToMagick(false);
             mGeo.IgnoreAspectRatio = true;
             underlay.Resize(mGeo);
             underlay.RePage();
@@ -181,6 +181,16 @@ namespace LiveSplit.VAS.Models
                     }
                     i++;
                 }
+            }
+        }
+
+        public readonly static CompiledFeatures Blank = new CompiledFeatures();
+
+        public bool IsBlank
+        {
+            get
+            {
+                return this.Equals(Blank);
             }
         }
 
@@ -224,14 +234,14 @@ namespace LiveSplit.VAS.Models
             return CWatchZones.All(wz => wz.IsPaused(dateTime));
         }
 
-        public bool UseDupeCheck(DateTime dateTime)
+        public bool UsesDupeCheck()
         {
-            return HasDupeCheck && CWatchZones.Any(wz => wz.UsesDupeCheck(dateTime));
+            return HasDupeCheck;
         }
 
-        public IEnumerable<CWatchZone> GetEnumerator()
+        public bool UsesDupeCheck(DateTime dateTime)
         {
-            return CWatchZones;
+            return HasDupeCheck && CWatchZones.Any(wz => wz.UsesDupeCheck(dateTime));
         }
 
         public CWatchZone this[int i]
@@ -291,11 +301,6 @@ namespace LiveSplit.VAS.Models
             {
                 cWatcher.Dispose();
             }
-        }
-
-        public IEnumerable<CWatcher> GetEnumerator()
-        {
-            return CWatches;
         }
 
         public CWatcher this[int i]
@@ -384,11 +389,6 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public IEnumerable<CWatchImage> GetEnumerator()
-        {
-            return CWatchImages;
-        }
-
         public CWatchImage this[int i]
         {
             get
@@ -408,8 +408,21 @@ namespace LiveSplit.VAS.Models
             MagickImage = magickImage;
             HasAlpha = MagickImage.HasAlpha;
             TransparencyRate = MagickImage.GetTransparencyRate();
+            AlphaChannel = null;
 
             PauseTicks = DateTime.MinValue.Ticks;
+            
+            if (HasAlpha)
+            {
+                // Does Separate() clone the channels? If so, does it dispose of them during this?
+                var tmpMi = MagickImage.Separate().Last().Clone();
+                tmpMi.Negate();
+                AlphaChannel = new MagickImage(MagickColors.Black, MagickImage.Width, MagickImage.Height);
+                AlphaChannel.Composite(tmpMi, CompositeOperator.CopyAlpha);
+                tmpMi.Dispose();
+
+                MagickImage.ColorAlpha(MagickColors.Black);
+            }
         }
 
         // Dummy for Dupe Frame checking
@@ -418,6 +431,7 @@ namespace LiveSplit.VAS.Models
             Name = name;
             Index = index;
             MagickImage = null;
+            AlphaChannel = null;
             HasAlpha = false;
             TransparencyRate = 0;
 
@@ -427,6 +441,7 @@ namespace LiveSplit.VAS.Models
         public string Name { get; }
         public int Index { get; }
         public IMagickImage MagickImage { get; }
+        public IMagickImage AlphaChannel { get; }
         public bool HasAlpha { get; }
         public double TransparencyRate { get; }
 
@@ -452,6 +467,7 @@ namespace LiveSplit.VAS.Models
         public void Dispose()
         {
             MagickImage?.Dispose();
+            AlphaChannel?.Dispose();
         }
     }
 }

@@ -29,12 +29,14 @@ namespace LiveSplit.VAS.UI
         private Geometry VideoGeometry => Scanner.VideoGeometry;
 
         private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
-        private const FilterType DEFAULT_SCALE_FILTER = FilterType.Lanczos;
+        private const FilterType DEFAULT_SCALE_FILTER = FilterType.Box;
         private static readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
 
-        private DateTime LastUpdate = DateTime.UtcNow;
+        private DateTime NextUpdate = DateTime.UtcNow;
 
-        private Geometry MIN_VALUES
+        private bool RenderingFrame = false;
+
+        private Geometry minGeometry
         {
             get
             {
@@ -100,7 +102,7 @@ namespace LiveSplit.VAS.UI
                 newGeo.Width  = (double)numWidth.Value;
                 newGeo.Height = (double)numHeight.Value;
             }
-            CropGeometry = newGeo.Min(MAX_VALUES).Max(MIN_VALUES);
+            CropGeometry = newGeo.Min(MAX_VALUES).Max(minGeometry);
         }
 
         private void FillboxPreviewType()
@@ -149,11 +151,10 @@ namespace LiveSplit.VAS.UI
 
         private void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
-            if (this.Visible)
-            if (DateTime.UtcNow.Subtract(LastUpdate) > TimeSpan.FromSeconds(0.1))
+            if (!RenderingFrame)
             {
-                LastUpdate = DateTime.UtcNow;
-                var frame = e.Frame.DeepCopy();
+                RenderingFrame = true;
+                var frame = (Bitmap)e.Frame.Clone();
                 Task.Run(() => RefreshThumbnail(frame));
             }
         }
@@ -162,7 +163,6 @@ namespace LiveSplit.VAS.UI
         {
             int featureIndex = -1;
             WatchImage feature = null;
-            if (boxPreviewFeature.Visible)
             boxPreviewFeature.Invoke((MethodInvoker)delegate
             {
                 featureIndex = boxPreviewFeature.SelectedIndex;
@@ -224,10 +224,7 @@ namespace LiveSplit.VAS.UI
                         mi.ColorSpace = wi.Watcher.ColorSpace;
                         deltaImage.ColorSpace = wi.Watcher.ColorSpace;
                         mi.Crop(baseMGeo, STANDARD_GRAVITY);
-                        //mi.Write(@"E:\fuck0.png");
-                        //deltaImage.Write(@"E:\fuck1.png");
                         mi.Alpha(AlphaOption.Off); // Why is this necessary? It wasn't necessary before.
-                        //mi.Write(@"E:\fuck2.png");
                         if (wi.Watcher.Equalize)
                         {
                             deltaImage.Equalize();
@@ -235,12 +232,8 @@ namespace LiveSplit.VAS.UI
                         }
                         deltaImage.RePage();
                         mi.RePage();
-                        //mi.Write(@"E:\fuck3.png");
-                        //deltaImage.Write(@"E:\fuck4.png");
                         lblDelta.Text = mi.Compare(deltaImage, ErrorMetric.PeakSignalToNoiseRatio).ToString("0.####");
                         mi.Composite(deltaImage, CompositeOperator.Difference);
-                        //mi.Write(@"E:\fuck5.png");
-                        //deltaImage.Write(@"E:\fuck6.png");
                     }
 
                     minGeo = minGeo.Min(GetScaledGeometry(wi.WatchZone.CropGeometry));
@@ -252,7 +245,7 @@ namespace LiveSplit.VAS.UI
             {
                 var mGeo = minGeo.ToMagick();
                 mGeo.IgnoreAspectRatio = false;
-                //mi.ColorSpace = ColorSpace.Lab;
+                //mi.ColorSpace = ColorSpace.HCL;
                 mi.FilterType = DEFAULT_SCALE_FILTER;
                 mi.Resize(mGeo);
             }
@@ -265,6 +258,7 @@ namespace LiveSplit.VAS.UI
             {
                 pictureBox.Size = minGeo;
                 pictureBox.Image = bitmap;
+                RenderingFrame = false;
             });
         }
 

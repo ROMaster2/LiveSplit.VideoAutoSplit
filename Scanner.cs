@@ -8,6 +8,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +20,8 @@ namespace LiveSplit.VAS
 
         public Thread FrameHandlerThread;
 
-        public GameProfile GameProfile => Component.GameProfile;
+        private GameProfile GameProfile => Component.GameProfile;
+        private string VideoDevice => Component.VideoDevice;
         private VideoCaptureDevice VideoSource = new VideoCaptureDevice();
         public CompiledFeatures CompiledFeatures { get; private set; }
         public DeltaManager DeltaManager { get; private set; }
@@ -41,6 +43,8 @@ namespace LiveSplit.VAS
         public Scanner(VASComponent component)
         {
             Component = component;
+            NewFrameEventHandler = HandleNewFrame;
+            VideoSourceErrorEventHandler = HandleVideoError;
         }
 
         private Geometry _VideoGeometry = Geometry.Blank;
@@ -48,14 +52,25 @@ namespace LiveSplit.VAS
         {
             get
             {
-                if (!_VideoGeometry.HasSize && IsVideoSourceValid())
+                if (!IsVideoGeometrySet())
                 {
-                    VideoSource.Start();
-                    SubscribeToFrameHandler(SetFrameSize);
-                    //while (!_VideoGeometry.HasSize) Thread.Sleep(1);
+                    if (!IsVideoSourceRunning() && IsVideoSourceValid())
+                    {
+                        VideoSource.Source = DeviceMoniker;
+                        VideoSource.Start();
+                    }
+                    if (IsVideoSourceRunning())
+                    {
+                        Task.Factory.StartNew(() => SubscribeToFrameHandler(SetFrameSize));
+                    }
                 }
                 return _VideoGeometry;
             }
+        }
+
+        private bool IsVideoGeometrySet()
+        {
+            return _VideoGeometry.HasSize;
         }
 
         // Hacky but it saves on CPU for the scanner.
@@ -136,9 +151,25 @@ namespace LiveSplit.VAS
         public double MinWaitTime     { get; internal set; } = double.NaN;
         public double MaxWaitTime     { get; internal set; } = double.NaN;
 
-        public bool IsVideoSourceValid() // Not really but good enough.
+        public bool IsVideoSourceValid()
         {
-            return !string.IsNullOrEmpty(VideoSource.Source);
+            var v = Regex.Match(VideoDevice, "@device.*}");
+            return v.Success && !string.IsNullOrEmpty(new FilterInfo(v.Value).Name);
+        }
+
+        public string DeviceMoniker
+        {
+            get
+            {
+                if (IsVideoSourceValid())
+                {
+                    return Regex.Match(VideoDevice, "@device.*}").Value;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         public bool IsVideoSourceRunning()
@@ -166,12 +197,6 @@ namespace LiveSplit.VAS
             VideoSource.VideoSourceError -= method;
         }
 
-        public void SetVideoSource(string monikerString)
-        {
-            _VideoGeometry = Geometry.Blank;
-            VideoSource.Source = monikerString;
-        }
-
         public Geometry ResetCropGeometry()
         {
             _CropGeometry = Geometry.Blank;
@@ -193,14 +218,11 @@ namespace LiveSplit.VAS
 
         public void AsyncStart()
         {
-            if (GameProfile != null && IsVideoSourceValid())
+            if (FrameHandlerThread == null || FrameHandlerThread.ThreadState != ThreadState.Running)
             {
-                if (FrameHandlerThread == null || FrameHandlerThread.ThreadState != System.Threading.ThreadState.Running)
-                {
-                    ThreadStart t = new ThreadStart(Start);
-                    FrameHandlerThread = new Thread(t);
-                    FrameHandlerThread.Start();
-                }
+                ThreadStart t = new ThreadStart(Start);
+                FrameHandlerThread = new Thread(t);
+                FrameHandlerThread.Start();
             }
         }
 
@@ -211,13 +233,13 @@ namespace LiveSplit.VAS
             {
                 CurrentIndex = 0;
                 DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
-                VideoSource.Start();
-
                 initCount = 0;
-                NewFrameEventHandler = new NewFrameEventHandler(HandleNewFrame);
+
                 SubscribeToFrameHandler(NewFrameEventHandler);
-                VideoSourceErrorEventHandler = new VideoSourceErrorEventHandler(HandleVideoError);
                 SubscribeToErrorHandler(VideoSourceErrorEventHandler);
+
+                VideoSource.Source = DeviceMoniker;
+                VideoSource.Start();
             }
         }
 
@@ -225,7 +247,7 @@ namespace LiveSplit.VAS
         {
             if (!Restarting)
             {
-                LiveSplit.Options.Log.Error("VAS: Fatal error encountered, restarting scanner...");
+                Component.LogEvent("Fatal error encountered, restarting scanner...");
                 Restarting = true;
                 if (IsScannerLocked) Thread.Sleep(1);
                 Stop();
@@ -290,7 +312,16 @@ namespace LiveSplit.VAS
 
         private void HandleVideoError(object sender, VideoSourceErrorEventArgs e)
         {
-            Restart();
+            Component.LogEvent(e.Description);
+            if (e.Exception != null)
+            {
+                Component.LogEvent("Accord exception details:");
+                Component.LogEvent(e.Exception);
+            }
+            if (IsVideoSourceRunning())
+            {
+                Restart();
+            }
         }
 
         internal int initCount = 0; // To stop wasting CPU when first starting.
@@ -311,7 +342,7 @@ namespace LiveSplit.VAS
                 var previousFrame = CurrentFrame;
                 CurrentFrame = currentFrame;
 
-                var newScan = new Scan(currentFrame, previousFrame, CompiledFeatures.UseDupeCheck(now));
+                var newScan = new Scan(currentFrame, previousFrame, CompiledFeatures.UsesDupeCheck(now));
 
                 var index = CurrentIndex;
                 CurrentIndex++;
@@ -508,9 +539,8 @@ namespace LiveSplit.VAS
                 {
                     if (cWatchImage.HasAlpha)
                     {
-                        fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
-                        fileImageCompare.ColorAlpha(MagickColors.Black);
-                        deltaImage.ColorAlpha(MagickColors.Black); // Todo: Add to CWatchImage instead;
+                        fileImageCompare.Composite(cWatchImage.AlphaChannel, CompositeOperator.Over);
+                        //fileImageCompare.Write(@"C:\test7.png");
                     }
 
                     SetDelta(ref deltas, fileImageCompare, deltaImage, cWatcher, cWatchImage);

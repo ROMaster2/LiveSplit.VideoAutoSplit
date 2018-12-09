@@ -254,6 +254,15 @@ namespace LiveSplit.VAS
             return num1 + num2 / 256f;
         }
 
+        public static void LightSleep(Func<bool> func, double timeoutLimit = 5000d, int millisecondsTimeout = 1)
+        {
+            var breakTime = DateTime.UtcNow.AddMilliseconds(timeoutLimit);
+
+            while (!func() && DateTime.UtcNow < breakTime)
+            {
+                Thread.Sleep(millisecondsTimeout);
+            }
+        }
 
     }
 
