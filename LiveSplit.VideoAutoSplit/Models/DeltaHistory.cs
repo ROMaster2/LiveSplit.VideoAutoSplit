@@ -6,20 +6,18 @@ namespace LiveSplit.VAS.Models.Delta
 {
     public class DeltaHistory : IReadOnlyList<DeltaResult>
     {
-        private readonly DeltaResult[] History;
+        public int Count => _History.Length;
+        public double this[int index, int featureIndex] => _History[index].Deltas[featureIndex];
+        public DeltaResult this[int index] => _History[index];
 
-        public int Count => History.Length;
-
-        public DeltaResult this[int index] => History[index];
-
-        public double this[int index, int featureIndex] => History[index].Deltas[featureIndex];
+        private readonly DeltaResult[] _History;
 
         public DeltaHistory(int capacity)
         {
-            History = new DeltaResult[capacity];
+            _History = new DeltaResult[capacity];
             for (int i = 0; i < capacity; i++)
             {
-                History[i] = DeltaResult.Blank;
+                _History[i] = DeltaResult.Blank;
             }
         }
 
@@ -35,13 +33,13 @@ namespace LiveSplit.VAS.Models.Delta
             var currIndex = index % Count;
             var prevIndex = (index - 1) % Count;
 
-            var dr = new DeltaResult(index, frameStart, frameEnd, scanEnd, waitEnd, deltas, benchmarks);
-            History[currIndex] = dr;
+            _History[currIndex] = new DeltaResult(index, frameStart, frameEnd, scanEnd, waitEnd, deltas, benchmarks);
         }
 
+        // @TODO: Are you sure this does what you expect it to do?
         public IEnumerator<DeltaResult> GetEnumerator()
         {
-            foreach (var result in History)
+            foreach (var result in _History)
             {
                 yield return result;
             }
