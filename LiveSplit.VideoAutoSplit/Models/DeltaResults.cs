@@ -40,6 +40,6 @@ namespace LiveSplit.VAS.Models.Delta
         public TimeSpan WaitDuration => WaitEnd - ScanEnd;
         public TimeSpan ProcessDuration => WaitEnd - FrameEnd;
 
-        // Todo: Add method(s) for getting Frame timestamps rounded to the framerate.
+        // @TODO: Add method(s) for getting Frame timestamps rounded to the framerate.
     }
 }
