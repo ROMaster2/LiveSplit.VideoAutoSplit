@@ -20,69 +20,15 @@ namespace LiveSplit.VAS.Models
     /// </summary>
     public partial struct Geometry
     {
-        #region Constructors
+        #region Constants
 
-        /// <summary>
-        /// Constructor which sets the initial values to the values of the parameters.
-        /// </summary>
-        public Geometry(double x,
-                    double y,
-                    double width,
-                    double height,
-                    Anchor anchor = Anchor.Undefined)
-        {
-            _x = x;
-            _y = y;
-            _width = width;
-            _height = height;
-            _anchor = anchor;
-            ValidateAll();
-        }
+        private const double _PIXEL_LIMIT = 8192;
+        private double _x;
+        private double _y;
+        private double _width;
+        private double _height;
 
-        /// <summary>
-        /// Constructor which sets the initial values to the values of the parameters
-        /// </summary>
-        public Geometry(Point location, Size size, Anchor anchor = Anchor.Undefined)
-            : this(location.X, location.Y, size.Width, size.Height, anchor) { }
-
-        /// <summary>
-        /// Constructor which sets the initial values to bound the two points provided.
-        /// </summary>
-        public Geometry(Point point1, Point point2, Anchor anchor = Anchor.Undefined)
-        {
-            _x = Math.Min(point1.X, point2.X);
-            _y = Math.Min(point1.Y, point2.Y);
-
-            //  Max with 0 to prevent double weirdness from causing us to be (-epsilon..0)
-            _width = Math.Max(Math.Max(point1.X, point2.X) - _x, 0);
-            _height = Math.Max(Math.Max(point1.Y, point2.Y) - _y, 0);
-
-            _anchor = anchor;
-            ValidateAll();
-        }
-
-        /// <summary>
-        /// Constructor which sets the initial values to bound the point provided and the point
-        /// which results from point + vector.
-        /// </summary>
-        public Geometry(Point point, Vector vector, Anchor anchor = Anchor.Undefined)
-            : this(point, point + vector, anchor) { }
-
-        /// <summary>
-        /// Constructor which sets the initial values to bound the (0,0) point and the point
-        /// that results from (0,0) + Width and Height.
-        /// </summary>
-        public Geometry(double width, double height, Anchor anchor = Anchor.Undefined)
-            : this(0, 0, width, height, anchor) { }
-
-        /// <summary>
-        /// Constructor which sets the initial values to bound the (0,0) point and the point
-        /// that results from (0,0) + size.
-        /// </summary>
-        public Geometry(System.Windows.Size size, Anchor anchor = Anchor.Undefined)
-            : this(size.Width, size.Height, anchor) { }
-
-        #endregion Constructors
+        #endregion Constants
 
         #region Statics
 
@@ -99,49 +45,30 @@ namespace LiveSplit.VAS.Models
         /// <summary>
         /// HasPoint - this returns true if this geometry has set coordinates.
         /// </summary>
-        public bool HasPoint
-        {
-            get
-            {
-                return (X != 0) || (Y != 0);
-            }
-        }
+        public bool HasPoint => (X != 0) || (Y != 0);
 
         /// <summary>
         /// HasSize - this returns true if this geometry has dimensions.
         /// Note: This will still return false if either Width or Height equals 0 and the other
         /// does not.
         /// </summary>
-        public bool HasSize
-        {
-            get
-            {
-                return Width != 0 || Height != 0;
-            }
-        }
+        public bool HasSize => Width != 0 || Height != 0;
 
         /// <summary>
         /// HasAnchor - this returns true if the anchor is set.
         /// </summary>
-        public bool HasAnchor
-        {
-            get
-            {
-                return Anchor != Anchor.Undefined;
-            }
-        }
+        public bool HasAnchor => Anchor != Anchor.Undefined;
 
         /// <summary>
         /// IsBlank - this returns true all variables are unset.
         /// Except Anchor, it's not as important.
         /// </summary>
-        public bool IsBlank
-        {
-            get
-            {
-                return !(HasPoint || HasSize);
-            }
-        }
+        public bool IsBlank => !(HasPoint || HasSize);
+
+        /// <summary>
+        /// Anchor - The side or corner the coordiates are relative to.
+        /// </summary>
+        public Anchor Anchor { get; set; }
 
         /// <summary>
         /// X - The X coordinate of the Location.
@@ -204,21 +131,6 @@ namespace LiveSplit.VAS.Models
             {
                 Validate(value);
                 _height = value;
-            }
-        }
-
-        /// <summary>
-        /// Anchor - The side or corner the coordiates are relative to.
-        /// </summary>
-        public Anchor Anchor
-        {
-            get
-            {
-                return _anchor;
-            }
-            set
-            {
-                _anchor = value;
             }
         }
 
@@ -443,14 +355,73 @@ namespace LiveSplit.VAS.Models
         /// <summary>
         /// Center Property - Location of the Center point relative to its anchor.
         /// </summary>
-        public Point Center
-        {
-            get
-            {
-                return new Point(CenterX, CenterY);
-            }
-        }
+        public Point Center => new Point(CenterX, CenterY);
+
         #endregion Public Properties
+
+        #region Constructors
+
+        /// <summary>
+        /// Constructor which sets the initial values to the values of the parameters.
+        /// </summary>
+        public Geometry(double x,
+                    double y,
+                    double width,
+                    double height,
+                    Anchor anchor = Anchor.Undefined)
+        {
+            _x = x;
+            _y = y;
+            _width = width;
+            _height = height;
+            Anchor = anchor;
+            ValidateAll();
+        }
+
+        /// <summary>
+        /// Constructor which sets the initial values to the values of the parameters
+        /// </summary>
+        public Geometry(Point location, Size size, Anchor anchor = Anchor.Undefined)
+            : this(location.X, location.Y, size.Width, size.Height, anchor) { }
+
+        /// <summary>
+        /// Constructor which sets the initial values to bound the two points provided.
+        /// </summary>
+        public Geometry(Point point1, Point point2, Anchor anchor = Anchor.Undefined)
+        {
+            _x = Math.Min(point1.X, point2.X);
+            _y = Math.Min(point1.Y, point2.Y);
+
+            //  Max with 0 to prevent double weirdness from causing us to be (-epsilon..0)
+            _width = Math.Max(Math.Max(point1.X, point2.X) - _x, 0);
+            _height = Math.Max(Math.Max(point1.Y, point2.Y) - _y, 0);
+
+            Anchor = anchor;
+            ValidateAll();
+        }
+
+        /// <summary>
+        /// Constructor which sets the initial values to bound the point provided and the point
+        /// which results from point + vector.
+        /// </summary>
+        public Geometry(Point point, Vector vector, Anchor anchor = Anchor.Undefined)
+            : this(point, point + vector, anchor) { }
+
+        /// <summary>
+        /// Constructor which sets the initial values to bound the (0,0) point and the point
+        /// that results from (0,0) + Width and Height.
+        /// </summary>
+        public Geometry(double width, double height, Anchor anchor = Anchor.Undefined)
+            : this(0, 0, width, height, anchor) { }
+
+        /// <summary>
+        /// Constructor which sets the initial values to bound the (0,0) point and the point
+        /// that results from (0,0) + size.
+        /// </summary>
+        public Geometry(System.Windows.Size size, Anchor anchor = Anchor.Undefined)
+            : this(size.Width, size.Height, anchor) { }
+
+        #endregion Constructors
 
         #region Public Methods
 
@@ -522,7 +493,7 @@ namespace LiveSplit.VAS.Models
             RemoveAnchor(parentGeometry.Width, parentGeometry.Height);
         }
 
-        // Todo: test
+        // @TODO: test
         public void ChangeAnchor(double width, double height, Anchor anchor)
         {
             RemoveAnchor(width, height);
@@ -859,7 +830,7 @@ namespace LiveSplit.VAS.Models
         /// <param name="rect"> The rect to intersect with this </param>
         public void Intersect(Geometry rect)
         {
-            if (!this.IntersectsWith(rect))
+            if (!IntersectsWith(rect))
             {
                 this = Blank;
             }
@@ -1098,11 +1069,11 @@ namespace LiveSplit.VAS.Models
         {
             foreach (double num in nums)
             {
-                if (num > PIXEL_LIMIT || num < -PIXEL_LIMIT)
+                if (num > _PIXEL_LIMIT || num < -_PIXEL_LIMIT)
                 {
                     throw new System.InvalidOperationException(
-                        "Dimensions and Coordinates cannot be greater than " + PIXEL_LIMIT.ToString() +
-                        "or less than -" + PIXEL_LIMIT.ToString() + "."
+                        "Dimensions and Coordinates cannot be greater than " + _PIXEL_LIMIT.ToString() +
+                        "or less than -" + _PIXEL_LIMIT.ToString() + "."
                         );
                 }
             }
@@ -1145,27 +1116,11 @@ namespace LiveSplit.VAS.Models
                 _y = 0,
                 _width = 0,
                 _height = 0,
-                _anchor = Anchor.Undefined
+                Anchor = Anchor.Undefined
             };
             return geometry;
         }
 
         #endregion Private Methods
-
-        #region Private Fields
-
-        private double _x;
-        private double _y;
-        private double _width;
-        private double _height;
-        private Anchor _anchor;
-
-        #endregion Private Fields
-
-        #region Constants
-
-        private const double PIXEL_LIMIT = 8192;
-
-        #endregion Constants
     }
 }
