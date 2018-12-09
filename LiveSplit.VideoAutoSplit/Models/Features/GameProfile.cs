@@ -10,19 +10,11 @@ namespace LiveSplit.VAS.Models
 {
     public class GameProfile
     {
-        public GameProfile(string name)
-        {
-            Name = name;
-        }
-
-        internal GameProfile() { }
-
         public string Name;
-
         public List<Screen> Screens { get; internal set; } = new List<Screen>();
 
         [XmlIgnore]
-        public string RawScript = null;
+        public string RawScript;
 
         [XmlIgnore]
         public List<WatchZone> WatchZones
@@ -35,6 +27,13 @@ namespace LiveSplit.VAS.Models
         [XmlIgnore]
         public List<WatchImage> WatchImages
         { get { return Watches.SelectMany(w => w.WatchImages).ToList(); } }
+
+        public GameProfile(string name)
+        {
+            Name = name;
+        }
+
+        internal GameProfile() { }
 
         public Screen AddScreen(string name, bool useAdvanced, Geometry geometry)
         {
