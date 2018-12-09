@@ -6,6 +6,22 @@ namespace LiveSplit.VAS.Models
 {
     public class Watcher
     {
+        public string Name;
+        public double Frequency = 1d;
+        public ColorSpace ColorSpace = ColorSpace.sRGB;
+        public int Channel = -1;
+        public bool Equalize = true;
+        public ErrorMetric ErrorMetric = ErrorMetric.PeakSignalToNoiseRatio;
+        public WatcherType WatcherType = WatcherType.Standard;
+        public bool DupeFrameCheck = false; // To remove
+        public List<WatchImage> WatchImages = new List<WatchImage>();
+
+        [XmlIgnore]
+        public Screen Screen { get { return WatchZone.Screen; } }
+
+        [XmlIgnore]
+        public WatchZone WatchZone { get; internal set; }
+
         internal Watcher(WatchZone watchZone, string name, double frequency = 1d, ColorSpace colorSpace = ColorSpace.RGB)
         {
             WatchZone = watchZone;
@@ -15,27 +31,6 @@ namespace LiveSplit.VAS.Models
         }
 
         internal Watcher() { }
-
-        public string Name;
-
-        public double Frequency = 1d;
-
-        public ColorSpace ColorSpace = ColorSpace.sRGB;
-        public int Channel = -1;
-        public bool Equalize = true;
-
-        public ErrorMetric ErrorMetric = ErrorMetric.PeakSignalToNoiseRatio;
-
-        public WatcherType WatcherType = WatcherType.Standard;
-        public bool DupeFrameCheck = false; // To remove
-
-        public List<WatchImage> WatchImages = new List<WatchImage>();
-
-        [XmlIgnore]
-        public Screen Screen { get { return WatchZone.Screen; } }
-
-        [XmlIgnore]
-        public WatchZone WatchZone { get; internal set; }
 
         public WatchImage AddWatchImage(string filePath)
         {
