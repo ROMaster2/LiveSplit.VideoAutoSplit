@@ -6,6 +6,8 @@ namespace LiveSplit.VAS.Models
 {
     public struct Frame
     {
+        public static readonly Frame Blank = new Frame(TimeStamp.CurrentDateTime.Time, null);
+
         public readonly DateTime DateTime;
         public readonly Bitmap Bitmap;
         public readonly bool IsBlank;
@@ -16,7 +18,5 @@ namespace LiveSplit.VAS.Models
             Bitmap = bitmap;
             IsBlank = (bitmap == null);
         }
-
-        public static readonly Frame Blank = new Frame(TimeStamp.CurrentDateTime.Time, null);
     }
 }
