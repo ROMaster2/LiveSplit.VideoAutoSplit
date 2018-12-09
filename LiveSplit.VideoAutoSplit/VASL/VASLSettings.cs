@@ -24,10 +24,7 @@ namespace LiveSplit.VAS.VASL
             Type = ((object)defaultValue).GetType().ToString();
         }
 
-        public override string ToString()
-        {
-            return Label;
-        }
+        public override string ToString() => Label;
     }
 
     public class VASLSettings
@@ -51,10 +48,7 @@ namespace LiveSplit.VAS.VASL
 
         public void AddSetting(string name, dynamic defaultValue, string description, string parent)
         {
-            if (description == null)
-            {
-                description = name;
-            }
+            if (description == null) description = name;
 
             if (parent != null && !Settings.ContainsKey(parent))
             {
@@ -75,13 +69,9 @@ namespace LiveSplit.VAS.VASL
         {
             // Don't cause error if setting doesn't exist, but still inform script
             // author since that usually shouldn't happen.
-            if (Settings.ContainsKey(name))
-            {
-                return GetSettingValueRecursive(Settings[name]);
-            }
+            if (Settings.ContainsKey(name)) return GetSettingValueRecursive(Settings[name]);
 
             Log.Info("[VASL] Custom Setting Key doesn't exist: " + name);
-
             return false;
         }
 
@@ -92,11 +82,7 @@ namespace LiveSplit.VAS.VASL
 
         public bool GetBasicSettingValue(string name)
         {
-            if (BasicSettings.ContainsKey(name))
-            {
-                return BasicSettings[name].Value;
-            }
-
+            if (BasicSettings.ContainsKey(name)) return BasicSettings[name].Value;
             return false;
         }
 
@@ -110,16 +96,8 @@ namespace LiveSplit.VAS.VASL
         /// </summary>
         private dynamic GetSettingValueRecursive(VASLSetting setting)
         {
-            if (!setting.Value)
-            {
-                return false;
-            }
-
-            if (setting.Parent == null)
-            {
-                return setting.Value;
-            }
-
+            if (!setting.Value) return false;
+            if (setting.Parent == null) return setting.Value;
             return GetSettingValueRecursive(Settings[setting.Parent]);
         }
     }
@@ -130,31 +108,27 @@ namespace LiveSplit.VAS.VASL
     public class VASLSettingsBuilder
     {
         public string CurrentDefaultParent { get; set; }
-        private readonly VASLSettings _s;
+        private readonly VASLSettings _VaslSettings;
 
         public VASLSettingsBuilder(VASLSettings s)
         {
-            _s = s;
+            _VaslSettings = s;
         }
 
         public void Add(string id, dynamic default_value, string description = null, string parent = null)
         {
-            if (parent == null)
-            {
-                parent = CurrentDefaultParent;
-            }
-
-            _s.AddSetting(id, default_value, description, parent);
+            if (parent == null) parent = CurrentDefaultParent;
+            _VaslSettings.AddSetting(id, default_value, description, parent);
         }
 
         public void SetToolTip(string id, string text)
         {
-            if (!_s.Settings.ContainsKey(id))
+            if (!_VaslSettings.Settings.ContainsKey(id))
             {
                 throw new ArgumentException($"Can't set tooltip, '{id}' is not a setting");
             }
 
-            _s.Settings[id].ToolTip = text;
+            _VaslSettings.Settings[id].ToolTip = text;
         }
     }
 
@@ -163,36 +137,17 @@ namespace LiveSplit.VAS.VASL
     /// </summary>
     public class VASLSettingsReader
     {
-        private readonly VASLSettings _s;
+        private readonly VASLSettings _VaslSettings;
 
         public VASLSettingsReader(VASLSettings s)
         {
-            _s = s;
+            _VaslSettings = s;
         }
 
-        public dynamic this[string id]
-        {
-            get { return _s.GetSettingValue(id); }
-        }
-
-        public bool ContainsKey(string key)
-        {
-            return _s.Settings.ContainsKey(key);
-        }
-
-        public bool StartEnabled
-        {
-            get { return _s.GetBasicSettingValue("start"); }
-        }
-
-        public bool ResetEnabled
-        {
-            get { return _s.GetBasicSettingValue("reset"); }
-        }
-
-        public bool SplitEnabled
-        {
-            get { return _s.GetBasicSettingValue("split"); }
-        }
+        public dynamic this[string id] => _VaslSettings.GetSettingValue(id);
+        public bool ContainsKey(string key) => _VaslSettings.Settings.ContainsKey(key);
+        public bool StartEnabled => _VaslSettings.GetBasicSettingValue("start");
+        public bool ResetEnabled => _VaslSettings.GetBasicSettingValue("reset");
+        public bool SplitEnabled => _VaslSettings.GetBasicSettingValue("split");
     }
 }
