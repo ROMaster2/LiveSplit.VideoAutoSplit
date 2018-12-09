@@ -83,15 +83,14 @@ namespace LiveSplit.VAS.UI
         {
             for (int i = tlpFeatures.RowCount - 2; i > 0; i--)
             {
-                if (tlpFeatures.Controls.ContainsKey(i.ToString()))
-                {
-                    tlpFeatures.Controls[i].Dispose();
-                }
+                if (tlpFeatures.Controls.ContainsKey(i.ToString())) tlpFeatures.Controls[i].Dispose();
                 tlpFeatures.RowStyles.RemoveAt(i);
             }
+
             tlpFeatures.RowCount = 2;
         }
 
+        // @TODO: This method does not run asynchronous, consider removing the async keyword
         private void UpdateRowsAsync(object sender, DeltaOutput d)
         {
             Task.Run(() => UpdateRows(sender, d));
@@ -105,7 +104,7 @@ namespace LiveSplit.VAS.UI
             // Then again, why not make a Dictionary? Later, probably.
             var deltas = (double[])d.History[d.FrameIndex].Deltas.Clone();
 
-            this.Invoke((MethodInvoker)delegate
+            Invoke((MethodInvoker)delegate
             {
                 var deltaCount = deltas.Length;
                 for (int i = 1; i < deltaCount + 1; i++)
@@ -167,11 +166,13 @@ namespace LiveSplit.VAS.UI
                 Text = name,
                 TextAlign = ContentAlignment.MiddleLeft
             };
+
             CkbEnabled = new CheckBox()
             {
                 CheckState = CheckState.Indeterminate,
                 Padding = new Padding(0, 2, 0, 0)
             };
+
             CkbEnabled.Click += CkbEnabled_Click;
             LblValue = lblNumeric.Clone();
             LblMaximum = lblNumeric.Clone();
@@ -194,10 +195,8 @@ namespace LiveSplit.VAS.UI
                 LblValue.Text = value.ToString("F4"); // Todo: Formatting based on ErrorMetric.
 
                 ValueQueue.Enqueue(value);
-                if (ValueQueue.Count >= QueueSize)
-                {
-                    ValueQueue.Dequeue();
-                }
+
+                if (ValueQueue.Count >= QueueSize) ValueQueue.Dequeue();
 
                 LblMaximum.Text = ValueQueue.Max().ToString("F4");
                 LblMinimum.Text = ValueQueue.Min().ToString("F4");
@@ -213,6 +212,7 @@ namespace LiveSplit.VAS.UI
             }
         }
 
+        // @TODO: Implement the functionality instead of throwing new NotImplementedException
         internal void CkbEnabled_Click(object sender, EventArgs e)
         {
             throw new NotImplementedException("Todo lol");
