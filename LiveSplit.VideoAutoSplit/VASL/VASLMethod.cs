@@ -12,17 +12,14 @@ namespace LiveSplit.VAS.VASL
 {
     public class VASLMethod
     {
-        public VASLScript.MethodList ScriptMethods { get; set; }
-
         public string Name { get; private set; }
-
         public bool IsEmpty { get; private set; }
-
         public int LineOffset { get; private set; }
 
         public Module Module { get; private set; }
+        public VASLScript.MethodList ScriptMethods { get; set; }
 
-        private readonly dynamic CompiledCode;
+        private readonly dynamic _CompiledCode;
 
         public VASLMethod(string code, string name = null, int scriptLine = 0)
         {
@@ -85,6 +82,7 @@ public class CompiledScript
                     GenerateInMemory = true,
                     CompilerOptions = "/optimize /d:TRACE /debug:pdbonly",
                 };
+
                 parameters.ReferencedAssemblies.Add("System.dll");
                 parameters.ReferencedAssemblies.Add("System.Core.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
@@ -104,7 +102,7 @@ public class CompiledScript
 
                 Module = res.CompiledAssembly.ManifestModule;
                 var type = res.CompiledAssembly.GetType("CompiledScript");
-                CompiledCode = Activator.CreateInstance(type);
+                _CompiledCode = Activator.CreateInstance(type);
             }
         }
 
@@ -112,25 +110,21 @@ public class CompiledScript
             dynamic settings, DeltaOutput d)
         {
             dynamic ret;
+
             try
             {
-                ret = CompiledCode.Execute(timer, vars, d, settings);
+                ret = _CompiledCode.Execute(timer, vars, d, settings);
             }
             catch (NullReferenceException ex)
             {
-                if (d?.OriginalIndex >= d?.HistorySize)
-                {
-                    throw new VASLRuntimeException(this, ex);
-                }
-                else
-                {
-                    ret = null;
-                }
+                if (d?.OriginalIndex >= d?.HistorySize) throw new VASLRuntimeException(this, ex);
+                else ret = null;
             }
             catch (Exception ex)
             {
                 throw new VASLRuntimeException(this, ex);
             }
+
             return ret;
         }
     }
