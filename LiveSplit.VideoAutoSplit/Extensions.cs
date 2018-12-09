@@ -5,14 +5,11 @@ using System.Reflection;
 
 namespace LiveSplit.VAS
 {
-    public static partial class Extensions
+    public static class Extensions
     {
         public static double GetTransparencyRate(this ImageMagick.IMagickImage mi)
         {
-            if (!mi.HasAlpha)
-            {
-                return 0;
-            }
+            if (!mi.HasAlpha)  return 0;
 
             var bytes = mi.Separate(ImageMagick.Channels.Alpha).First().GetPixels().GetValues();
             return (255d - bytes.Average(x => (double)x)) / 255d;
@@ -39,11 +36,6 @@ namespace LiveSplit.VAS
                     x = (int)Math.Round(point.X + (Math.Sign(point.X) > 0 ? rounder : -rounder));
                     y = (int)Math.Round(point.Y + (Math.Sign(point.Y) > 0 ? rounder : -rounder));
                     break;
-                case 0: // Round
-                default:
-                    x = (int)Math.Round(point.X);
-                    y = (int)Math.Round(point.Y);
-                    break;
                 case -1: // Rounddown
                     x = (int)Math.Round(point.X + (Math.Sign(point.X) < 0 ? rounder : -rounder));
                     y = (int)Math.Round(point.Y + (Math.Sign(point.Y) < 0 ? rounder : -rounder));
@@ -51,6 +43,10 @@ namespace LiveSplit.VAS
                 case -2: // Floor
                     x = (int)Math.Floor(point.X);
                     y = (int)Math.Floor(point.Y);
+                    break;
+                default:
+                    x = (int)Math.Round(point.X);
+                    y = (int)Math.Round(point.Y);
                     break;
             }
 
@@ -123,12 +119,9 @@ namespace LiveSplit.VAS
 
             foreach (PropertyInfo propInfo in controlProperties)
             {
-                if (propInfo.CanWrite)
+                if (propInfo.CanWrite && propInfo.Name != "WindowTarget")
                 {
-                    if (propInfo.Name != "WindowTarget")
-                    {
-                        propInfo.SetValue(instance, propInfo.GetValue(controlToClone, null), null);
-                    }
+                    propInfo.SetValue(instance, propInfo.GetValue(controlToClone, null), null);
                 }
             }
 
