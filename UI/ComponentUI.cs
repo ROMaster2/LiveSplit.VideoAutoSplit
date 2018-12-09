@@ -50,7 +50,7 @@ namespace LiveSplit.VAS.UI
             userControl.Name = name;
         }
 
-        // Some of the interfaces are very 'active', so they should only be enabled when the users is actually using them.
+        // Some of the interfaces are very 'active', so they should only be enabled when the user is actually using one.
         #region Renderers
 
         private void ComponentUI_Load(object sender, EventArgs e)

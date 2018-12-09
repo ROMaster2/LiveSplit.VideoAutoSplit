@@ -50,7 +50,7 @@ namespace LiveSplit.VAS
                     {
                         LogEvent("Test1234"); // Testing to see if it appears when it's not supposed to.
                         LogEvent(e);
-                        _ProfilePath = null;
+                        _ProfilePath = string.Empty;
                         ProfileCleanup();
                     }
                 }

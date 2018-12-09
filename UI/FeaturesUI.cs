@@ -177,7 +177,7 @@ namespace LiveSplit.VAS.UI
                 Padding = new Padding(0, 2, 0, 0)
             };
             ckbEnabled.Click += ckbEnabled_Click;
-            lblValue = lblNumeric.Clone();
+            lblValue   = lblNumeric.Clone();
             lblMaximum = lblNumeric.Clone();
             lblMinimum = lblNumeric.Clone();
 
