@@ -31,33 +31,39 @@ namespace LiveSplit.VAS.UI
 
         private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
         private const FilterType DEFAULT_SCALE_FILTER = FilterType.Lanczos;
-        private static readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
+        private readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
 
-        private static readonly Geometry MIN_VALUES = new Geometry(-Scanner.VideoGeometry.Width, -Scanner.VideoGeometry.Height, 4, 4);
-        private static readonly Geometry MAX_VALUES = new Geometry(
-            Scanner.VideoGeometry.Width,
-            Scanner.VideoGeometry.Height,
-            Scanner.VideoGeometry.Width * 2,
-            Scanner.VideoGeometry.Height * 2);
+        private Scanner Scanner;
 
-        private static Bitmap CurrentFrame = new Bitmap(1, 1);
-        private static DateTime LastUpdate = DateTime.UtcNow;
+        private readonly Geometry minGeometry;
+        private readonly Geometry maxGeometry;
+
+        private Bitmap CurrentFrame = new Bitmap(1, 1);
+        private DateTime LastUpdate = DateTime.UtcNow;
         /*
         public double CropX { get; set; }      = Scanner.CropGeometry.X;
         public double CropY { get; set; }      = Scanner.CropGeometry.Y;
         public double CropWidth { get; set; }  = Scanner.CropGeometry.Width;
         public double CropHeight { get; set; } = Scanner.CropGeometry.Height;
         */
-        public Aligner()
+        public Aligner(Scanner scanner)
         {
+            Scanner = scanner;
             InitializeComponent();
             SetAllNumValues(Scanner.CropGeometry);
-            FillDdlWatchZone();
+            //FillDdlWatchZone();
             Scanner.SubscribeToFrameHandler(HandleNewFrame);
             RefreshThumbnail();
+
+            minGeometry = new Geometry(-Scanner.VideoGeometry.Width, -Scanner.VideoGeometry.Height, 4, 4);
+            maxGeometry = new Geometry(
+            Scanner.VideoGeometry.Width,
+            Scanner.VideoGeometry.Height,
+            Scanner.VideoGeometry.Width * 2,
+            Scanner.VideoGeometry.Height * 2);
         }
 
-        private void Aligner_FormClosing(object sender, FormClosingEventArgs e)
+    private void Aligner_FormClosing(object sender, FormClosingEventArgs e)
         {
             Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);/*
             CropX      = Scanner.CropGeometry.X;
@@ -218,20 +224,20 @@ namespace LiveSplit.VAS.UI
         }
 
         private void BtnRefreshFrame_Click(object sender, EventArgs e) => RefreshThumbnail();
-
+        
         private void BtnTryAutoAlign_Click(object sender, EventArgs e)
-        {
+        {/*
             if (Scanner.GameProfile != null)
             {
                 using (var haystack = (Bitmap)Scanner.CurrentFrame.Bitmap.Clone())
                 using (var needle = (Bitmap)Scanner.GameProfile.Screens[0].Autofitter.Image.Clone())
                 {
                     var geo = AutoAlign(needle, haystack);
-                    SetAllNumValues(geo.Min(MAX_VALUES).Max(MIN_VALUES));
+                    SetAllNumValues(geo.Min(maxGeometry).Max(minGeometry));
                 }
             }
-        }
-
+        */}
+        
         #region Numeric Field Logic/Events
 
         private void UpdateCropGeometry(Geometry? geo = null)
@@ -244,7 +250,7 @@ namespace LiveSplit.VAS.UI
                 newGeo.Width = (double)NumWidth.Value;
                 newGeo.Height = (double)NumHeight.Value;
             }
-            Scanner.CropGeometry = newGeo.Min(MAX_VALUES).Max(MIN_VALUES);
+            Scanner.CropGeometry = newGeo.Min(maxGeometry).Max(minGeometry);
             Scanner.UpdateCropGeometry();
             RefreshThumbnail();
         }
@@ -317,7 +323,7 @@ namespace LiveSplit.VAS.UI
                 default: break;
             }
 
-            SetAllNumValues(geo.Min(MAX_VALUES).Max(MIN_VALUES));
+            SetAllNumValues(geo.Min(maxGeometry).Max(minGeometry));
         }
 
         #endregion DPad Logic
@@ -356,9 +362,9 @@ namespace LiveSplit.VAS.UI
             var geo = Scanner.ResetCropGeometry();
             SetAllNumValues(geo);
         }
-
+        
         private void FillDdlWatchZone()
-        {
+        {/*
             DdlWatchZone.Items.Add("<None>");
             if (Scanner.GameProfile != null)
             {
@@ -369,8 +375,8 @@ namespace LiveSplit.VAS.UI
                 }
             }
             DdlWatchZone.SelectedIndex = 0;
-        }
-
+        */}
+        
         private void DdlWatchZone_SelectedIndexChanged(object sender, EventArgs e) => RefreshThumbnail();
 
         private void CkbViewDelta_CheckedChanged(object sender, EventArgs e) => RefreshThumbnail();

@@ -46,39 +46,9 @@
             this.DdlWatchZone = new System.Windows.Forms.ComboBox();
             this.BtnResetRegion = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
-            this.ShrinkDPad = new System.Windows.Forms.TableLayoutPanel();
-            this.ShrinkDPad9 = new System.Windows.Forms.PictureBox();
-            this.ShrinkDPad8 = new System.Windows.Forms.PictureBox();
-            this.ShrinkDPad7 = new System.Windows.Forms.PictureBox();
-            this.ShrinkDPad6 = new System.Windows.Forms.PictureBox();
-            this.ShrinkDPad5 = new System.Windows.Forms.PictureBox();
-            this.ShrinkDPad4 = new System.Windows.Forms.PictureBox();
-            this.ShrinkDPad3 = new System.Windows.Forms.PictureBox();
-            this.ShrinkDPad2 = new System.Windows.Forms.PictureBox();
-            this.ShrinkDPad1 = new System.Windows.Forms.PictureBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.GrowDPad = new System.Windows.Forms.TableLayoutPanel();
-            this.GrowDPad9 = new System.Windows.Forms.PictureBox();
-            this.GrowDPad8 = new System.Windows.Forms.PictureBox();
-            this.GrowDPad7 = new System.Windows.Forms.PictureBox();
-            this.GrowDPad6 = new System.Windows.Forms.PictureBox();
-            this.GrowDPad5 = new System.Windows.Forms.PictureBox();
-            this.GrowDPad4 = new System.Windows.Forms.PictureBox();
-            this.GrowDPad3 = new System.Windows.Forms.PictureBox();
-            this.GrowDPad2 = new System.Windows.Forms.PictureBox();
-            this.GrowDPad1 = new System.Windows.Forms.PictureBox();
             this.label1 = new System.Windows.Forms.Label();
             this.BtnRefreshFrame = new System.Windows.Forms.Button();
-            this.MoveDPad = new System.Windows.Forms.TableLayoutPanel();
-            this.MoveDPad9 = new System.Windows.Forms.PictureBox();
-            this.MoveDPad8 = new System.Windows.Forms.PictureBox();
-            this.MoveDPad7 = new System.Windows.Forms.PictureBox();
-            this.MoveDPad6 = new System.Windows.Forms.PictureBox();
-            this.MoveDPad5 = new System.Windows.Forms.PictureBox();
-            this.MoveDPad4 = new System.Windows.Forms.PictureBox();
-            this.MoveDPad3 = new System.Windows.Forms.PictureBox();
-            this.MoveDPad2 = new System.Windows.Forms.PictureBox();
-            this.MoveDPad1 = new System.Windows.Forms.PictureBox();
             this.ThumbnailBox = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.NumHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumWidth)).BeginInit();
@@ -86,36 +56,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.NumX)).BeginInit();
             this.TLPCore.SuspendLayout();
             this.ControlPanel.SuspendLayout();
-            this.ShrinkDPad.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad9)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad8)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad7)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad6)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad5)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad4)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad1)).BeginInit();
-            this.GrowDPad.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad9)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad8)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad7)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad6)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad5)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad4)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad1)).BeginInit();
-            this.MoveDPad.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad9)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad8)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad7)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad6)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad5)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad4)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThumbnailBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -293,12 +233,9 @@
             this.ControlPanel.Controls.Add(this.DdlWatchZone);
             this.ControlPanel.Controls.Add(this.BtnResetRegion);
             this.ControlPanel.Controls.Add(this.label3);
-            this.ControlPanel.Controls.Add(this.ShrinkDPad);
             this.ControlPanel.Controls.Add(this.label2);
-            this.ControlPanel.Controls.Add(this.GrowDPad);
             this.ControlPanel.Controls.Add(this.label1);
             this.ControlPanel.Controls.Add(this.BtnRefreshFrame);
-            this.ControlPanel.Controls.Add(this.MoveDPad);
             this.ControlPanel.Controls.Add(this.Label_Width);
             this.ControlPanel.Controls.Add(this.Label_X);
             this.ControlPanel.Controls.Add(this.Label_Height);
@@ -389,146 +326,6 @@
             this.label3.Text = "Shrink Capture Region";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // ShrinkDPad
-            // 
-            this.ShrinkDPad.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.ShrinkDPad.ColumnCount = 3;
-            this.ShrinkDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.ShrinkDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.ShrinkDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad9, 2, 2);
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad8, 1, 2);
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad7, 0, 2);
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad6, 2, 1);
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad5, 1, 1);
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad4, 0, 1);
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad3, 2, 0);
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad2, 1, 0);
-            this.ShrinkDPad.Controls.Add(this.ShrinkDPad1, 0, 0);
-            this.ShrinkDPad.Location = new System.Drawing.Point(50, 432);
-            this.ShrinkDPad.Name = "ShrinkDPad";
-            this.ShrinkDPad.RowCount = 3;
-            this.ShrinkDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.ShrinkDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.ShrinkDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.ShrinkDPad.Size = new System.Drawing.Size(96, 96);
-            this.ShrinkDPad.TabIndex = 237;
-            // 
-            // ShrinkDPad9
-            // 
-            this.ShrinkDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad9.Image = global::LiveSplit.VAS.Properties.Resources.DPadN9;
-            this.ShrinkDPad9.Location = new System.Drawing.Point(64, 64);
-            this.ShrinkDPad9.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad9.Name = "ShrinkDPad9";
-            this.ShrinkDPad9.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad9.TabIndex = 8;
-            this.ShrinkDPad9.TabStop = false;
-            this.ShrinkDPad9.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseDown);
-            this.ShrinkDPad9.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseUp);
-            // 
-            // ShrinkDPad8
-            // 
-            this.ShrinkDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad8.Image = global::LiveSplit.VAS.Properties.Resources.DPadN8;
-            this.ShrinkDPad8.Location = new System.Drawing.Point(32, 64);
-            this.ShrinkDPad8.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad8.Name = "ShrinkDPad8";
-            this.ShrinkDPad8.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad8.TabIndex = 7;
-            this.ShrinkDPad8.TabStop = false;
-            this.ShrinkDPad8.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseDown);
-            this.ShrinkDPad8.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseUp);
-            // 
-            // ShrinkDPad7
-            // 
-            this.ShrinkDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad7.Image = global::LiveSplit.VAS.Properties.Resources.DPadN7;
-            this.ShrinkDPad7.Location = new System.Drawing.Point(0, 64);
-            this.ShrinkDPad7.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad7.Name = "ShrinkDPad7";
-            this.ShrinkDPad7.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad7.TabIndex = 6;
-            this.ShrinkDPad7.TabStop = false;
-            this.ShrinkDPad7.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseDown);
-            this.ShrinkDPad7.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseUp);
-            // 
-            // ShrinkDPad6
-            // 
-            this.ShrinkDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad6.Image = global::LiveSplit.VAS.Properties.Resources.DPadN6;
-            this.ShrinkDPad6.Location = new System.Drawing.Point(64, 32);
-            this.ShrinkDPad6.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad6.Name = "ShrinkDPad6";
-            this.ShrinkDPad6.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad6.TabIndex = 5;
-            this.ShrinkDPad6.TabStop = false;
-            this.ShrinkDPad6.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseDown);
-            this.ShrinkDPad6.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseUp);
-            // 
-            // ShrinkDPad5
-            // 
-            this.ShrinkDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad5.Image = global::LiveSplit.VAS.Properties.Resources.DPadN5;
-            this.ShrinkDPad5.Location = new System.Drawing.Point(32, 32);
-            this.ShrinkDPad5.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad5.Name = "ShrinkDPad5";
-            this.ShrinkDPad5.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad5.TabIndex = 4;
-            this.ShrinkDPad5.TabStop = false;
-            // 
-            // ShrinkDPad4
-            // 
-            this.ShrinkDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad4.Image = global::LiveSplit.VAS.Properties.Resources.DPadN4;
-            this.ShrinkDPad4.Location = new System.Drawing.Point(0, 32);
-            this.ShrinkDPad4.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad4.Name = "ShrinkDPad4";
-            this.ShrinkDPad4.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad4.TabIndex = 3;
-            this.ShrinkDPad4.TabStop = false;
-            this.ShrinkDPad4.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseDown);
-            this.ShrinkDPad4.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseUp);
-            // 
-            // ShrinkDPad3
-            // 
-            this.ShrinkDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad3.Image = global::LiveSplit.VAS.Properties.Resources.DPadN3;
-            this.ShrinkDPad3.Location = new System.Drawing.Point(64, 0);
-            this.ShrinkDPad3.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad3.Name = "ShrinkDPad3";
-            this.ShrinkDPad3.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad3.TabIndex = 2;
-            this.ShrinkDPad3.TabStop = false;
-            this.ShrinkDPad3.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseDown);
-            this.ShrinkDPad3.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseUp);
-            // 
-            // ShrinkDPad2
-            // 
-            this.ShrinkDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad2.Image = global::LiveSplit.VAS.Properties.Resources.DPadN2;
-            this.ShrinkDPad2.Location = new System.Drawing.Point(32, 0);
-            this.ShrinkDPad2.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad2.Name = "ShrinkDPad2";
-            this.ShrinkDPad2.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad2.TabIndex = 1;
-            this.ShrinkDPad2.TabStop = false;
-            this.ShrinkDPad2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseDown);
-            this.ShrinkDPad2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseUp);
-            // 
-            // ShrinkDPad1
-            // 
-            this.ShrinkDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad1.Image = global::LiveSplit.VAS.Properties.Resources.DPadN1;
-            this.ShrinkDPad1.Location = new System.Drawing.Point(0, 0);
-            this.ShrinkDPad1.Margin = new System.Windows.Forms.Padding(0);
-            this.ShrinkDPad1.Name = "ShrinkDPad1";
-            this.ShrinkDPad1.Size = new System.Drawing.Size(32, 32);
-            this.ShrinkDPad1.TabIndex = 0;
-            this.ShrinkDPad1.TabStop = false;
-            this.ShrinkDPad1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseDown);
-            this.ShrinkDPad1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ShrinkDPad_MouseUp);
-            // 
             // label2
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -538,146 +335,6 @@
             this.label2.TabIndex = 236;
             this.label2.Text = "Grow Capture Region";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // GrowDPad
-            // 
-            this.GrowDPad.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.GrowDPad.ColumnCount = 3;
-            this.GrowDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.GrowDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.GrowDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.GrowDPad.Controls.Add(this.GrowDPad9, 2, 2);
-            this.GrowDPad.Controls.Add(this.GrowDPad8, 1, 2);
-            this.GrowDPad.Controls.Add(this.GrowDPad7, 0, 2);
-            this.GrowDPad.Controls.Add(this.GrowDPad6, 2, 1);
-            this.GrowDPad.Controls.Add(this.GrowDPad5, 1, 1);
-            this.GrowDPad.Controls.Add(this.GrowDPad4, 0, 1);
-            this.GrowDPad.Controls.Add(this.GrowDPad3, 2, 0);
-            this.GrowDPad.Controls.Add(this.GrowDPad2, 1, 0);
-            this.GrowDPad.Controls.Add(this.GrowDPad1, 0, 0);
-            this.GrowDPad.Location = new System.Drawing.Point(50, 315);
-            this.GrowDPad.Name = "GrowDPad";
-            this.GrowDPad.RowCount = 3;
-            this.GrowDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.GrowDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.GrowDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.GrowDPad.Size = new System.Drawing.Size(96, 96);
-            this.GrowDPad.TabIndex = 235;
-            // 
-            // GrowDPad9
-            // 
-            this.GrowDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad9.Image = global::LiveSplit.VAS.Properties.Resources.DPad9;
-            this.GrowDPad9.Location = new System.Drawing.Point(64, 64);
-            this.GrowDPad9.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad9.Name = "GrowDPad9";
-            this.GrowDPad9.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad9.TabIndex = 8;
-            this.GrowDPad9.TabStop = false;
-            this.GrowDPad9.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseDown);
-            this.GrowDPad9.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseUp);
-            // 
-            // GrowDPad8
-            // 
-            this.GrowDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad8.Image = global::LiveSplit.VAS.Properties.Resources.DPad8;
-            this.GrowDPad8.Location = new System.Drawing.Point(32, 64);
-            this.GrowDPad8.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad8.Name = "GrowDPad8";
-            this.GrowDPad8.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad8.TabIndex = 7;
-            this.GrowDPad8.TabStop = false;
-            this.GrowDPad8.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseDown);
-            this.GrowDPad8.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseUp);
-            // 
-            // GrowDPad7
-            // 
-            this.GrowDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad7.Image = global::LiveSplit.VAS.Properties.Resources.DPad7;
-            this.GrowDPad7.Location = new System.Drawing.Point(0, 64);
-            this.GrowDPad7.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad7.Name = "GrowDPad7";
-            this.GrowDPad7.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad7.TabIndex = 6;
-            this.GrowDPad7.TabStop = false;
-            this.GrowDPad7.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseDown);
-            this.GrowDPad7.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseUp);
-            // 
-            // GrowDPad6
-            // 
-            this.GrowDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad6.Image = global::LiveSplit.VAS.Properties.Resources.DPad6;
-            this.GrowDPad6.Location = new System.Drawing.Point(64, 32);
-            this.GrowDPad6.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad6.Name = "GrowDPad6";
-            this.GrowDPad6.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad6.TabIndex = 5;
-            this.GrowDPad6.TabStop = false;
-            this.GrowDPad6.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseDown);
-            this.GrowDPad6.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseUp);
-            // 
-            // GrowDPad5
-            // 
-            this.GrowDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad5.Image = global::LiveSplit.VAS.Properties.Resources.DPad5;
-            this.GrowDPad5.Location = new System.Drawing.Point(32, 32);
-            this.GrowDPad5.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad5.Name = "GrowDPad5";
-            this.GrowDPad5.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad5.TabIndex = 4;
-            this.GrowDPad5.TabStop = false;
-            // 
-            // GrowDPad4
-            // 
-            this.GrowDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad4.Image = global::LiveSplit.VAS.Properties.Resources.DPad4;
-            this.GrowDPad4.Location = new System.Drawing.Point(0, 32);
-            this.GrowDPad4.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad4.Name = "GrowDPad4";
-            this.GrowDPad4.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad4.TabIndex = 3;
-            this.GrowDPad4.TabStop = false;
-            this.GrowDPad4.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseDown);
-            this.GrowDPad4.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseUp);
-            // 
-            // GrowDPad3
-            // 
-            this.GrowDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad3.Image = global::LiveSplit.VAS.Properties.Resources.DPad3;
-            this.GrowDPad3.Location = new System.Drawing.Point(64, 0);
-            this.GrowDPad3.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad3.Name = "GrowDPad3";
-            this.GrowDPad3.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad3.TabIndex = 2;
-            this.GrowDPad3.TabStop = false;
-            this.GrowDPad3.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseDown);
-            this.GrowDPad3.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseUp);
-            // 
-            // GrowDPad2
-            // 
-            this.GrowDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad2.Image = global::LiveSplit.VAS.Properties.Resources.DPad2;
-            this.GrowDPad2.Location = new System.Drawing.Point(32, 0);
-            this.GrowDPad2.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad2.Name = "GrowDPad2";
-            this.GrowDPad2.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad2.TabIndex = 1;
-            this.GrowDPad2.TabStop = false;
-            this.GrowDPad2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseDown);
-            this.GrowDPad2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseUp);
-            // 
-            // GrowDPad1
-            // 
-            this.GrowDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad1.Image = global::LiveSplit.VAS.Properties.Resources.DPad1;
-            this.GrowDPad1.Location = new System.Drawing.Point(0, 0);
-            this.GrowDPad1.Margin = new System.Windows.Forms.Padding(0);
-            this.GrowDPad1.Name = "GrowDPad1";
-            this.GrowDPad1.Size = new System.Drawing.Size(32, 32);
-            this.GrowDPad1.TabIndex = 0;
-            this.GrowDPad1.TabStop = false;
-            this.GrowDPad1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseDown);
-            this.GrowDPad1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GrowDPad_MouseUp);
             // 
             // label1
             // 
@@ -699,146 +356,6 @@
             this.BtnRefreshFrame.Text = "Refresh Frame";
             this.BtnRefreshFrame.UseVisualStyleBackColor = true;
             this.BtnRefreshFrame.Click += new System.EventHandler(this.BtnRefreshFrame_Click);
-            // 
-            // MoveDPad
-            // 
-            this.MoveDPad.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.MoveDPad.ColumnCount = 3;
-            this.MoveDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.MoveDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.MoveDPad.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.MoveDPad.Controls.Add(this.MoveDPad9, 2, 2);
-            this.MoveDPad.Controls.Add(this.MoveDPad8, 1, 2);
-            this.MoveDPad.Controls.Add(this.MoveDPad7, 0, 2);
-            this.MoveDPad.Controls.Add(this.MoveDPad6, 2, 1);
-            this.MoveDPad.Controls.Add(this.MoveDPad5, 1, 1);
-            this.MoveDPad.Controls.Add(this.MoveDPad4, 0, 1);
-            this.MoveDPad.Controls.Add(this.MoveDPad3, 2, 0);
-            this.MoveDPad.Controls.Add(this.MoveDPad2, 1, 0);
-            this.MoveDPad.Controls.Add(this.MoveDPad1, 0, 0);
-            this.MoveDPad.Location = new System.Drawing.Point(50, 198);
-            this.MoveDPad.Name = "MoveDPad";
-            this.MoveDPad.RowCount = 3;
-            this.MoveDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.MoveDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.MoveDPad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.MoveDPad.Size = new System.Drawing.Size(96, 96);
-            this.MoveDPad.TabIndex = 232;
-            // 
-            // MoveDPad9
-            // 
-            this.MoveDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad9.Image = global::LiveSplit.VAS.Properties.Resources.DPad9;
-            this.MoveDPad9.Location = new System.Drawing.Point(64, 64);
-            this.MoveDPad9.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad9.Name = "MoveDPad9";
-            this.MoveDPad9.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad9.TabIndex = 8;
-            this.MoveDPad9.TabStop = false;
-            this.MoveDPad9.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseDown);
-            this.MoveDPad9.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseUp);
-            // 
-            // MoveDPad8
-            // 
-            this.MoveDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad8.Image = global::LiveSplit.VAS.Properties.Resources.DPad8;
-            this.MoveDPad8.Location = new System.Drawing.Point(32, 64);
-            this.MoveDPad8.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad8.Name = "MoveDPad8";
-            this.MoveDPad8.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad8.TabIndex = 7;
-            this.MoveDPad8.TabStop = false;
-            this.MoveDPad8.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseDown);
-            this.MoveDPad8.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseUp);
-            // 
-            // MoveDPad7
-            // 
-            this.MoveDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad7.Image = global::LiveSplit.VAS.Properties.Resources.DPad7;
-            this.MoveDPad7.Location = new System.Drawing.Point(0, 64);
-            this.MoveDPad7.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad7.Name = "MoveDPad7";
-            this.MoveDPad7.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad7.TabIndex = 6;
-            this.MoveDPad7.TabStop = false;
-            this.MoveDPad7.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseDown);
-            this.MoveDPad7.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseUp);
-            // 
-            // MoveDPad6
-            // 
-            this.MoveDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad6.Image = global::LiveSplit.VAS.Properties.Resources.DPad6;
-            this.MoveDPad6.Location = new System.Drawing.Point(64, 32);
-            this.MoveDPad6.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad6.Name = "MoveDPad6";
-            this.MoveDPad6.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad6.TabIndex = 5;
-            this.MoveDPad6.TabStop = false;
-            this.MoveDPad6.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseDown);
-            this.MoveDPad6.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseUp);
-            // 
-            // MoveDPad5
-            // 
-            this.MoveDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad5.Image = global::LiveSplit.VAS.Properties.Resources.DPad5;
-            this.MoveDPad5.Location = new System.Drawing.Point(32, 32);
-            this.MoveDPad5.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad5.Name = "MoveDPad5";
-            this.MoveDPad5.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad5.TabIndex = 4;
-            this.MoveDPad5.TabStop = false;
-            // 
-            // MoveDPad4
-            // 
-            this.MoveDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad4.Image = global::LiveSplit.VAS.Properties.Resources.DPad4;
-            this.MoveDPad4.Location = new System.Drawing.Point(0, 32);
-            this.MoveDPad4.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad4.Name = "MoveDPad4";
-            this.MoveDPad4.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad4.TabIndex = 3;
-            this.MoveDPad4.TabStop = false;
-            this.MoveDPad4.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseDown);
-            this.MoveDPad4.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseUp);
-            // 
-            // MoveDPad3
-            // 
-            this.MoveDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad3.Image = global::LiveSplit.VAS.Properties.Resources.DPad3;
-            this.MoveDPad3.Location = new System.Drawing.Point(64, 0);
-            this.MoveDPad3.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad3.Name = "MoveDPad3";
-            this.MoveDPad3.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad3.TabIndex = 2;
-            this.MoveDPad3.TabStop = false;
-            this.MoveDPad3.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseDown);
-            this.MoveDPad3.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseUp);
-            // 
-            // MoveDPad2
-            // 
-            this.MoveDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad2.Image = global::LiveSplit.VAS.Properties.Resources.DPad2;
-            this.MoveDPad2.Location = new System.Drawing.Point(32, 0);
-            this.MoveDPad2.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad2.Name = "MoveDPad2";
-            this.MoveDPad2.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad2.TabIndex = 1;
-            this.MoveDPad2.TabStop = false;
-            this.MoveDPad2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseDown);
-            this.MoveDPad2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseUp);
-            // 
-            // MoveDPad1
-            // 
-            this.MoveDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad1.Image = global::LiveSplit.VAS.Properties.Resources.DPad1;
-            this.MoveDPad1.Location = new System.Drawing.Point(0, 0);
-            this.MoveDPad1.Margin = new System.Windows.Forms.Padding(0);
-            this.MoveDPad1.Name = "MoveDPad1";
-            this.MoveDPad1.Size = new System.Drawing.Size(32, 32);
-            this.MoveDPad1.TabIndex = 0;
-            this.MoveDPad1.TabStop = false;
-            this.MoveDPad1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseDown);
-            this.MoveDPad1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MoveDPad_MouseUp);
             // 
             // ThumbnailBox
             // 
@@ -867,36 +384,6 @@
             this.TLPCore.ResumeLayout(false);
             this.ControlPanel.ResumeLayout(false);
             this.ControlPanel.PerformLayout();
-            this.ShrinkDPad.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad9)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad8)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad7)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad6)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad5)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad4)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ShrinkDPad1)).EndInit();
-            this.GrowDPad.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad9)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad8)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad7)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad6)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad5)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad4)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GrowDPad1)).EndInit();
-            this.MoveDPad.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad9)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad8)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad7)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad6)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad5)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad4)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MoveDPad1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThumbnailBox)).EndInit();
             this.ResumeLayout(false);
 
@@ -916,40 +403,10 @@
         private System.Windows.Forms.PictureBox ThumbnailBox;
         private System.Windows.Forms.TableLayoutPanel TLPCore;
         private System.Windows.Forms.Panel ControlPanel;
-        private System.Windows.Forms.TableLayoutPanel MoveDPad;
-        private System.Windows.Forms.PictureBox MoveDPad9;
-        private System.Windows.Forms.PictureBox MoveDPad8;
-        private System.Windows.Forms.PictureBox MoveDPad7;
-        private System.Windows.Forms.PictureBox MoveDPad6;
-        private System.Windows.Forms.PictureBox MoveDPad5;
-        private System.Windows.Forms.PictureBox MoveDPad4;
-        private System.Windows.Forms.PictureBox MoveDPad3;
-        private System.Windows.Forms.PictureBox MoveDPad2;
-        private System.Windows.Forms.PictureBox MoveDPad1;
         private System.Windows.Forms.Button BtnRefreshFrame;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TableLayoutPanel GrowDPad;
-        private System.Windows.Forms.PictureBox GrowDPad9;
-        private System.Windows.Forms.PictureBox GrowDPad8;
-        private System.Windows.Forms.PictureBox GrowDPad7;
-        private System.Windows.Forms.PictureBox GrowDPad6;
-        private System.Windows.Forms.PictureBox GrowDPad5;
-        private System.Windows.Forms.PictureBox GrowDPad4;
-        private System.Windows.Forms.PictureBox GrowDPad3;
-        private System.Windows.Forms.PictureBox GrowDPad2;
-        private System.Windows.Forms.PictureBox GrowDPad1;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TableLayoutPanel ShrinkDPad;
-        private System.Windows.Forms.PictureBox ShrinkDPad9;
-        private System.Windows.Forms.PictureBox ShrinkDPad8;
-        private System.Windows.Forms.PictureBox ShrinkDPad7;
-        private System.Windows.Forms.PictureBox ShrinkDPad6;
-        private System.Windows.Forms.PictureBox ShrinkDPad5;
-        private System.Windows.Forms.PictureBox ShrinkDPad4;
-        private System.Windows.Forms.PictureBox ShrinkDPad3;
-        private System.Windows.Forms.PictureBox ShrinkDPad2;
-        private System.Windows.Forms.PictureBox ShrinkDPad1;
         private System.Windows.Forms.Button BtnResetRegion;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox DdlWatchZone;
