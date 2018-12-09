@@ -21,11 +21,12 @@ namespace LiveSplit.VAS
 
         public override string ComponentName => "Video Auto Splitter";
 
-        private LiveSplitState State;
+        private readonly LiveSplitState State;
 
-        private ComponentUI ComponentUI;
+        private readonly ComponentUI ComponentUI;
 
         private string _ProfilePath = string.Empty;
+
         public string ProfilePath
         {
             get
@@ -58,6 +59,7 @@ namespace LiveSplit.VAS
         }
 
         private GameProfile _GameProfile = null;
+
         public GameProfile GameProfile
         {
             get
@@ -102,6 +104,7 @@ namespace LiveSplit.VAS
         }
 
         private VASLScript _Script = null;
+
         public VASLScript Script
         {
             get
@@ -128,6 +131,7 @@ namespace LiveSplit.VAS
         }
 
         private string _GameVersion = string.Empty;
+
         public string GameVersion
         {
             get
@@ -146,7 +150,9 @@ namespace LiveSplit.VAS
 
         // To expand upon
         private string _VideoDevice = string.Empty;
-        public string VideoDevice {
+
+        public string VideoDevice
+        {
             get
             {
                 return _VideoDevice;
@@ -173,6 +179,7 @@ namespace LiveSplit.VAS
 
         // Is this name okay? It feels like it conflicts with existing standards, but I don't know exactly which ones.
         private string _EventLog = string.Empty;
+
         public string EventLog
         {
             get
@@ -187,7 +194,7 @@ namespace LiveSplit.VAS
             }
         }
 
-        private FileSystemWatcher FSWatcher;
+        private readonly FileSystemWatcher FSWatcher;
 
         public event EventHandler<GameProfile> ProfileChanged;
         public event EventHandler<string> VideoDeviceChanged;
@@ -211,8 +218,9 @@ namespace LiveSplit.VAS
             Scanner = new Scanner(this);
 
             FSWatcher = new FileSystemWatcher();
-            FSWatcher.Changed += async (sender, args) => {
-                await Task.Delay(200);
+            FSWatcher.Changed += async (sender, args) =>
+            {
+                await Task.Delay(200).ConfigureAwait(false);
                 ProfileCleanup();
             };
 
@@ -241,7 +249,7 @@ namespace LiveSplit.VAS
         private void AppendBasicSettingsToXml(XmlDocument document, XmlNode settingsNode)
         {
             var basicSettings = ComponentUI?.SettingsUI?.BasicSettings;
-            if (basicSettings != null && basicSettings.Count > 0)
+            if (basicSettings?.Count > 0)
             {
                 foreach (var setting in basicSettings)
                 {
@@ -305,7 +313,7 @@ namespace LiveSplit.VAS
         private void ParseBasicSettingsFromXml(XmlElement element)
         {
             var basicSettings = ComponentUI?.SettingsUI?.BasicSettings;
-            if (basicSettings != null && basicSettings.Count > 0)
+            if (basicSettings?.Count > 0)
             {
                 foreach (var setting in basicSettings)
                 {
@@ -328,7 +336,7 @@ namespace LiveSplit.VAS
         {
             XmlElement customSettingsNode = data["CustomSettings"];
 
-            if (customSettingsNode != null && customSettingsNode.HasChildNodes)
+            if (customSettingsNode?.HasChildNodes == true)
             {
                 foreach (XmlElement element in customSettingsNode.ChildNodes)
                 {
@@ -339,7 +347,7 @@ namespace LiveSplit.VAS
 
                     string id = element.Attributes["id"]?.Value;
                     //string type = element.Attributes["type"].Value;
-                    string type = "string"; // Temporary until coercion by the script is done.
+                    const string type = "string"; // Temporary until coercion by the script is done.
 
                     if (id != null)
                     {
@@ -399,7 +407,9 @@ namespace LiveSplit.VAS
                 {
                     var value = setting.Value;
                     if (CustomSettingsState.ContainsKey(setting.Id))
+                    {
                         value = CustomSettingsState[setting.Id];
+                    }
 
                     setting.Value = value;
 
@@ -526,7 +536,6 @@ namespace LiveSplit.VAS
             _EventLog = string.Empty;
         }
 
-        public override void Update(IInvalidator i, LiveSplitState s, float w, float h, LayoutMode m) { }
-
+        public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode) { }
     }
 }

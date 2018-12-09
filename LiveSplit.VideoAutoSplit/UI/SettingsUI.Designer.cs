@@ -123,7 +123,7 @@
             this.boxCaptureDevice.Name = "boxCaptureDevice";
             this.boxCaptureDevice.Size = new System.Drawing.Size(281, 21);
             this.boxCaptureDevice.TabIndex = 3;
-            this.boxCaptureDevice.SelectedIndexChanged += new System.EventHandler(this.boxCaptureDevice_SelectedIndexChanged);
+            this.boxCaptureDevice.SelectedIndexChanged += new System.EventHandler(this.BoxCaptureDevice_SelectedIndexChanged);
             // 
             // btnCaptureDevice
             // 
@@ -134,7 +134,7 @@
             this.btnCaptureDevice.TabIndex = 4;
             this.btnCaptureDevice.Text = "Refresh";
             this.btnCaptureDevice.UseVisualStyleBackColor = true;
-            this.btnCaptureDevice.Click += new System.EventHandler(this.btnCaptureDevice_Click);
+            this.btnCaptureDevice.Click += new System.EventHandler(this.BtnCaptureDevice_Click);
             // 
             // lblGameProfile
             // 
@@ -183,7 +183,7 @@
             this.btnGameProfile.TabIndex = 2;
             this.btnGameProfile.Text = "Browse...";
             this.btnGameProfile.UseVisualStyleBackColor = true;
-            this.btnGameProfile.Click += new System.EventHandler(this.btnGameProfile_Click);
+            this.btnGameProfile.Click += new System.EventHandler(this.BtnGameProfile_Click);
             // 
             // txtGameProfile
             // 
@@ -241,7 +241,7 @@
             this.ckbReset.TabIndex = 7;
             this.ckbReset.Text = "Reset";
             this.ckbReset.UseVisualStyleBackColor = true;
-            this.ckbReset.CheckedChanged += new System.EventHandler(this.methodCheckbox_CheckedChanged);
+            this.ckbReset.CheckedChanged += new System.EventHandler(this.MethodCheckbox_CheckedChanged);
             // 
             // boxGameVersion
             // 
@@ -267,7 +267,7 @@
             this.ckbSplit.TabIndex = 6;
             this.ckbSplit.Text = "Split";
             this.ckbSplit.UseVisualStyleBackColor = true;
-            this.ckbSplit.CheckedChanged += new System.EventHandler(this.methodCheckbox_CheckedChanged);
+            this.ckbSplit.CheckedChanged += new System.EventHandler(this.MethodCheckbox_CheckedChanged);
             // 
             // ckbStart
             // 
@@ -281,7 +281,7 @@
             this.ckbStart.TabIndex = 5;
             this.ckbStart.Text = "Start";
             this.ckbStart.UseVisualStyleBackColor = true;
-            this.ckbStart.CheckedChanged += new System.EventHandler(this.methodCheckbox_CheckedChanged);
+            this.ckbStart.CheckedChanged += new System.EventHandler(this.MethodCheckbox_CheckedChanged);
             // 
             // lblGameVersion
             // 
@@ -323,7 +323,7 @@
             this.btnResetToDefault.TabIndex = 12;
             this.btnResetToDefault.Text = "Reset to Default";
             this.btnResetToDefault.UseVisualStyleBackColor = true;
-            this.btnResetToDefault.Click += new System.EventHandler(this.btnResetToDefault_Click);
+            this.btnResetToDefault.Click += new System.EventHandler(this.BtnResetToDefault_Click);
             // 
             // btnUncheckAll
             // 
@@ -334,7 +334,7 @@
             this.btnUncheckAll.TabIndex = 11;
             this.btnUncheckAll.Text = "Uncheck All";
             this.btnUncheckAll.UseVisualStyleBackColor = true;
-            this.btnUncheckAll.Click += new System.EventHandler(this.btnUncheckAll_Click);
+            this.btnUncheckAll.Click += new System.EventHandler(this.BtnUncheckAll_Click);
             // 
             // btnCheckAll
             // 
@@ -345,7 +345,7 @@
             this.btnCheckAll.TabIndex = 10;
             this.btnCheckAll.Text = "Check All";
             this.btnCheckAll.UseVisualStyleBackColor = true;
-            this.btnCheckAll.Click += new System.EventHandler(this.btnCheckAll_Click);
+            this.btnCheckAll.Click += new System.EventHandler(this.BtnCheckAll_Click);
             // 
             // treeCustomSettings
             // 
@@ -358,9 +358,9 @@
             this.treeCustomSettings.ShowNodeToolTips = true;
             this.treeCustomSettings.Size = new System.Drawing.Size(361, 350);
             this.treeCustomSettings.TabIndex = 9;
-            this.treeCustomSettings.BeforeCheck += new System.Windows.Forms.TreeViewCancelEventHandler(this.settingsTree_BeforeCheck);
-            this.treeCustomSettings.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.settingsTree_AfterCheck);
-            this.treeCustomSettings.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.settingsTree_NodeMouseClick);
+            this.treeCustomSettings.BeforeCheck += new System.Windows.Forms.TreeViewCancelEventHandler(this.SettingsTree_BeforeCheck);
+            this.treeCustomSettings.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.SettingsTree_AfterCheck);
+            this.treeCustomSettings.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.SettingsTree_NodeMouseClick);
             // 
             // SettingsUI
             // 

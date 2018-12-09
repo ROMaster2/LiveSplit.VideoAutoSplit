@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
 using Accord.Video;
-using Accord.Video.DirectShow;
 using ImageMagick;
 using LiveSplit.VAS.Models;
-using LiveSplit.VAS.UI;
 using LiveSplit.VAS.VASL;
 
 namespace LiveSplit.VAS.UI
@@ -36,26 +27,35 @@ namespace LiveSplit.VAS.UI
 
         private bool RenderingFrame = false;
 
-        private Geometry minGeometry
+        private Geometry MinGeometry
         {
             get
             {
                 var geo = VideoGeometry;
                 if (geo.IsBlank)
+                {
                     return new Geometry(-8192, -8192, 4, 4);
+                }
                 else
+                {
                     return new Geometry(-VideoGeometry.Width, -VideoGeometry.Height, 4, 4);
+                }
             }
         }
+
         private Geometry MAX_VALUES
         {
             get
             {
                 var geo = VideoGeometry;
                 if (geo.IsBlank)
+                {
                     return new Geometry(8192, 8192, 8192, 8192);
+                }
                 else
+                {
                     return new Geometry(VideoGeometry.Width, VideoGeometry.Height, VideoGeometry.Width * 2, VideoGeometry.Height * 2);
+                }
             }
         }
 
@@ -64,32 +64,34 @@ namespace LiveSplit.VAS.UI
             InitializeComponent();
         }
 
-        override public void Rerender()
+        public override void Rerender()
         {
             SetAllNumValues(CropGeometry, false);
             FillboxPreviewFeature();
             Scanner.SubscribeToFrameHandler(HandleNewFrame);
         }
 
-        override public void Derender()
+        public override void Derender()
         {
             Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);
             boxPreviewFeature.Items.Clear();
-            pictureBox.Image = new Bitmap(1,1);
+            pictureBox.Image = new Bitmap(1, 1);
         }
 
-        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        internal override void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
-
         }
 
         private void SetAllNumValues(Geometry geo, bool updateGeo = true)
         {
-            numX.Value      = (decimal)geo.X;
-            numY.Value      = (decimal)geo.Y;
-            numWidth.Value  = (decimal)geo.Width;
+            numX.Value = (decimal)geo.X;
+            numY.Value = (decimal)geo.Y;
+            numWidth.Value = (decimal)geo.Width;
             numHeight.Value = (decimal)geo.Height;
-            if (updateGeo) UpdateCropGeometry(geo);
+            if (updateGeo)
+            {
+                UpdateCropGeometry(geo);
+            }
         }
 
         private void UpdateCropGeometry(Geometry? geo = null)
@@ -97,12 +99,12 @@ namespace LiveSplit.VAS.UI
             Geometry newGeo = geo ?? Geometry.Blank;
             if (geo == null)
             {
-                newGeo.X      = (double)numX.Value;
-                newGeo.Y      = (double)numY.Value;
-                newGeo.Width  = (double)numWidth.Value;
+                newGeo.X = (double)numX.Value;
+                newGeo.Y = (double)numY.Value;
+                newGeo.Width = (double)numWidth.Value;
                 newGeo.Height = (double)numHeight.Value;
             }
-            CropGeometry = newGeo.Min(MAX_VALUES).Max(minGeometry);
+            CropGeometry = newGeo.Min(MAX_VALUES).Max(MinGeometry);
         }
 
         private void FillboxPreviewType()
@@ -167,14 +169,16 @@ namespace LiveSplit.VAS.UI
             {
                 featureIndex = boxPreviewFeature.SelectedIndex;
                 if (featureIndex > 0)
+                {
                     feature = (WatchImage)boxPreviewFeature.SelectedItem;
+                }
             });
             RefreshThumbnailAsync(frame, featureIndex, feature);
         }
 
         private async void RefreshThumbnailAsync(Bitmap frame, int featureIndex, WatchImage feature)
         {
-            await Task.Delay(0);
+            await Task.Delay(0).ConfigureAwait(false);
             Geometry minGeo = Geometry.Min(CropGeometry, GetScaledGeometry(Geometry.Blank));
 
             MagickImage mi = new MagickImage(frame);
@@ -261,6 +265,5 @@ namespace LiveSplit.VAS.UI
                 RenderingFrame = false;
             });
         }
-
     }
 }

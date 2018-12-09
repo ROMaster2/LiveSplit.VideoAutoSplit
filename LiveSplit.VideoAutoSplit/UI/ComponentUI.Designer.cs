@@ -49,7 +49,7 @@
             this.tabControlCore.SelectedIndex = 0;
             this.tabControlCore.Size = new System.Drawing.Size(476, 532);
             this.tabControlCore.TabIndex = 1;
-            this.tabControlCore.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControlCore_Selecting);
+            this.tabControlCore.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.TabControlCore_Selecting);
             // 
             // tabSettings
             // 

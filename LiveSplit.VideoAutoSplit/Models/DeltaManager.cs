@@ -1,21 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LiveSplit.VAS;
-using LiveSplit.Model;
-using System.IO;
 using System.Threading;
-using LiveSplit.VAS.Models;
+using LiveSplit.Model;
 
 namespace LiveSplit.VAS.Models.Delta
 {
     public class DeltaManager
     {
-        internal CompiledFeatures CompiledFeatures { get; }
+        internal CompiledFeatures CompiledFeatures { get; private set; }
 
-        public DeltaHistory History { get; }
+        public DeltaHistory History { get; private set; }
 
         // Todo: Let scripts modify this.
         public int DefaultOffset { get; set; } = 100; // 100 milliseconds.
@@ -36,7 +29,7 @@ namespace LiveSplit.VAS.Models.Delta
         {
             if (index >= History.Count)
             {
-                int curIndex  = index % History.Count;
+                int curIndex = index % History.Count;
                 int prevIndex = (index - 1) % History.Count;
                 int i = 0;
                 while (History[prevIndex].IsBlank || History[prevIndex].Index != index - 1)
@@ -59,6 +52,5 @@ namespace LiveSplit.VAS.Models.Delta
 
         public void AddResult(int index, Scan scan, DateTime scanEnd, double[] deltas, double[] benchmarks)
             => AddResult(index, scan.PreviousFrame.DateTime, scan.CurrentFrame.DateTime, scanEnd, deltas, benchmarks);
-
     }
 }

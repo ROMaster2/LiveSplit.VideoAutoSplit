@@ -1,7 +1,7 @@
 ﻿/**
  * Since I couldn't find any shape class that included alignment/gravity/anchor logic, I
  * implemented my own. The below is derived from System.Windows.Rect.
- * 
+ *
  * This ultimately should be made very portable.
  */
 
@@ -69,15 +69,15 @@ namespace LiveSplit.VAS.Models
             : this(point, point + vector, anchor) { }
 
         /// <summary>
-        /// Constructor which sets the initial values to bound the (0,0) point and the point 
-        /// that results from (0,0) + Width and Height. 
+        /// Constructor which sets the initial values to bound the (0,0) point and the point
+        /// that results from (0,0) + Width and Height.
         /// </summary>
         public Geometry(double width, double height, Anchor anchor = Anchor.Undefined)
             : this(0, 0, width, height, anchor) { }
 
         /// <summary>
-        /// Constructor which sets the initial values to bound the (0,0) point and the point 
-        /// that results from (0,0) + size. 
+        /// Constructor which sets the initial values to bound the (0,0) point and the point
+        /// that results from (0,0) + size.
         /// </summary>
         public Geometry(System.Windows.Size size, Anchor anchor = Anchor.Undefined)
             : this(size.Width, size.Height, anchor) { }
@@ -157,7 +157,6 @@ namespace LiveSplit.VAS.Models
                 Validate(value);
                 _x = value;
             }
-
         }
 
         /// <summary>
@@ -280,17 +279,17 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                if (Anchor == Anchor.Undefined || Anchor.HasFlag(Anchor.Left))
+                if (Anchor == Anchor.Undefined || (Anchor & Anchor.Left) != 0)
                 {
                     return X;
                 }
-                else if (Anchor.HasFlag(Anchor.Right))
+                else if ((Anchor & Anchor.Right) != 0)
                 {
                     return Width + X;
                 }
                 else
                 {
-                    return Width / 2 + X;
+                    return (Width / 2) + X;
                 }
             }
         }
@@ -302,17 +301,17 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                if (Anchor == Anchor.Undefined || Anchor.HasFlag(Anchor.Top))
+                if (Anchor == Anchor.Undefined || (Anchor & Anchor.Top) != 0)
                 {
                     return Y;
                 }
-                else if (Anchor.HasFlag(Anchor.Bottom))
+                else if ((Anchor & Anchor.Bottom) != 0)
                 {
                     return Height + Y;
                 }
                 else
                 {
-                    return Height / 2 + Y;
+                    return (Height / 2) + Y;
                 }
             }
         }
@@ -324,17 +323,17 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                if (Anchor == Anchor.Undefined || Anchor.HasFlag(Anchor.Left))
+                if (Anchor == Anchor.Undefined || (Anchor & Anchor.Left) != 0)
                 {
                     return Width + X;
                 }
-                else if (Anchor.HasFlag(Anchor.Right))
+                else if ((Anchor & Anchor.Right) != 0)
                 {
                     return X;
                 }
                 else
                 {
-                    return Width / 2 + X;
+                    return (Width / 2) + X;
                 }
             }
         }
@@ -346,17 +345,17 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                if (Anchor == Anchor.Undefined || Anchor.HasFlag(Anchor.Top))
+                if (Anchor == Anchor.Undefined || (Anchor & Anchor.Top) != 0)
                 {
                     return Height + Y;
                 }
-                else if (Anchor.HasFlag(Anchor.Bottom))
+                else if ((Anchor & Anchor.Bottom) != 0)
                 {
                     return Y;
                 }
                 else
                 {
-                    return Height / 2 + Y;
+                    return (Height / 2) + Y;
                 }
             }
         }
@@ -368,9 +367,9 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                if (Anchor.HasFlag(Anchor.Left) || Anchor.HasFlag(Anchor.Right))
+                if ((Anchor & Anchor.Left) != 0 || (Anchor & Anchor.Right) != 0)
                 {
-                    return X + Width / 2;
+                    return X + (Width / 2);
                 }
                 else
                 {
@@ -386,9 +385,9 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                if (Anchor.HasFlag(Anchor.Top) || Anchor.HasFlag(Anchor.Bottom))
+                if ((Anchor & Anchor.Top) != 0 || (Anchor & Anchor.Bottom) != 0)
                 {
-                    return Y + Height / 2;
+                    return Y + (Height / 2);
                 }
                 else
                 {
@@ -468,30 +467,30 @@ namespace LiveSplit.VAS.Models
             double x;
             double y;
 
-            if (Anchor == Anchor.Undefined || Anchor.HasFlag(Anchor.Left))
+            if (Anchor == Anchor.Undefined || (Anchor & Anchor.Left) != 0)
             {
                 x = X;
             }
-            else if (Anchor.HasFlag(Anchor.Right))
+            else if ((Anchor & Anchor.Right) != 0)
             {
                 x = width - Width + X;
             }
             else
             {
-                x = (width - Width) / 2 + X;
+                x = ((width - Width) / 2) + X;
             }
 
-            if (Anchor == Anchor.Undefined || Anchor.HasFlag(Anchor.Top))
+            if (Anchor == Anchor.Undefined || (Anchor & Anchor.Top) != 0)
             {
                 y = Y;
             }
-            else if (Anchor.HasFlag(Anchor.Bottom))
+            else if ((Anchor & Anchor.Bottom) != 0)
             {
                 y = height - Height + Y;
             }
             else
             {
-                y = (height - Height) / 2 + Y;
+                y = ((height - Height) / 2) + Y;
             }
 
             return new Point(x, y);
@@ -528,7 +527,7 @@ namespace LiveSplit.VAS.Models
         {
             RemoveAnchor(width, height);
 
-            switch(anchor)
+            switch (anchor)
             {
                 case Anchor.Undefined:
                     break;
@@ -611,10 +610,26 @@ namespace LiveSplit.VAS.Models
             double y = Math.Max(y1 ?? double.MinValue, y2 ?? double.MinValue);
             double width = Math.Max(width1 ?? double.MinValue, width2 ?? double.MinValue);
             double height = Math.Max(height1 ?? double.MinValue, height2 ?? double.MinValue);
-            if (x == double.MinValue) x = Blank.X;
-            if (y == double.MinValue) y = Blank.Y;
-            if (width == double.MinValue) width = Blank.Width;
-            if (height == double.MinValue) height = Blank.Height;
+            if (x == double.MinValue)
+            {
+                x = Blank.X;
+            }
+
+            if (y == double.MinValue)
+            {
+                y = Blank.Y;
+            }
+
+            if (width == double.MinValue)
+            {
+                width = Blank.Width;
+            }
+
+            if (height == double.MinValue)
+            {
+                height = Blank.Height;
+            }
+
             return new Geometry(x, y, width, height);
         }
 
@@ -641,10 +656,26 @@ namespace LiveSplit.VAS.Models
             double y = Math.Min(y1 ?? double.MaxValue, y2 ?? double.MaxValue);
             double width = Math.Min(width1 ?? double.MaxValue, width2 ?? double.MaxValue);
             double height = Math.Min(height1 ?? double.MaxValue, height2 ?? double.MaxValue);
-            if (x == double.MaxValue) x = Blank.X;
-            if (y == double.MaxValue) y = Blank.Y;
-            if (width == double.MaxValue) width = Blank.Width;
-            if (height == double.MaxValue) height = Blank.Height;
+            if (x == double.MaxValue)
+            {
+                x = Blank.X;
+            }
+
+            if (y == double.MaxValue)
+            {
+                y = Blank.Y;
+            }
+
+            if (width == double.MaxValue)
+            {
+                width = Blank.Width;
+            }
+
+            if (height == double.MaxValue)
+            {
+                height = Blank.Height;
+            }
+
             return new Geometry(x, y, width, height);
         }
 
@@ -741,7 +772,6 @@ namespace LiveSplit.VAS.Models
             return new Geometry(x, y, width, height, Anchor.Undefined);
         }
 
-
         // I do not trust these contains and related. They need testing.
 
         /// <summary>
@@ -785,10 +815,10 @@ namespace LiveSplit.VAS.Models
                 return false;
             }
 
-            return (_x <= childGeometry._x &&
-                    _y <= childGeometry._y &&
-                    _x + _width >= childGeometry._x + childGeometry._width &&
-                    _y + _height >= childGeometry._y + childGeometry._height);
+            return _x <= childGeometry._x
+                    && _y <= childGeometry._y
+                    && _x + _width >= childGeometry._x + childGeometry._width
+                    && _y + _height >= childGeometry._y + childGeometry._height;
             /*
             return (childGeometry.X >= 0 &&
                     childGeometry.Y >= 0 &&
@@ -816,10 +846,10 @@ namespace LiveSplit.VAS.Models
                 return false;
             }
 
-            return (rect.Left <= Right) &&
-                   (rect.Right >= Left) &&
-                   (rect.Top <= Bottom) &&
-                   (rect.Bottom >= Top);
+            return (rect.Left <= Right)
+                   && (rect.Right >= Left)
+                   && (rect.Top <= Bottom)
+                   && (rect.Bottom >= Top);
         }
 
         /// <summary>
@@ -990,7 +1020,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        override public string ToString()
+        public override string ToString()
         {
             return Math.Round(Width, 4).ToString() + "x" + Math.Round(Height, 4).ToString() +
                 Math.Round(X, 4).ToString("+0.####;-#.####") + Math.Round(Y, 4).ToString("+0.####;-#.####");
@@ -1101,20 +1131,22 @@ namespace LiveSplit.VAS.Models
             // We do "x - _width <= _x" instead of "x <= _x + _width"
             // so that this check works when _width is PositiveInfinity
             // and _x is NegativeInfinity.
-            return ((x >= _x) && (x - _width <= _x) &&
-                    (y >= _y) && (y - _height <= _y));
+            return (x >= _x) && (x - _width <= _x)
+                    && (y >= _y) && (y - _height <= _y);
         }
 
-        static private Geometry CreateEmptyGeometry()
+        private static Geometry CreateEmptyGeometry()
         {
-            Geometry geometry = new Geometry();
-            // We can't set these via the property setters because negatives widths
-            // are rejected in those APIs.
-            geometry._x = 0;
-            geometry._y = 0;
-            geometry._width = 0;
-            geometry._height = 0;
-            geometry._anchor = Anchor.Undefined;
+            Geometry geometry = new Geometry
+            {
+                // We can't set these via the property setters because negatives widths
+                // are rejected in those APIs.
+                _x = 0,
+                _y = 0,
+                _width = 0,
+                _height = 0,
+                _anchor = Anchor.Undefined
+            };
             return geometry;
         }
 

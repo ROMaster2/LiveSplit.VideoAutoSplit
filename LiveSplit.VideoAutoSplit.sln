@@ -1,8 +1,14 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiveSplit.VideoAutoSplit", "LiveSplit.VideoAutoSplit/LiveSplit.VideoAutoSplit.csproj", "{5ABF1470-516E-484E-A87B-207DE9DCC831}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiveSplit.VideoAutoSplit", "LiveSplit.VideoAutoSplit\LiveSplit.VideoAutoSplit.csproj", "{5ABF1470-516E-484E-A87B-207DE9DCC831}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{11E0D4BE-DA3D-4F3A-A21A-99B2C5FE26D0}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,7 +1,6 @@
-﻿using ImageMagick;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
+using ImageMagick;
 
 namespace LiveSplit.VAS.Models
 {
@@ -34,6 +33,7 @@ namespace LiveSplit.VAS.Models
 
         [XmlIgnore]
         public Screen Screen { get { return WatchZone.Screen; } }
+
         [XmlIgnore]
         public WatchZone WatchZone { get; internal set; }
 
@@ -55,7 +55,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        override public string ToString()
+        public override string ToString()
         {
             return Name;
         }

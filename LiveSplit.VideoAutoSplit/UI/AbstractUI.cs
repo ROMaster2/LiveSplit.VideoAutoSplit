@@ -10,7 +10,7 @@ namespace LiveSplit.VAS.UI
     public abstract class AbstractUI : UserControl
 #endif
     {
-        internal VASComponent Component { get; }
+        internal VASComponent Component { get; private set; }
 
         public TabPage PageParent => (TabPage)Parent;
         public TabControl TabParent => (TabControl)Parent.Parent;
@@ -23,9 +23,9 @@ namespace LiveSplit.VAS.UI
 #if DEBUG
         public AbstractUI() : base() { }
 
-        virtual public void Rerender() { }
-        virtual public void Derender() { }
-        virtual internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded) { }
+        public virtual void Rerender() { }
+        public virtual void Derender() { }
+        internal virtual void InitVASLSettings(VASLSettings settings, bool scriptLoaded) { }
 #else
         abstract public void Rerender();
         abstract public void Derender();

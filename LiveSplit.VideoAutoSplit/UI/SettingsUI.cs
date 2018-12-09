@@ -38,17 +38,17 @@ namespace LiveSplit.VAS.UI
             Component.ProfileChanged += (sender, gameProfile) => txtGameProfile.Text = ProfilePath;
         }
 
-        override public void Rerender()
+        public override void Rerender()
         {
             FillboxCaptureDevice();
         }
 
-        override public void Derender()
+        public override void Derender()
         {
             boxCaptureDevice.Items.Clear();
         }
 
-        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        internal override void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
             treeCustomSettings.BeginUpdate();
             treeCustomSettings.Nodes.Clear();
@@ -59,7 +59,9 @@ namespace LiveSplit.VAS.UI
             {
                 var value = setting.Value;
                 if (CustomSettingsState.ContainsKey(setting.Id))
+                {
                     value = CustomSettingsState[setting.Id];
+                }
 
                 var node = new DropDownTreeNode(setting.Label)
                 {
@@ -94,7 +96,9 @@ namespace LiveSplit.VAS.UI
 
             // Scroll up to the top
             if (treeCustomSettings.Nodes.Count > 0)
+            {
                 treeCustomSettings.Nodes[0].EnsureVisible();
+            }
 
             UpdateCustomSettingsVisibility();
             InitBasicSettings(settings);
@@ -114,7 +118,7 @@ namespace LiveSplit.VAS.UI
                 if (!string.IsNullOrEmpty(VideoDevice))
                 {
                     var savedDevices = videoDevices.Where(d => d.ToString() == VideoDevice);
-                    if (savedDevices.Count() > 0)
+                    if (savedDevices.Any())
                     {
                         var savedDevice = savedDevices.First();
                         selectedIndex = videoDevices.IndexOf(savedDevice);
@@ -127,7 +131,7 @@ namespace LiveSplit.VAS.UI
                 }
 
                 //if (boxCaptureDevice.SelectedIndex != selectedIndex)
-                    boxCaptureDevice.SelectedIndex = selectedIndex;
+                boxCaptureDevice.SelectedIndex = selectedIndex;
                 return true;
             }
             else
@@ -142,10 +146,10 @@ namespace LiveSplit.VAS.UI
         {
             bool show = treeCustomSettings.GetNodeCount(false) > 0;
             treeCustomSettings.Visible = show;
-            btnResetToDefault.Visible  = show;
-            btnCheckAll.Visible        = show;
-            btnUncheckAll.Visible      = show;
-            lblAdvanced.Visible        = show;
+            btnResetToDefault.Visible = show;
+            btnCheckAll.Visible = show;
+            btnUncheckAll.Visible = show;
+            lblAdvanced.Visible = show;
         }
 
         private void UpdateNodesInTree(Func<DropDownTreeNode, bool> func, TreeNodeCollection nodes)
@@ -154,14 +158,18 @@ namespace LiveSplit.VAS.UI
             {
                 bool include_child_nodes = func(node);
                 if (include_child_nodes)
+                {
                     UpdateNodesInTree(func, node.Nodes);
+                }
             }
         }
 
         internal void UpdateNodesValues(Func<VASLSetting, dynamic> func, TreeNodeCollection nodes = null)
         {
             if (nodes == null)
+            {
                 nodes = treeCustomSettings.Nodes;
+            }
 
             UpdateNodesInTree(node =>
             {
@@ -169,7 +177,9 @@ namespace LiveSplit.VAS.UI
                 dynamic value = func(setting);
 
                 if (node.ComboBox.Text != value.ToString())
+                {
                     node.ComboBox.Text = value.ToString();
+                }
 
                 return true;
             }, nodes);
@@ -178,14 +188,18 @@ namespace LiveSplit.VAS.UI
         internal void UpdateNodesValues(IDictionary<string, dynamic> settingValues, TreeNodeCollection nodes = null)
         {
             if (settingValues == null)
+            {
                 return;
+            }
 
             UpdateNodesValues(setting =>
             {
                 string id = setting.Id;
 
                 if (settingValues.ContainsKey(id))
+                {
                     return settingValues[id];
+                }
 
                 return setting.Value;
             }, nodes);
@@ -197,7 +211,9 @@ namespace LiveSplit.VAS.UI
             dynamic value = func(setting);
 
             if (node.ComboBox.Text != value.ToString())
+            {
                 node.ComboBox.Text = value.ToString();
+            }
         }
 
         private void UpdateGrayedOut(DropDownTreeNode node)
@@ -227,7 +243,9 @@ namespace LiveSplit.VAS.UI
                     var value = setting.Value;
 
                     if (BasicSettingsState.ContainsKey(name))
+                    {
                         value = BasicSettingsState[name];
+                    }
 
                     checkbox.Checked = value;
                     setting.Value = value;
@@ -243,12 +261,16 @@ namespace LiveSplit.VAS.UI
 
         // Events
 
-        private void btnGameProfile_Click(object sender, EventArgs e)
+        private void BtnGameProfile_Click(object sender, EventArgs e)
         {
-            if (ModifierKeys.HasFlag(Keys.Shift))
+            if ((ModifierKeys & Keys.Shift) != 0)
+            {
                 SetGameProfileWithFolder();
+            }
             else
+            {
                 SetGameProfileWithFile();
+            }
         }
 
         private void SetGameProfileWithFile()
@@ -269,7 +291,7 @@ namespace LiveSplit.VAS.UI
                     ofd.InitialDirectory = Path.GetDirectoryName(ProfilePath);
                 }
 
-                if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists == true)
+                if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists)
                 {
                     TryLoadGameProfile(ofd.FileName);
                 }
@@ -298,7 +320,7 @@ namespace LiveSplit.VAS.UI
 
         private void TryLoadGameProfile(string filePath)
         {
-            retry:
+retry:
             var gp = GameProfile.FromPath(filePath);
 
             if (gp == null)
@@ -326,7 +348,7 @@ namespace LiveSplit.VAS.UI
         //
         // This detects both changes made by the user and by the program, so this should
         // change the state in _basic_settings_state fine as well.
-        private void methodCheckbox_CheckedChanged(object sender, EventArgs e)
+        private void MethodCheckbox_CheckedChanged(object sender, EventArgs e)
         {
             var checkbox = (CheckBox)sender;
             var setting = (VASLSetting)checkbox.Tag;
@@ -338,7 +360,7 @@ namespace LiveSplit.VAS.UI
         }
 
         // Custom Setting checked/unchecked (only after initially building the tree)
-        private void settingsTree_AfterCheck(object sender, TreeViewEventArgs e)
+        private void SettingsTree_AfterCheck(object sender, TreeViewEventArgs e)
         {
             // Update value in the ASLSetting object, which also changes it in the ASL script
             var node = (DropDownTreeNode)e.Node;
@@ -349,68 +371,67 @@ namespace LiveSplit.VAS.UI
             UpdateGrayedOut(node);
         }
 
-        private void settingsTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
+        private void SettingsTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
         {
             e.Cancel = e.Node.ForeColor == SystemColors.GrayText;
         }
 
         // Custom Settings Button Events
 
-        private void btnCheckAll_Click(object sender, EventArgs e)
+        private void BtnCheckAll_Click(object sender, EventArgs e)
         {
-            UpdateNodesValues(s => true);
+            UpdateNodesValues(_ => true);
         }
 
-        private void btnUncheckAll_Click(object sender, EventArgs e)
+        private void BtnUncheckAll_Click(object sender, EventArgs e)
         {
-            UpdateNodesValues(s => false);
+            UpdateNodesValues(_ => false);
         }
 
-        private void btnResetToDefault_Click(object sender, EventArgs e)
+        private void BtnResetToDefault_Click(object sender, EventArgs e)
         {
             UpdateNodesValues(s => s.DefaultValue);
         }
 
-
         // Custom Settings Context Menu Events
 
-        private void settingsTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void SettingsTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             // Select clicked node (not only with left-click) for use with context menu
             treeCustomSettings.SelectedNode = e.Node;
         }
 
-        private void cmiCheckBranch_Click(object sender, EventArgs e)
+        private void CmiCheckBranch_Click(object sender, EventArgs e)
         {
-            UpdateNodesValues(s => true, treeCustomSettings.SelectedNode.Nodes);
-            UpdateNodeValue(s => true, (DropDownTreeNode)treeCustomSettings.SelectedNode);
+            UpdateNodesValues(_ => true, treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodeValue(_ => true, (DropDownTreeNode)treeCustomSettings.SelectedNode);
         }
 
-        private void cmiUncheckBranch_Click(object sender, EventArgs e)
+        private void CmiUncheckBranch_Click(object sender, EventArgs e)
         {
-            UpdateNodesValues(s => false, treeCustomSettings.SelectedNode.Nodes);
-            UpdateNodeValue(s => false, (DropDownTreeNode)treeCustomSettings.SelectedNode);
+            UpdateNodesValues(_ => false, treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodeValue(_ => false, (DropDownTreeNode)treeCustomSettings.SelectedNode);
         }
 
-        private void cmiResetBranchToDefault_Click(object sender, EventArgs e)
+        private void CmiResetBranchToDefault_Click(object sender, EventArgs e)
         {
             UpdateNodesValues(s => s.DefaultValue, treeCustomSettings.SelectedNode.Nodes);
             UpdateNodeValue(s => s.DefaultValue, (DropDownTreeNode)treeCustomSettings.SelectedNode);
         }
 
-        private void cmiExpandBranch_Click(object sender, EventArgs e)
+        private void CmiExpandBranch_Click(object sender, EventArgs e)
         {
             treeCustomSettings.SelectedNode.ExpandAll();
             treeCustomSettings.SelectedNode.EnsureVisible();
         }
 
-        private void cmiCollapseBranch_Click(object sender, EventArgs e)
+        private void CmiCollapseBranch_Click(object sender, EventArgs e)
         {
             treeCustomSettings.SelectedNode.Collapse();
             treeCustomSettings.SelectedNode.EnsureVisible();
         }
 
-        private void cmiCollapseTreeToSelection_Click(object sender, EventArgs e)
+        private void CmiCollapseTreeToSelection_Click(object sender, EventArgs e)
         {
             TreeNode selected = treeCustomSettings.SelectedNode;
             treeCustomSettings.CollapseAll();
@@ -418,25 +439,25 @@ namespace LiveSplit.VAS.UI
             selected.EnsureVisible();
         }
 
-        private void cmiExpandTree_Click(object sender, EventArgs e)
+        private void CmiExpandTree_Click(object sender, EventArgs e)
         {
             treeCustomSettings.ExpandAll();
             treeCustomSettings.SelectedNode.EnsureVisible();
         }
 
-        private void cmiCollapseTree_Click(object sender, EventArgs e)
+        private void CmiCollapseTree_Click(object sender, EventArgs e)
         {
             treeCustomSettings.CollapseAll();
         }
 
-        private void cmiResetSettingToDefault_Click(object sender, EventArgs e)
+        private void CmiResetSettingToDefault_Click(object sender, EventArgs e)
         {
             UpdateNodeValue(s => s.DefaultValue, (DropDownTreeNode)treeCustomSettings.SelectedNode);
         }
 
-        private void btnCaptureDevice_Click(object sender, EventArgs e)
+        private void BtnCaptureDevice_Click(object sender, EventArgs e)
         {
-            retry:
+retry:
             var success = FillboxCaptureDevice();
             if (!success)
             {
@@ -454,18 +475,23 @@ namespace LiveSplit.VAS.UI
             }
         }
 
-        private void boxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
+        private void BoxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
         {
             // May need to tweak more
             if (boxCaptureDevice.SelectedItem.ToString() == VideoDevice)
+            {
                 return;
+            }
 
             if (Component.Scanner.IsVideoSourceRunning())
+            {
                 Component.Scanner.Stop();
-            retry:
+            }
+
+retry:
             var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             var matches = videoDevices.Where(v => v.ToString() == boxCaptureDevice.Text);
-            if (matches.Count() > 0)
+            if (matches.Any())
             {
                 var match = matches.First();
                 //Component.Scanner.SetVideoSource(match.MonikerString);

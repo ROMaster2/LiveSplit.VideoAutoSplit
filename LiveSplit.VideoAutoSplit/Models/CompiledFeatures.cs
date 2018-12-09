@@ -1,10 +1,8 @@
-﻿using ImageMagick;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Drawing;
-using System.Threading;
-using LiveSplit.Model;
+using System.Linq;
+using ImageMagick;
 
 namespace LiveSplit.VAS.Models
 {
@@ -14,12 +12,12 @@ namespace LiveSplit.VAS.Models
 
         private Geometry CaptureGeometry;
 
-        public CWatchZone[] CWatchZones { get; }
-        public int FeatureCount { get; }
-        private bool HasDupeCheck { get; }
-        public int PixelLimit { get; }
-        public int PixelCount { get; }
-        public IReadOnlyDictionary<string, int> IndexNames { get; }
+        public CWatchZone[] CWatchZones { get; private set; }
+        public int FeatureCount { get; private set; }
+        private bool HasDupeCheck { get; set; }
+        public int PixelLimit { get; private set; }
+        public int PixelCount { get; private set; }
+        public IReadOnlyDictionary<string, int> IndexNames { get; private set; }
 
         public CompiledFeatures(GameProfile gameProfile, Geometry cropGeometry, int pixelLimit = INIT_PIXEL_LIMIT)
         {
@@ -56,7 +54,9 @@ namespace LiveSplit.VAS.Models
                         var CWatchImages = new CWatchImage[wiCount];
 
                         if (wiCount <= 0)
+                        {
                             throw new ArgumentException("Standard Watchers require at least one image to compare against.");
+                        }
 
                         for (int i3 = 0; i3 < wiCount; i3++)
                         {
@@ -66,7 +66,10 @@ namespace LiveSplit.VAS.Models
                             GetComposedImage(ref mi, watcher.Channel);
                             StandardResize(ref mi, wzCropGeo);
                             //PreciseResize(ref mi, watchZone.Geometry, gameGeo, screen.CropGeometry, watcher.ColorSpace);
-                            if (watcher.Equalize) mi.Equalize();
+                            if (watcher.Equalize)
+                            {
+                                mi.Equalize();
+                            }
 
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
 
@@ -132,7 +135,9 @@ namespace LiveSplit.VAS.Models
             for (int i = 0; i < FeatureCount; i++)
             {
                 if (!indexes.Contains(i))
+                {
                     LiveSplit.Options.Log.Warning("Feature #" + i.ToString() + "'s name was not indexed.");
+                }
             }
         }
 
@@ -184,7 +189,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public readonly static CompiledFeatures Blank = new CompiledFeatures();
+        public static readonly CompiledFeatures Blank = new CompiledFeatures();
 
         public bool IsBlank
         {
@@ -263,11 +268,12 @@ namespace LiveSplit.VAS.Models
             CWatches = cWatches;
             HasDupeCheck = CWatches.Any(w => w.IsDuplicateFrame);
         }
-        public string Name { get; }
-        public Geometry Geometry { get; }
-        public Rectangle Rectangle { get; }
-        public CWatcher[] CWatches { get; }
-        private bool HasDupeCheck { get; }
+
+        public string Name { get; private set; }
+        public Geometry Geometry { get; private set; }
+        public Rectangle Rectangle { get; private set; }
+        public CWatcher[] CWatches { get; private set; }
+        private bool HasDupeCheck { get; set; }
 
         public bool UsesDupeCheck(DateTime dateTime)
         {
@@ -335,6 +341,7 @@ namespace LiveSplit.VAS.Models
             IsStandard = WatcherType.Equals(WatcherType.Standard);
             IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
         }
+
         public CWatcher(CWatchImage[] cWatchImages, Watcher watcher)
         {
             Name = watcher.Name;
@@ -349,16 +356,16 @@ namespace LiveSplit.VAS.Models
             IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
         }
 
-        public string Name { get; }
-        public WatcherType WatcherType { get; }
-        public ColorSpace ColorSpace { get; }
-        public int Channel { get; }
-        public bool Equalize { get; }
-        public ErrorMetric ErrorMetric { get; }
-        public CWatchImage[] CWatchImages { get; }
+        public string Name { get; private set; }
+        public WatcherType WatcherType { get; private set; }
+        public ColorSpace ColorSpace { get; private set; }
+        public int Channel { get; private set; }
+        public bool Equalize { get; private set; }
+        public ErrorMetric ErrorMetric { get; private set; }
+        public CWatchImage[] CWatchImages { get; private set; }
 
-        public bool IsStandard { get; }
-        public bool IsDuplicateFrame { get; }
+        public bool IsStandard { get; private set; }
+        public bool IsDuplicateFrame { get; private set; }
 
         public bool IsPaused(DateTime dateTime)
         {
@@ -411,7 +418,7 @@ namespace LiveSplit.VAS.Models
             AlphaChannel = null;
 
             PauseTicks = DateTime.MinValue.Ticks;
-            
+
             if (HasAlpha)
             {
                 // Does Separate() clone the channels? If so, does it dispose of them during this?
@@ -438,12 +445,12 @@ namespace LiveSplit.VAS.Models
             PauseTicks = DateTime.MinValue.Ticks;
         }
 
-        public string Name { get; }
-        public int Index { get; }
-        public IMagickImage MagickImage { get; }
-        public IMagickImage AlphaChannel { get; }
-        public bool HasAlpha { get; }
-        public double TransparencyRate { get; }
+        public string Name { get; private set; }
+        public int Index { get; private set; }
+        public IMagickImage MagickImage { get; private set; }
+        public IMagickImage AlphaChannel { get; private set; }
+        public bool HasAlpha { get; private set; }
+        public double TransparencyRate { get; private set; }
 
         private long PauseTicks;
 

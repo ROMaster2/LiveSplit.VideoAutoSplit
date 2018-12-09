@@ -2,12 +2,8 @@
 // Originally made by Matt Valerio.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Runtime.Serialization;
+using System.Windows.Forms;
 
 namespace LiveSplit.VAS.Models
 {
@@ -79,9 +75,9 @@ namespace LiveSplit.VAS.Models
         }
         #endregion
 
-
         #region Property - ComboBox
         private ComboBox m_ComboBox = new ComboBox();
+
         /// <summary>
         /// Gets or sets the ComboBox.  Lets you access all of the properties of the internal ComboBox.
         /// </summary>
@@ -91,7 +87,7 @@ namespace LiveSplit.VAS.Models
         /// DropDownTreeNode node1 = new DropDownTreeNode("Some text");
         /// node1.ComboBox.Items.Add("Some text");
         /// node1.ComboBox.Items.Add("Some more text");
-        /// node1.IsDropDown = true; 
+        /// node1.IsDropDown = true;
         /// </code>
         /// </example>
         /// <value>The combo box.</value>
@@ -127,11 +123,9 @@ namespace LiveSplit.VAS.Models
         }
         #endregion
 
-
         // We'll use this variable to keep track of the current node that is being edited.
         // This is set to something (non-null) only if the node's ComboBox is being displayed.
         private DropDownTreeNode m_CurrentNode = null;
-
 
         /// <summary>
         /// Occurs when the <see cref="E:System.Windows.Forms.TreeView.NodeMouseClick"></see> event is fired
@@ -156,8 +150,8 @@ namespace LiveSplit.VAS.Models
                     20);
 
                 // Listen to the SelectedValueChanged event of the node's ComboBox
-                this.m_CurrentNode.ComboBox.SelectedValueChanged += new EventHandler(ComboBox_SelectedValueChanged);
-                this.m_CurrentNode.ComboBox.DropDownClosed += new EventHandler(ComboBox_DropDownClosed);
+                this.m_CurrentNode.ComboBox.SelectedValueChanged += ComboBox_SelectedValueChanged;
+                this.m_CurrentNode.ComboBox.DropDownClosed += ComboBox_DropDownClosed;
 
                 // Now show the ComboBox
                 this.m_CurrentNode.ComboBox.Show();
@@ -166,18 +160,16 @@ namespace LiveSplit.VAS.Models
             base.OnNodeMouseClick(e);
         }
 
-
         /// <summary>
         /// Handles the SelectedValueChanged event of the ComboBox control.
         /// Hides the ComboBox if an item has been selected in it.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
-        void ComboBox_SelectedValueChanged(object sender, EventArgs e)
+        private void ComboBox_SelectedValueChanged(object sender, EventArgs e)
         {
             HideComboBox();
         }
-
 
         /// <summary>
         /// Handles the DropDownClosed event of the ComboBox control.
@@ -185,11 +177,10 @@ namespace LiveSplit.VAS.Models
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
-        void ComboBox_DropDownClosed(object sender, EventArgs e)
+        private void ComboBox_DropDownClosed(object sender, EventArgs e)
         {
             HideComboBox();
         }
-
 
         /// <summary>
         /// Handles the <see cref="E:System.Windows.Forms.Control.MouseWheel"></see> event.
@@ -201,7 +192,6 @@ namespace LiveSplit.VAS.Models
             HideComboBox();
             base.OnMouseWheel(e);
         }
-
 
         /// <summary>
         /// Method to hide the currently-selected node's ComboBox
@@ -227,13 +217,12 @@ namespace LiveSplit.VAS.Models
                 // And return to the default state (no ComboBox displayed)
                 this.m_CurrentNode = null;
             }
-
         }
 
         /// <summary>
         /// Fixes double-clicking on checkboxes.
         /// </summary>
-        /// 
+        ///
         /// See also:
         /// http://stackoverflow.com/questions/17356976/treeview-with-checkboxes-not-processing-clicks-correctly
         /// http://stackoverflow.com/questions/14647216/c-sharp-treeview-ignore-double-click-only-at-checkbox

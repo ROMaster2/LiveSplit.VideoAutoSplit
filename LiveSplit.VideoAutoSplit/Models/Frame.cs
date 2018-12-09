@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using ImageMagick;
 using LiveSplit.Model;
 
 namespace LiveSplit.VAS.Models

@@ -1,24 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LiveSplit.VAS.Models;
 
 namespace LiveSplit.VAS.Models.Delta
 {
     public class DeltaOutput
     {
-        private DeltaManager Manager;
+        private readonly DeltaManager Manager;
 
         public DeltaHistory History => Manager.History;
         public int HistorySize => History.Count;
 
-        public int OriginalIndex { get; }
-        public int FrameIndex { get; }
-        public double FrameRate { get; }
+        public int OriginalIndex { get; private set; }
+        public int FrameIndex { get; private set; }
+        public double FrameRate { get; private set; }
 
         private int[] _FeatureIndexes;
+
         private int[] FeatureIndexes
         {
             get
@@ -60,16 +57,22 @@ namespace LiveSplit.VAS.Models.Delta
             {
                 var millisecondOffsetLimit = (int)Math.Ceiling((HistorySize - 1) / FrameRate * 1000);
                 if (milliseconds < 0)
+                {
                     throw new IndexOutOfRangeException("Offset cannot be negative.");
+                }
                 else if (milliseconds > millisecondOffsetLimit)
+                {
                     throw new IndexOutOfRangeException(
                         "Offset cannot exceed the history's count, which is currently " +
                         HistorySize.ToString() +
                         ", and this is trying to access previous frame #" +
                         Math.Round(FrameRate * milliseconds / 1000d).ToString() +
                         ".");
+                }
                 else
-                    throw e;
+                {
+                    throw;
+                }
             }
         }
 
@@ -81,33 +84,39 @@ namespace LiveSplit.VAS.Models.Delta
                 startMilliseconds = 0;
             }
             else
+            {
                 startOffset = FrameOffset(startMilliseconds);
+            }
 
             if (duration <= 0)
+            {
                 endOffset = FrameOffset(startMilliseconds + Manager.DefaultOffset);
+            }
             else
+            {
                 endOffset = FrameOffset(startMilliseconds + duration);
+            }
         }
 
         private double[] GetDeltaRange(int startMilliseconds, int duration, params int[] indexes)
         {
-            int startOffset;
-            int endOffset;
-            FrameOffsets(startMilliseconds, duration, out startOffset, out endOffset);
+            FrameOffsets(startMilliseconds, duration, out var startOffset, out var endOffset);
 
             var featureIndexes = indexes.Length == 0 ? FeatureIndexes : indexes;
 
             var result = new double[(endOffset - startOffset) * featureIndexes.Length];
 
             if (result.Length == 0)
+            {
                 return new double[] { double.NaN };
+            }
 
             for (int i = 0; i < endOffset - startOffset; i++)
             {
                 var frameIndex = IndexFromOffset(i + startOffset);
                 for (int n = 0; n < featureIndexes.Length; n++)
                 {
-                    var t = n + i * featureIndexes.Length;
+                    var t = n + (i * featureIndexes.Length);
                     result[t] = Manager.History[frameIndex, featureIndexes[n]]; // Todo: Handle NaN.
                 }
             }
@@ -117,9 +126,7 @@ namespace LiveSplit.VAS.Models.Delta
 
         private double[] GetDeltaRange(Func<double[], double> func, int startMilliseconds, int duration, params int[] indexes)
         {
-            int startOffset;
-            int endOffset;
-            FrameOffsets(startMilliseconds, duration, out startOffset, out endOffset);
+            FrameOffsets(startMilliseconds, duration, out var startOffset, out var endOffset);
 
             var featureIndexes = indexes.Length == 0 ? FeatureIndexes : indexes;
             var featureArray = new double[featureIndexes.Length];
@@ -127,7 +134,9 @@ namespace LiveSplit.VAS.Models.Delta
             var offsetDiff = endOffset - startOffset;
 
             if (offsetDiff <= 0)
+            {
                 return new double[] { double.NaN };
+            }
 
             var result = new double[offsetDiff];
 
@@ -146,9 +155,7 @@ namespace LiveSplit.VAS.Models.Delta
 
         private double[] GetDeltaRangeInverse(Func<double[], double> func, int startMilliseconds, int duration, params int[] indexes)
         {
-            int startOffset;
-            int endOffset;
-            FrameOffsets(startMilliseconds, duration, out startOffset, out endOffset);
+            FrameOffsets(startMilliseconds, duration, out var startOffset, out var endOffset);
 
             var featureIndexes = indexes.Length == 0 ? FeatureIndexes : indexes;
             var result = new double[featureIndexes.Length];
@@ -156,7 +163,9 @@ namespace LiveSplit.VAS.Models.Delta
             var offsetDiff = endOffset - startOffset;
 
             if (offsetDiff <= 0)
+            {
                 return new double[] { double.NaN };
+            }
 
             var indexArray = new double[offsetDiff];
 
@@ -176,30 +185,30 @@ namespace LiveSplit.VAS.Models.Delta
         public double[] MinMany(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
-            return GetDeltaRange((x) => { return x.Min(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
+            return GetDeltaRange((x) => x.Min(), startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
         public double[] MinManyInverse(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
-            return GetDeltaRangeInverse((x) => { return x.Min(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
+            return GetDeltaRangeInverse((x) => x.Min(), startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
         public double[] MaxMany(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
-            return GetDeltaRange((x) => { return x.Max(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
+            return GetDeltaRange((x) => x.Max(), startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
         public double[] MaxManyInverse(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
-            return GetDeltaRangeInverse((x) => { return x.Max(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
+            return GetDeltaRangeInverse((x) => x.Max(), startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
         #region VASL Syntax
 
-        public double current // Single index only
+        public double Current // Single index only
         {
             get
             {
@@ -207,17 +216,19 @@ namespace LiveSplit.VAS.Models.Delta
             }
         }
 
-        public double old(int milliseconds = 0) // Single index only
+        public double Old(int milliseconds = 0) // Single index only
         {
             if (milliseconds <= 0)
+            {
                 milliseconds = Manager.DefaultOffset;
+            }
 
             var prevFrameIndex = IndexFromOffset(FrameOffset(milliseconds));
             return Manager.History[prevFrameIndex, FeatureIndexes[0]];
         }
 
         // For the below, actual timestamps will be used once splitting can be offset'd.
-        public void pause(double milliseconds = 0d)
+        public void Pause(double milliseconds = 0d)
         {
             var untilDate = milliseconds > 0d ? Manager.History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
             //var untilDate = milliseconds > 0d ? TimeStamp.CurrentDateTime.Time.AddMilliseconds(milliseconds) : DateTime.MaxValue;
@@ -227,7 +238,7 @@ namespace LiveSplit.VAS.Models.Delta
             }
         }
 
-        public void resume(double milliseconds = 0d)
+        public void Resume(double milliseconds = 0d)
         {
             var untilDate = milliseconds > 0d ? Manager.History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
             foreach (var f in FeatureIndexes)
@@ -236,7 +247,7 @@ namespace LiveSplit.VAS.Models.Delta
             }
         }
 
-        public void pauseAll()
+        public void PauseAll()
         {
             var untilDate = DateTime.MaxValue;
             for (int i = 0; i < Manager.CompiledFeatures.FeatureCount; i++)
@@ -245,7 +256,7 @@ namespace LiveSplit.VAS.Models.Delta
             }
         }
 
-        public bool isPaused
+        public bool IsPaused
         {
             get
             {
@@ -262,77 +273,79 @@ namespace LiveSplit.VAS.Models.Delta
             }
         }
 
-        public double min(int milliseconds = 0)
+        public double Min(int milliseconds = 0)
         {
-            return min(0, milliseconds);
+            return Min(0, milliseconds);
         }
 
-        public double min(int startMilliseconds, int endMilliseconds)
+        public double Min(int startMilliseconds, int endMilliseconds)
         {
             var range = GetDeltaRange(startMilliseconds, endMilliseconds - startMilliseconds);
             return range.Min();
         }
 
-        public double max(int milliseconds = 0)
+        public double Max(int milliseconds = 0)
         {
-            return max(0, milliseconds);
+            return Max(0, milliseconds);
         }
 
-        public double max(int startMilliseconds, int endMilliseconds)
+        public double Max(int startMilliseconds, int endMilliseconds)
         {
             var range = GetDeltaRange(startMilliseconds, endMilliseconds - startMilliseconds);
             return range.Max();
         }
 
-        public double average(int milliseconds = 0)
+        public double Average(int milliseconds = 0)
         {
-            return average(0, milliseconds);
+            return Average(0, milliseconds);
         }
 
-        public double average(int startMilliseconds, int endMilliseconds)
+        public double Average(int startMilliseconds, int endMilliseconds)
         {
             var range = GetDeltaRange(startMilliseconds, endMilliseconds - startMilliseconds);
             return range.Average();
         }
 
-        public double stdev(int milliseconds = 0)
+        public double Stdev(int milliseconds = 0)
         {
-            return stdev(0, milliseconds);
+            return Stdev(0, milliseconds);
         }
 
-        public double stdev(int startMilliseconds, int endMilliseconds)
+        public double Stdev(int startMilliseconds, int endMilliseconds)
         {
             var range = GetDeltaRange(startMilliseconds, endMilliseconds - startMilliseconds);
             return range.StdDev();
         }
 
-        public double delta(int milliseconds = 0)
+        public double Delta(int milliseconds = 0)
         {
-            return delta(0, milliseconds);
+            return Delta(0, milliseconds);
         }
 
-        public double delta(int startMilliseconds, int endMilliseconds) // Single index only
+        public double Delta(int startMilliseconds, int endMilliseconds) // Single index only
         {
             var featureIndex = FeatureIndexes[0];
 
             double start;
             if (startMilliseconds <= 0)
             {
-                start = this[featureIndex].current;
+                start = this[featureIndex].Current;
                 startMilliseconds = 0;
             }
             else
-                start = this[featureIndex].old(startMilliseconds);
+            {
+                start = this[featureIndex].Old(startMilliseconds);
+            }
 
-            return start / this[featureIndex].old(endMilliseconds - startMilliseconds);
+            return start / this[featureIndex].Old(endMilliseconds - startMilliseconds);
         }
 
         // Incomplete
-        public double dupeDelta(int milliseconds = 0) // Single index only
+        public double DupeDelta(int milliseconds = 0) // Single index only
         {
             var featureIndex = FeatureIndexes[0];
 
-            return this[featureIndex].min(milliseconds) / this[featureIndex].max(milliseconds, milliseconds * 2);
+            return this[featureIndex].Min(milliseconds) / this[featureIndex].Max(milliseconds, milliseconds * 2);
         }
 
         /*
@@ -362,11 +375,16 @@ namespace LiveSplit.VAS.Models.Delta
                 int[] numbers = new int[strings.Length];
                 for (int n = 0; n < strings.Length; n++)
                 {
-                    int i;
-                    if (!Manager.CompiledFeatures.IndexNames.TryGetValue(strings[n], out i))
+                    if (!Manager.CompiledFeatures.IndexNames.TryGetValue(strings[n], out var i))
+                    {
                         throw new ArgumentException("This name does not exist.");
+                    }
+
                     if (i < 0)
+                    {
                         throw new ArgumentException("This name is shared between more than one feature. Identify it more specifically.");
+                    }
+
                     numbers[n] = i;
                 }
                 FeatureIndexes = numbers;
@@ -375,22 +393,22 @@ namespace LiveSplit.VAS.Models.Delta
         }
 
         // Great naming. No one will ever get them mixed up.
-        public double maxMin(int milliseconds = 0)
+        public double MaxMin(int milliseconds = 0)
         {
             return MinMany(0, milliseconds).Max();
         }
 
-        public double minMax(int milliseconds = 0)
+        public double MinMax(int milliseconds = 0)
         {
             return MaxMany(0, milliseconds).Min();
         }
 
-        public double maxMinInverse(int milliseconds = 0)
+        public double MaxMinInverse(int milliseconds = 0)
         {
             return MinManyInverse(0, milliseconds).Max();
         }
 
-        public double minMaxInverse(int milliseconds = 0)
+        public double MinMaxInverse(int milliseconds = 0)
         {
             return MaxManyInverse(0, milliseconds).Min();
         }

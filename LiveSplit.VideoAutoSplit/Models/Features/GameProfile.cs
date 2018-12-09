@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Xml.Serialization;
-using System.IO.Compression;
-using LiveSplit.Options;
 
 namespace LiveSplit.VAS.Models
 {
@@ -28,9 +27,11 @@ namespace LiveSplit.VAS.Models
         [XmlIgnore]
         public List<WatchZone> WatchZones
         { get { return Screens.SelectMany(s => s.WatchZones).ToList(); } }
+
         [XmlIgnore]
         public List<Watcher> Watches
         { get { return WatchZones.SelectMany(wz => wz.Watches).ToList(); } }
+
         [XmlIgnore]
         public List<WatchImage> WatchImages
         { get { return Watches.SelectMany(w => w.WatchImages).ToList(); } }
@@ -44,7 +45,8 @@ namespace LiveSplit.VAS.Models
 
         public void ReSyncRelationships()
         {
-            if (Screens.Count > 0) {
+            if (Screens.Count > 0)
+            {
                 foreach (var s in Screens)
                 {
                     s.GameProfile = this;
@@ -69,11 +71,17 @@ namespace LiveSplit.VAS.Models
             GameProfile gp;
 
             if (File.Exists(path))
+            {
                 gp = FromZip(path);
+            }
             else if (Directory.Exists(path))
+            {
                 gp = FromFolder(path);
+            }
             else
+            {
                 throw new FileNotFoundException();
+            }
 
             return gp;
         }
@@ -85,7 +93,7 @@ namespace LiveSplit.VAS.Models
 
             var search = ".xml";
             var xmlFiles = entries.Where(z => z.Name.ToLower().Contains(search));
-            if (xmlFiles.Count() == 0)
+            if (!xmlFiles.Any())
             {
                 throw new Exception("Game Profile XML is missing");
             }
@@ -95,13 +103,11 @@ namespace LiveSplit.VAS.Models
             }
             var xmlStream = xmlFiles.First().Open();
 
-
             GameProfile gp = FromXmlStream(xmlStream);
-
 
             search = "script.asl"; // To rename
             var scriptFiles = entries.Where(z => z.Name.ToLower().Contains(search));
-            if (scriptFiles.Count() == 0)
+            if (!scriptFiles.Any())
             {
                 throw new Exception("Script file (script.asl) is missing.");
             }
@@ -116,7 +122,7 @@ namespace LiveSplit.VAS.Models
             {
                 search = s.Name.ToLower() + "_autofit.png";
                 var files = entries.Where(z => z.Name.ToLower().Contains(search));
-                if (files.Count() == 0)
+                if (!files.Any())
                 {
                     continue;
                 }
@@ -131,7 +137,7 @@ namespace LiveSplit.VAS.Models
             {
                 search = wi.FilePath.Replace('\\', '/').ToLower();
                 var files = entries.Where(z => z.FullName.ToLower().Contains(search));
-                if (files.Count() == 0)
+                if (!files.Any())
                 {
                     throw new Exception("Image for " + search + " not found.");
                 }
@@ -152,68 +158,68 @@ namespace LiveSplit.VAS.Models
 
             var search = "*.xml";
             var xmlFiles = Directory.GetFiles(folderPath, search, SearchOption.TopDirectoryOnly);
-            if (xmlFiles.Count() == 0)
+            if (xmlFiles.Length == 0)
             {
                 throw new Exception("Game Profile XML is missing");
             }
-            else if (xmlFiles.Count() > 1)
+            else if (xmlFiles.Length > 1)
             {
                 throw new Exception("Multiple XML files found, we only need one.");
             }
-            var xmlFile = xmlFiles.First();
-
+            var xmlFile = xmlFiles[0];
 
             GameProfile gp = FromXmlStream(new FileStream(xmlFile, FileMode.Open, FileAccess.Read));
 
-
             search = "script.asl"; // To rename
             var scriptFiles = Directory.GetFiles(folderPath, search, SearchOption.TopDirectoryOnly);
-            if (scriptFiles.Count() == 0)
+            if (scriptFiles.Length == 0)
             {
                 throw new Exception("Script file (script.asl) is missing.");
             }
-            else if (scriptFiles.Count() > 1)
+            else if (scriptFiles.Length > 1)
             {
                 LiveSplit.Options.Log.Warning("Multiple script files found, we only need one. Using first one.");
             }
-            using (var scriptStream = File.Open(scriptFiles.First(), FileMode.Open))
+            using (var scriptStream = File.Open(scriptFiles[0], FileMode.Open))
+            {
                 gp.RawScript = new StreamReader(scriptStream).ReadToEnd();
+            }
 
             foreach (var s in gp.Screens)
             {
                 search = s.Name.ToLower() + "_autofit.png";
                 var autofitFiles = Directory.GetFiles(folderPath, search, SearchOption.AllDirectories);
-                if (autofitFiles.Count() == 0)
+                if (autofitFiles.Length == 0)
                 {
                     continue;
                 }
-                else if (autofitFiles.Count() > 1)
+                else if (autofitFiles.Length > 1)
                 {
                     LiveSplit.Options.Log.Warning("Multiple autofit images found for screen " + s.Name + ". Using first one.");
                 }
-                var autofitFile = autofitFiles.First();
+                var autofitFile = autofitFiles[0];
                 s.Autofitter.Image = new Bitmap(autofitFile);
             }
             foreach (var wi in gp.WatchImages)
             {
                 search = wi.FilePath.Replace('\\', '/').ToLower();
                 var imageFiles = Directory.GetFiles(folderPath, search, SearchOption.AllDirectories);
-                if (imageFiles.Count() == 0)
+                if (imageFiles.Length == 0)
                 {
                     throw new Exception("Image for " + search + " not found.");
                 }
-                else if (imageFiles.Count() > 1)
+                else if (imageFiles.Length > 1)
                 {
                     LiveSplit.Options.Log.Warning("Multiple images found for " + wi.FilePath + ", somehow. Using first one.");
                 }
-                var imageFile = imageFiles.First();
+                var imageFile = imageFiles[0];
                 wi.Image = new Bitmap(imageFile);
             }
 
             return gp;
         }
 
-        override public string ToString()
+        public override string ToString()
         {
             return Name;
         }

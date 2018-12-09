@@ -7,25 +7,24 @@ using System.Text;
 using Irony.Parsing;
 using LiveSplit.Model;
 using LiveSplit.Options;
-using LiveSplit.UI.Components;
 using LiveSplit.VAS.Models.Delta;
 
 namespace LiveSplit.VAS.VASL
 {
     public class VASLScript
     {
-        private string GameVersion = "";
+        private readonly string GameVersion = "";
 
         private readonly bool UsesGameTime;
         private bool InitCompleted;
 
-        private VASLSettings Settings;
+        private readonly VASLSettings Settings;
 
         private ITimerModel Timer;
 
-        private MethodList Methods;
+        private readonly MethodList Methods;
 
-        public ExpandoObject Vars { get; }
+        public ExpandoObject Vars { get; private set; }
 
         public event EventHandler<DeltaOutput> ScriptUpdateFinished;
 
@@ -37,11 +36,19 @@ namespace LiveSplit.VAS.VASL
             Vars = new ExpandoObject();
 
             if (!Methods.start.IsEmpty)
+            {
                 Settings.AddBasicSetting("start");
+            }
+
             if (!Methods.split.IsEmpty)
+            {
                 Settings.AddBasicSetting("split");
+            }
+
             if (!Methods.reset.IsEmpty)
+            {
                 Settings.AddBasicSetting("reset");
+            }
 
             UsesGameTime = !Methods.isLoading.IsEmpty || !Methods.gameTime.IsEmpty;
         }
@@ -74,7 +81,7 @@ namespace LiveSplit.VAS.VASL
         public VASLSettings RunStartup(LiveSplitState state)
         {
             Debug("Running startup");
-            RunNoProcessMethod(Methods.startup, state, true);                                                         
+            RunNoProcessMethod(Methods.startup, state, true);
             return Settings;
         }
 
@@ -83,7 +90,6 @@ namespace LiveSplit.VAS.VASL
             Debug("Running shutdown");
             RunMethod(Methods.shutdown, state, null);
         }
-
 
         // This is executed each time after connecting to the game (usually just once,
         // unless an error occurs before the method finishes).
@@ -117,7 +123,9 @@ namespace LiveSplit.VAS.VASL
                 if (UsesGameTime)
                 {
                     if (!state.IsGameTimeInitialized)
+                    {
                         Timer.InitializeGameTime();
+                    }
 
                     var isPaused = RunMethod(Methods.isLoading, state, d);
                     if (isPaused != null)
@@ -131,15 +139,21 @@ namespace LiveSplit.VAS.VASL
                             var offsetTime = d.History[d.FrameIndex].ProcessDuration;
 
                             if (isPaused)
+                            {
                                 state.GameTimePauseTime -= offsetTime;
+                            }
                             else
+                            {
                                 state.GameTimePauseTime += offsetTime;
+                            }
                         }
                     }
 
                     var gameTime = RunMethod(Methods.gameTime, state, d);
                     if (gameTime != null)
+                    {
                         state.SetGameTime(gameTime);
+                    }
                 }
 
                 if (RunMethod(Methods.reset, state, d) ?? false && Settings.GetBasicSettingValue("reset"))
@@ -172,7 +186,9 @@ namespace LiveSplit.VAS.VASL
                     */
 
                     if (offset)
+                    {
                         Timer.Split();
+                    }
 
                     // Todo: Add undoSplit;
                 }
@@ -182,7 +198,9 @@ namespace LiveSplit.VAS.VASL
                 if (RunMethod(Methods.start, state, d) ?? false)
                 {
                     if (Settings.GetBasicSettingValue("start"))
+                    {
                         Timer.Start();
+                    }
                 }
             }
         }
@@ -218,7 +236,7 @@ namespace LiveSplit.VAS.VASL
                 foreach (var msg in parser.Context.CurrentParseTree.ParserMessages)
                 {
                     var loc = msg.Location;
-                    errorMsg.Append($"\nat Line {loc.Line + 1}, Col {loc.Column + 1}: {msg.Message}");
+                    errorMsg.Append("\nat Line ").Append(loc.Line + 1).Append(", Col ").Append(loc.Column + 1).Append(": ").Append(msg.Message);
                 }
 
                 throw new Exception(errorMsg.ToString());
@@ -260,7 +278,7 @@ namespace LiveSplit.VAS.VASL
 
         public class MethodList : IEnumerable<VASLMethod>
         {
-            private static VASLMethod noOp = new VASLMethod("");
+            private static readonly VASLMethod noOp = new VASLMethod("");
 
             public VASLMethod startup = noOp;
             public VASLMethod shutdown = noOp;

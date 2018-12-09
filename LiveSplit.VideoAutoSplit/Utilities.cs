@@ -1,29 +1,14 @@
-﻿using ImageMagick;
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
-using System.Text;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Serialization;
-using LiveSplit.VAS;
-using LiveSplit.VAS.Models;
-using System.Runtime.InteropServices;
 
 namespace LiveSplit.VAS
 {
@@ -50,9 +35,7 @@ namespace LiveSplit.VAS
             {
                 Interval = milliseconds
             };
-            t.Tick += delegate (object a, EventArgs b) {
-                form.BackColor = origColor;
-            };
+            t.Tick += (a, b) => form.BackColor = origColor;
             t.Start();
         }
 
@@ -60,11 +43,7 @@ namespace LiveSplit.VAS
         {
             number = Math.Round(number, precision);
             var str = number.ToString(specifier, CultureInfo.CurrentCulture);
-            if (number >= 0)
-                str = "+" + str;
-            else
-                str = "-" + str;
-            return str;
+            return number >= 0 ? "+" + str : "-" + str;
         }
 
         public static bool GetDiskSpace(string directory, out long totalSpace, out long freeSpace)
@@ -75,7 +54,7 @@ namespace LiveSplit.VAS
             freeSpace = -1L;
             foreach (DriveInfo drive in DriveInfo.GetDrives())
             {
-                if(drive.Name == directoryRoot)
+                if (drive.Name == directoryRoot)
                 {
                     totalSpace = drive.TotalSize;
 
@@ -98,10 +77,14 @@ namespace LiveSplit.VAS
         public static void SetCPULimit(int processorLimit)
         {
             if (processorLimit < 0)
+            {
                 processorLimit = Environment.ProcessorCount + processorLimit;
+            }
 
             if (processorLimit <= 0 || processorLimit > Environment.ProcessorCount)
+            {
                 processorLimit = Environment.ProcessorCount;
+            }
 
             processorLimit = (int)Math.Pow(processorLimit, 2);
 
@@ -120,14 +103,14 @@ namespace LiveSplit.VAS
         public static double CalculateStdDev(IEnumerable<double> values)
         {
             double ret = 0;
-            if (values.Count() > 0)
+            if (values.Any())
             {
-                //Compute the Average      
+                //Compute the Average
                 double avg = values.Average();
-                //Perform the Sum of (value-avg)_2_2      
+                //Perform the Sum of (value-avg)_2_2
                 double sum = values.Sum(d => Math.Pow(d - avg, 2));
-                //Put it all together      
-                ret = Math.Sqrt((sum) / (values.Count() - 1));
+                //Put it all together
+                ret = Math.Sqrt(sum / (values.Count() - 1));
             }
             return ret;
         }
@@ -136,7 +119,7 @@ namespace LiveSplit.VAS
         {
             var s = str.Split('/');
             decimal i = decimal.Parse(s[0]);
-            for (var n = 1; n < s.Count(); n++)
+            for (var n = 1; n < s.Length; n++)
             {
                 i /= decimal.Parse(s[n]);
             }
@@ -173,7 +156,7 @@ namespace LiveSplit.VAS
 
             if (text.Contains('.'))
             {
-                v[4] = int.Parse(text.Split('.')[1].PadRight(3,'0'));
+                v[4] = int.Parse(text.Split('.')[1].PadRight(3, '0'));
                 text = text.Split('.')[0];
             }
 
@@ -222,9 +205,13 @@ namespace LiveSplit.VAS
             while (a != 0 && b != 0)
             {
                 if (a > b)
+                {
                     a %= b;
+                }
                 else
+                {
                     b %= a;
+                }
             }
 
             return a == 0 ? b : a;
@@ -245,13 +232,13 @@ namespace LiveSplit.VAS
         {
             var bytes = new byte[2];
             bytes[0] = (byte)Math.Max(Math.Min(Math.Floor(num), 255), 0);
-            bytes[1] = (byte)Math.Floor(Math.Max(Math.Min(num - bytes[0], 255f/256f), 0) * 256);
+            bytes[1] = (byte)Math.Floor(Math.Max(Math.Min(num - bytes[0], 255f / 256f), 0) * 256);
             return bytes;
         }
 
         public static float BytesToFloat(byte num1, byte num2)
         {
-            return num1 + num2 / 256f;
+            return num1 + (num2 / 256f);
         }
 
         public static void LightSleep(Func<bool> func, double timeoutLimit = 5000d, int millisecondsTimeout = 1)
@@ -263,12 +250,12 @@ namespace LiveSplit.VAS
                 Thread.Sleep(millisecondsTimeout);
             }
         }
-
     }
 
     [Flags]
     public enum ThreadAccess : int
     {
+        NONE = 0,
         TERMINATE = (0x0001),
         SUSPEND_RESUME = (0x0002),
         GET_CONTEXT = (0x0008),
@@ -280,10 +267,8 @@ namespace LiveSplit.VAS
         DIRECT_IMPERSONATION = (0x0200)
     }
 
-
     public static class ProcessExtension
     {
-
         public static double StdDev(this IEnumerable<int> values)
         {
             double ret = 0;
@@ -321,11 +306,13 @@ namespace LiveSplit.VAS
         }
 
         [DllImport("kernel32.dll")]
-        static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+        private static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+
         [DllImport("kernel32.dll")]
-        static extern uint SuspendThread(IntPtr hThread);
+        private static extern uint SuspendThread(IntPtr hThread);
+
         [DllImport("kernel32.dll")]
-        static extern int ResumeThread(IntPtr hThread);
+        private static extern int ResumeThread(IntPtr hThread);
 
         public static void Suspend(this Process process)
         {
@@ -339,6 +326,7 @@ namespace LiveSplit.VAS
                 SuspendThread(pOpenThread);
             }
         }
+
         public static void Resume(this Process process)
         {
             foreach (ProcessThread thread in process.Threads)

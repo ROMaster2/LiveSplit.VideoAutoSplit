@@ -1,12 +1,7 @@
-﻿using ImageMagick;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
-using System.Drawing;
-using System.Linq;
+﻿using System.Drawing;
 using System.IO;
 using System.Xml.Serialization;
+using ImageMagick;
 
 namespace LiveSplit.VAS.Models
 {
@@ -25,14 +20,19 @@ namespace LiveSplit.VAS.Models
         public string FilePath;
 
         private string _Name;
+
         public string Name
         {
             get
             {
                 if (!string.IsNullOrWhiteSpace(_Name))
+                {
                     return _Name;
+                }
                 else
+                {
                     return FileName;
+                }
             }
             set
             {
@@ -41,6 +41,7 @@ namespace LiveSplit.VAS.Models
         }
 
         private Bitmap _Image;
+
         public Bitmap Image
         {
             get
@@ -71,8 +72,10 @@ namespace LiveSplit.VAS.Models
 
         [XmlIgnore]
         public Screen Screen { get { return WatchZone.Screen; } }
+
         [XmlIgnore]
         public WatchZone WatchZone { get { return Watcher.WatchZone; } }
+
         [XmlIgnore]
         public Watcher Watcher { get; internal set; }
 
@@ -142,18 +145,19 @@ namespace LiveSplit.VAS.Models
         */
         public void Dispose()
         {
-            if (_Image != null)
-            {
-                _Image.Dispose();
-            }
+            _Image?.Dispose();
         }
 
-        override public string ToString()
+        public override string ToString()
         {
             if (!string.IsNullOrWhiteSpace(Name))
+            {
                 return Name;
+            }
             else
+            {
                 return FileName;
+            }
         }
     }
 }

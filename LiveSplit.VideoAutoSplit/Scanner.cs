@@ -1,28 +1,28 @@
-﻿using Accord.Video;
-using Accord.Video.DirectShow;
-using ImageMagick;
-using LiveSplit.Model;
-using LiveSplit.VAS.Models;
-using LiveSplit.VAS.Models.Delta;
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Accord.Video;
+using Accord.Video.DirectShow;
+using ImageMagick;
+using LiveSplit.Model;
+using LiveSplit.VAS.Models;
+using LiveSplit.VAS.Models.Delta;
 
 namespace LiveSplit.VAS
 {
     public class Scanner
     {
-        private VASComponent Component;
+        private readonly VASComponent Component;
 
         public Thread FrameHandlerThread;
 
         private GameProfile GameProfile => Component.GameProfile;
         private string VideoDevice => Component.VideoDevice;
-        private VideoCaptureDevice VideoSource = new VideoCaptureDevice();
+        private readonly VideoCaptureDevice VideoSource = new VideoCaptureDevice();
         public CompiledFeatures CompiledFeatures { get; private set; }
         public DeltaManager DeltaManager { get; private set; }
 
@@ -33,8 +33,8 @@ namespace LiveSplit.VAS
         public bool IsScanning { get { return ScanningCount > 0; } }
         public bool Restarting { get; set; } = false;
 
-        private NewFrameEventHandler NewFrameEventHandler;
-        private VideoSourceErrorEventHandler VideoSourceErrorEventHandler;
+        private readonly NewFrameEventHandler NewFrameEventHandler;
+        private readonly VideoSourceErrorEventHandler VideoSourceErrorEventHandler;
         public event EventHandler<DeltaOutput> NewResult;
 
         // Todo: Add something for downscaling before comparing for large images.
@@ -48,6 +48,7 @@ namespace LiveSplit.VAS
         }
 
         private Geometry _VideoGeometry = Geometry.Blank;
+
         public Geometry VideoGeometry
         {
             get
@@ -84,6 +85,7 @@ namespace LiveSplit.VAS
         }
 
         private Geometry _CropGeometry = Geometry.Blank;
+
         public Geometry CropGeometry
         {
             get
@@ -103,6 +105,7 @@ namespace LiveSplit.VAS
 
         // Bad name.
         private Geometry _TrueCropGeometry = Geometry.Blank;
+
         public Geometry TrueCropGeometry
         {
             get
@@ -141,15 +144,15 @@ namespace LiveSplit.VAS
         }
 
         // Good/bad idea?
-        public double AverageFPS      { get; internal set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
-        public double MinFPS          { get; internal set; } = 60;
-        public double MaxFPS          { get; internal set; } = 60;
+        public double AverageFPS { get; internal set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
+        public double MinFPS { get; internal set; } = 60;
+        public double MaxFPS { get; internal set; } = 60;
         public double AverageScanTime { get; internal set; } = double.NaN;
-        public double MinScanTime     { get; internal set; } = double.NaN;
-        public double MaxScanTime     { get; internal set; } = double.NaN;
+        public double MinScanTime { get; internal set; } = double.NaN;
+        public double MaxScanTime { get; internal set; } = double.NaN;
         public double AverageWaitTime { get; internal set; } = double.NaN;
-        public double MinWaitTime     { get; internal set; } = double.NaN;
-        public double MaxWaitTime     { get; internal set; } = double.NaN;
+        public double MinWaitTime { get; internal set; } = double.NaN;
+        public double MaxWaitTime { get; internal set; } = double.NaN;
 
         public bool IsVideoSourceValid()
         {
@@ -249,7 +252,11 @@ namespace LiveSplit.VAS
             {
                 Component.LogEvent("Fatal error encountered, restarting scanner...");
                 Restarting = true;
-                if (IsScannerLocked) Thread.Sleep(1);
+                if (IsScannerLocked)
+                {
+                    Thread.Sleep(1);
+                }
+
                 Stop();
                 Thread.Sleep(1000);
                 Start();
@@ -301,8 +308,10 @@ namespace LiveSplit.VAS
                 return null;
             }
 
-            IMagickImage mi = new MagickImage(input);
-            mi.ColorSpace = colorSpace;
+            IMagickImage mi = new MagickImage(input)
+            {
+                ColorSpace = colorSpace
+            };
             if (channelIndex > -1)
             {
                 mi = mi.Separate().ElementAt(channelIndex);
@@ -331,10 +340,10 @@ namespace LiveSplit.VAS
             var now = TimeStamp.CurrentDateTime.Time;
             var test = !CompiledFeatures.IsPaused(now);
             initCount++;
-            if (!IsScannerLocked &&
-                (initCount > 255 || initCount % 10 == 0) &&
-                !CompiledFeatures.IsPaused(now) &&
-                ScanningCount < 20)
+            if (!IsScannerLocked
+                && (initCount > 255 || initCount % 10 == 0)
+                && !CompiledFeatures.IsPaused(now)
+                && ScanningCount < 20)
             {
                 ScanningCount++;
 
@@ -369,7 +378,9 @@ namespace LiveSplit.VAS
             try
             {
                 foreach (var cWatchZone in CompiledFeatures.CWatchZones)
+                {
                     CropScan(ref deltas, ref benchmarks, now, fileImageBase, prevFileImageBase, cWatchZone);
+                }
             }
             catch (ArgumentException e)
             {
@@ -469,7 +480,9 @@ namespace LiveSplit.VAS
                     prevFileImageBase?.Clone(cWatchZone.Rectangle, PixelFormat.Format24bppRgb) : null)
                 {
                     foreach (var cWatcher in cWatchZone.CWatches)
+                    {
                         ComposeScan(ref deltas, ref benchmarks, now, fileImageCropped, prevFileImageCropped, cWatcher);
+                    }
                 }
             }
             else
@@ -505,12 +518,20 @@ namespace LiveSplit.VAS
                     }
 
                     if (cWatcher.IsStandard)
+                    {
                         foreach (var cWatchImage in cWatcher.CWatchImages)
+                        {
                             CompareAgainstFeature(ref deltas, ref benchmarks, now, fileImageComposed, cWatcher, cWatchImage);
+                        }
+                    }
                     else if (cWatcher.IsDuplicateFrame)
+                    {
                         CompareAgainstPreviousFrame(ref deltas, ref benchmarks, now, fileImageComposed, prevFileImageComposed, cWatcher);
+                    }
                     else
+                    {
                         throw new NotImplementedException("How'd you get here?");
+                    }
                 }
             }
             else
@@ -590,6 +611,5 @@ namespace LiveSplit.VAS
         {
             benchmarks[cWatchImage.Index] = (TimeStamp.Now - timeStamp).TotalSeconds;
         }
-
     }
 }

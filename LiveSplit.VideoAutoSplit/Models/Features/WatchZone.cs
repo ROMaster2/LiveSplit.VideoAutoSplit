@@ -1,8 +1,8 @@
-﻿using ImageMagick;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using ImageMagick;
 
 namespace LiveSplit.VAS.Models
 {
@@ -20,6 +20,7 @@ namespace LiveSplit.VAS.Models
 
         public string Name;
         public Geometry Geometry;
+
         [XmlIgnore]
         public Geometry CropGeometry;
 
@@ -28,10 +29,10 @@ namespace LiveSplit.VAS.Models
 
         [XmlIgnore]
         public Screen Screen { get; internal set; }
+
         [XmlIgnore]
         public List<WatchImage> WatchImages
         { get { var a = new List<WatchImage>(); a.AddRange(Watches.SelectMany(w => w.WatchImages)); return a; } }
-
 
         public Watcher AddWatcher(string name, double frequency = 1d, ColorSpace colorSpace = ColorSpace.RGB)
         {
@@ -54,7 +55,7 @@ namespace LiveSplit.VAS.Models
 
         public Geometry WithoutScale(Geometry gameGeometry)
         {
-            double xScale = gameGeometry.Width  / Screen.Geometry.Width;
+            double xScale = gameGeometry.Width / Screen.Geometry.Width;
             double yScale = gameGeometry.Height / Screen.Geometry.Height;
 
             double _x = Geometry.X;
@@ -79,7 +80,7 @@ namespace LiveSplit.VAS.Models
             return new Geometry(_x, _y, _width, _height, Geometry.Anchor);
         }
 
-        override public string ToString()
+        public override string ToString()
         {
             return Name;
         }

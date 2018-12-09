@@ -1,12 +1,11 @@
-﻿using LiveSplit.Model;
-using System;
+﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using LiveSplit.Model;
 using LiveSplit.VAS.Models.Delta;
 
 namespace LiveSplit.VAS.VASL
@@ -15,20 +14,22 @@ namespace LiveSplit.VAS.VASL
     {
         public VASLScript.MethodList ScriptMethods { get; set; }
 
-        public string Name { get; }
+        public string Name { get; private set; }
 
-        public bool IsEmpty { get; }
+        public bool IsEmpty { get; private set; }
 
-        public int LineOffset { get; }
+        public int LineOffset { get; private set; }
 
-        public Module Module { get; }
+        public Module Module { get; private set; }
 
-        private dynamic CompiledCode;
+        private readonly dynamic CompiledCode;
 
         public VASLMethod(string code, string name = null, int scriptLine = 0)
         {
             if (code == null)
+            {
                 throw new ArgumentNullException(nameof(code));
+            }
 
             Name = name;
             IsEmpty = string.IsNullOrWhiteSpace(code);
@@ -41,7 +42,7 @@ namespace LiveSplit.VAS.VASL
 
             using (var provider = new Microsoft.CSharp.CSharpCodeProvider(options))
             {
-                var userCodeStartMarker = "// USER_CODE_START";
+                const string userCodeStartMarker = "// USER_CODE_START";
                 string source = $@"
 using System;
 using System.Collections.Generic;
@@ -79,7 +80,8 @@ public class CompiledScript
                     LineOffset = scriptLine - compiledCodeLine;
                 }
 
-                var parameters = new CompilerParameters() {
+                var parameters = new CompilerParameters()
+                {
                     GenerateInMemory = true,
                     CompilerOptions = "/optimize /d:TRACE /debug:pdbonly",
                 };
@@ -96,7 +98,9 @@ public class CompiledScript
 
                 var res = provider.CompileAssemblyFromSource(parameters, source);
                 if (res.Errors.HasErrors)
+                {
                     throw new VASLCompilerException(this, res.Errors);
+                }
 
                 Module = res.CompiledAssembly.ManifestModule;
                 var type = res.CompiledAssembly.GetType("CompiledScript");
@@ -115,9 +119,13 @@ public class CompiledScript
             catch (NullReferenceException ex)
             {
                 if (d?.OriginalIndex >= d?.HistorySize)
+                {
                     throw new VASLRuntimeException(this, ex);
+                }
                 else
+                {
                     ret = null;
+                }
             }
             catch (Exception ex)
             {

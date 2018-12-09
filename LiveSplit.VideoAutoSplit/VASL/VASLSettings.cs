@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using LiveSplit.Options;
 
 namespace LiveSplit.VAS.VASL
 {
     public class VASLSetting
     {
-        public string Id { get; }
-        public string Label { get; }
-        public string Type { get; }
+        public string Id { get; private set; }
+        public string Label { get; private set; }
+        public string Type { get; private set; }
         public dynamic Value { get; set; }
-        public dynamic DefaultValue { get; }
-        public string Parent { get; }
+        public dynamic DefaultValue { get; private set; }
+        public string Parent { get; private set; }
         public string ToolTip { get; set; }
 
         public VASLSetting(string id, dynamic defaultValue, string label, string parent)
@@ -34,9 +33,9 @@ namespace LiveSplit.VAS.VASL
     public class VASLSettings
     {
         public IDictionary<string, VASLSetting> Settings { get; set; }
-        public IList<VASLSetting> OrderedSettings { get; }
+        public IList<VASLSetting> OrderedSettings { get; private set; }
 
-        public IDictionary<string, VASLSetting> BasicSettings { get; }
+        public IDictionary<string, VASLSetting> BasicSettings { get; private set; }
 
         public VASLSettingsBuilder Builder;
         public VASLSettingsReader Reader;
@@ -53,11 +52,19 @@ namespace LiveSplit.VAS.VASL
         public void AddSetting(string name, dynamic defaultValue, string description, string parent)
         {
             if (description == null)
+            {
                 description = name;
+            }
+
             if (parent != null && !Settings.ContainsKey(parent))
+            {
                 throw new ArgumentException($"Parent for setting '{name}' is not a setting: {parent}");
+            }
+
             if (Settings.ContainsKey(name))
+            {
                 throw new ArgumentException($"Setting '{name}' was already added");
+            }
 
             var setting = new VASLSetting(name, defaultValue, description, parent);
             Settings.Add(name, setting);
@@ -69,7 +76,9 @@ namespace LiveSplit.VAS.VASL
             // Don't cause error if setting doesn't exist, but still inform script
             // author since that usually shouldn't happen.
             if (Settings.ContainsKey(name))
+            {
                 return GetSettingValueRecursive(Settings[name]);
+            }
 
             Log.Info("[VASL] Custom Setting Key doesn't exist: " + name);
 
@@ -84,7 +93,9 @@ namespace LiveSplit.VAS.VASL
         public bool GetBasicSettingValue(string name)
         {
             if (BasicSettings.ContainsKey(name))
+            {
                 return BasicSettings[name].Value;
+            }
 
             return false;
         }
@@ -94,17 +105,20 @@ namespace LiveSplit.VAS.VASL
             return BasicSettings.ContainsKey(name);
         }
 
-
         /// <summary>
         /// Returns true only if this setting and all it's parent settings are true.
         /// </summary>
         private dynamic GetSettingValueRecursive(VASLSetting setting)
         {
             if (!setting.Value)
+            {
                 return false;
+            }
 
             if (setting.Parent == null)
+            {
                 return setting.Value;
+            }
 
             return GetSettingValueRecursive(Settings[setting.Parent]);
         }
@@ -116,7 +130,7 @@ namespace LiveSplit.VAS.VASL
     public class VASLSettingsBuilder
     {
         public string CurrentDefaultParent { get; set; }
-        private VASLSettings _s;
+        private readonly VASLSettings _s;
 
         public VASLSettingsBuilder(VASLSettings s)
         {
@@ -126,7 +140,9 @@ namespace LiveSplit.VAS.VASL
         public void Add(string id, dynamic default_value, string description = null, string parent = null)
         {
             if (parent == null)
+            {
                 parent = CurrentDefaultParent;
+            }
 
             _s.AddSetting(id, default_value, description, parent);
         }
@@ -134,7 +150,9 @@ namespace LiveSplit.VAS.VASL
         public void SetToolTip(string id, string text)
         {
             if (!_s.Settings.ContainsKey(id))
+            {
                 throw new ArgumentException($"Can't set tooltip, '{id}' is not a setting");
+            }
 
             _s.Settings[id].ToolTip = text;
         }
@@ -145,7 +163,7 @@ namespace LiveSplit.VAS.VASL
     /// </summary>
     public class VASLSettingsReader
     {
-        private VASLSettings _s;
+        private readonly VASLSettings _s;
 
         public VASLSettingsReader(VASLSettings s)
         {

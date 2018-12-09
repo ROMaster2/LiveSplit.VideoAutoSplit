@@ -6,14 +6,14 @@ namespace LiveSplit.VAS.UI
 {
     public partial class ComponentUI : UserControl
     {
-        private VASComponent Component { get; }
+        private VASComponent Component { get; set; }
 
         // Children are hardcoded until a better solution is found.
         // tbh it's probably easier to read anyway.
-        internal SettingsUI   SettingsUI   { get; }
-        internal ScanRegionUI ScanRegionUI { get; }
-        internal FeaturesUI   FeaturesUI   { get; }
-        internal DebugUI      DebugUI      { get; }
+        internal SettingsUI SettingsUI { get; private set; }
+        internal ScanRegionUI ScanRegionUI { get; private set; }
+        internal FeaturesUI FeaturesUI { get; private set; }
+        internal DebugUI DebugUI { get; private set; }
 
         internal ComponentUI(VASComponent component)
         {
@@ -21,10 +21,10 @@ namespace LiveSplit.VAS.UI
 
             Component = component;
 
-            SettingsUI   = new SettingsUI(Component);
+            SettingsUI = new SettingsUI(Component);
             ScanRegionUI = new ScanRegionUI(Component);
-            FeaturesUI   = new FeaturesUI(Component);
-            DebugUI      = new DebugUI(Component);
+            FeaturesUI = new FeaturesUI(Component);
+            DebugUI = new DebugUI(Component);
             SetChildControlSettings(SettingsUI, tabSettings, "Settings");
             SetChildControlSettings(ScanRegionUI, tabScanRegion, "ScanRegion");
             SetChildControlSettings(FeaturesUI, tabFeatures, "Features");
@@ -61,7 +61,7 @@ namespace LiveSplit.VAS.UI
             Render();
         }
 
-        private void tabControlCore_Selecting(object sender, TabControlCancelEventArgs e) => Render();
+        private void TabControlCore_Selecting(object sender, TabControlCancelEventArgs e) => Render();
         private void Parent_Selecting(object sender, TabControlCancelEventArgs e) => Render();
         private void Parent_HandleDestroyed(object sender, EventArgs e) => Render(true);
 

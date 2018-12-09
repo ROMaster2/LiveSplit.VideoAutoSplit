@@ -12,14 +12,14 @@ namespace LiveSplit.VAS.UI
             InitializeComponent();
         }
 
-        override public void Rerender()
+        public override void Rerender()
         {
             txtDebug.Text = Component.EventLog;
 
             Component.EventLogUpdated += UpdatetxtDebug;
         }
 
-        override public void Derender()
+        public override void Derender()
         {
             Component.EventLogUpdated -= UpdatetxtDebug;
         }
@@ -32,13 +32,13 @@ namespace LiveSplit.VAS.UI
             });
         }
 
-        private void btnClear_Click(object sender, EventArgs e)
+        private void BtnClear_Click(object sender, EventArgs e)
         {
             txtDebug.Clear();
             Component.ClearEventLog();
         }
 
-        private void btnExport_Click(object sender, EventArgs e)
+        private void BtnExport_Click(object sender, EventArgs e)
         {
             using (var ofd = new SaveFileDialog()
             {
@@ -58,6 +58,6 @@ namespace LiveSplit.VAS.UI
         }
 
         // This form contains no settings.
-        override internal void InitVASLSettings(VASLSettings s, bool l) { }
+        internal override void InitVASLSettings(VASLSettings settings, bool scriptLoaded) { }
     }
 }

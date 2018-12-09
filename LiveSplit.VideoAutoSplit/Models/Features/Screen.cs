@@ -18,8 +18,10 @@ namespace LiveSplit.VAS.Models
 
         public string Name;
         public Geometry Geometry;
+
         [XmlIgnore]
         public Geometry CropGeometry; // Temporary place
+
         [XmlIgnore]
         public Geometry GameGeometry; // Temporary place
 
@@ -29,9 +31,11 @@ namespace LiveSplit.VAS.Models
 
         [XmlIgnore]
         public GameProfile GameProfile { get; internal set; }
+
         [XmlIgnore]
         public List<Watcher> Watches
         { get { var a = new List<Watcher>(); a.AddRange(WatchZones.SelectMany(wz => wz.Watches)); return a; } }
+
         [XmlIgnore]
         public List<WatchImage> WatchImages
         { get { var a = new List<WatchImage>(); a.AddRange(Watches.SelectMany(w => w.WatchImages)); return a; } }
@@ -48,7 +52,7 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        override public string ToString()
+        public override string ToString()
         {
             return Name;
         }

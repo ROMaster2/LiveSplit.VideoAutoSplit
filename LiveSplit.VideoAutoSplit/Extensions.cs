@@ -9,7 +9,11 @@ namespace LiveSplit.VAS
     {
         public static double GetTransparencyRate(this ImageMagick.IMagickImage mi)
         {
-            if (!mi.HasAlpha) return 0;
+            if (!mi.HasAlpha)
+            {
+                return 0;
+            }
+
             var bytes = mi.Separate(ImageMagick.Channels.Alpha).First().GetPixels().GetValues();
             return (255d - bytes.Average(x => (double)x)) / 255d;
         }
@@ -122,7 +126,9 @@ namespace LiveSplit.VAS
                 if (propInfo.CanWrite)
                 {
                     if (propInfo.Name != "WindowTarget")
+                    {
                         propInfo.SetValue(instance, propInfo.GetValue(controlToClone, null), null);
+                    }
                 }
             }
 

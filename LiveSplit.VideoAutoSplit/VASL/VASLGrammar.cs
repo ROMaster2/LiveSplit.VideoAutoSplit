@@ -8,46 +8,46 @@ namespace LiveSplit.VAS.VASL
     {
         public VASLGrammar() : base(true)
         {
-            var code       = new CustomTerminal("code", MatchCodeTerminal);
+            var code = new CustomTerminal("code", MatchCodeTerminal);
             var stringLit = TerminalFactory.CreateCSharpString("string");
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
-            var number     = TerminalFactory.CreateCSharpNumber("number");
+            var number = TerminalFactory.CreateCSharpNumber("number");
             number.Options |= NumberOptions.AllowSign;
 
             var singleLineComment = new CommentTerminal("SingleLineComment", "//", "\r", "\n", "\u2085", "\u2028", "\u2029");
-            var delimitedComment  = new CommentTerminal("DelimitedComment", "/*", "*/");
+            var delimitedComment = new CommentTerminal("DelimitedComment", "/*", "*/");
             NonGrammarTerminals.Add(singleLineComment);
             NonGrammarTerminals.Add(delimitedComment);
 
             // Todo: Aliases
 
-            var init      = new KeyTerm("init",      "init");
-            var exit      = new KeyTerm("exit",      "exit");
-            var update    = new KeyTerm("update",    "update");
-            var start     = new KeyTerm("start",     "start");
-            var split     = new KeyTerm("split",     "split");
-            var reset     = new KeyTerm("reset",     "reset");
-            var startup   = new KeyTerm("startup",   "startup");
-            var shutdown  = new KeyTerm("shutdown",  "shutdown");
+            var init = new KeyTerm("init", "init");
+            var exit = new KeyTerm("exit", "exit");
+            var update = new KeyTerm("update", "update");
+            var start = new KeyTerm("start", "start");
+            var split = new KeyTerm("split", "split");
+            var reset = new KeyTerm("reset", "reset");
+            var startup = new KeyTerm("startup", "startup");
+            var shutdown = new KeyTerm("shutdown", "shutdown");
             var undoSplit = new KeyTerm("undoSplit", "undoSplit");
             var isLoading = new KeyTerm("isLoading", "isLoading");
-            var gameTime  = new KeyTerm("gameTime",  "gameTime");
-            var comma     = ToTerm(",", "comma");
-            var semi      = ToTerm(";", "semi");
+            var gameTime = new KeyTerm("gameTime", "gameTime");
+            var comma = ToTerm(",", "comma");
+            var semi = ToTerm(";", "semi");
 
-            var root       = new NonTerminal("root");
-            var version    = new NonTerminal("version");
+            var root = new NonTerminal("root");
+            var version = new NonTerminal("version");
             var methodList = new NonTerminal("methodList");
-            var varList    = new NonTerminal("varList");
-            var var        = new NonTerminal("var");
-            var method     = new NonTerminal("method");
+            var varList = new NonTerminal("varList");
+            var var = new NonTerminal("var");
+            var method = new NonTerminal("method");
             var methodType = new NonTerminal("methodType");
 
-            root.Rule        = methodList;
-            version.Rule     = (comma + stringLit) | Empty;
+            root.Rule = methodList;
+            version.Rule = (comma + stringLit) | Empty;
             methodList.Rule = MakeStarRule(methodList, method);
-            varList.Rule    = MakeStarRule(varList, semi, var);
-            method.Rule      = (methodType + "{" + code + "}") | Empty;
+            varList.Rule = MakeStarRule(varList, semi, var);
+            method.Rule = (methodType + "{" + code + "}") | Empty;
             methodType.Rule = init | exit | update | start | split | isLoading | gameTime | reset | startup | shutdown | undoSplit;
 
             Root = root;

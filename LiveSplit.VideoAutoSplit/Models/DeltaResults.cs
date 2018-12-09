@@ -1,22 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LiveSplit.Model;
-using LiveSplit.VAS.Models;
 
 namespace LiveSplit.VAS.Models.Delta
 {
     public struct DeltaResult
     {
-        public int Index           { get; }
-        public DateTime FrameStart { get; }
-        public DateTime FrameEnd   { get; }
-        public DateTime ScanEnd    { get; }
-        public DateTime WaitEnd    { get; }
-        public double[] Deltas     { get; }
-        public double[] Benchmarks { get; }
+        public int Index { get; private set; }
+        public DateTime FrameStart { get; private set; }
+        public DateTime FrameEnd { get; private set; }
+        public DateTime ScanEnd { get; private set; }
+        public DateTime WaitEnd { get; private set; }
+        public double[] Deltas { get; private set; }
+        public double[] Benchmarks { get; private set; }
 
         public DeltaResult(
             int index,
@@ -41,10 +35,10 @@ namespace LiveSplit.VAS.Models.Delta
 
         public bool IsBlank => Index == -1;
 
-        public TimeSpan FrameDuration   => FrameEnd - FrameStart;
-        public TimeSpan ScanDuration    => ScanEnd  - FrameEnd;
-        public TimeSpan WaitDuration    => WaitEnd  - ScanEnd;
-        public TimeSpan ProcessDuration => WaitEnd  - FrameEnd;
+        public TimeSpan FrameDuration => FrameEnd - FrameStart;
+        public TimeSpan ScanDuration => ScanEnd - FrameEnd;
+        public TimeSpan WaitDuration => WaitEnd - ScanEnd;
+        public TimeSpan ProcessDuration => WaitEnd - FrameEnd;
 
         // Todo: Add method(s) for getting Frame timestamps rounded to the framerate.
     }

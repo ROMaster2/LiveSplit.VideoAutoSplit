@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using LiveSplit.VAS.Models.Delta;
 using LiveSplit.VAS.VASL;
-
-using System.Text.RegularExpressions;
 
 namespace LiveSplit.VAS.UI
 {
@@ -19,12 +17,12 @@ namespace LiveSplit.VAS.UI
             InitializeComponent();
         }
 
-        override public void Rerender()
+        public override void Rerender()
         {
             Component.Script.ScriptUpdateFinished += UpdateRowsAsync;
         }
 
-        override public void Derender()
+        public override void Derender()
         {
             Component.Script.ScriptUpdateFinished -= UpdateRowsAsync;
         }
@@ -32,7 +30,7 @@ namespace LiveSplit.VAS.UI
         // Because two rows exist for different purposes, the first for headers and last for layout balance,
         // indexing became terrible.
         // I didn't want it to be spaghetti but I am italian, so...
-        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        internal override void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
             ClearRows();
             if (scriptLoaded)
@@ -78,7 +76,6 @@ namespace LiveSplit.VAS.UI
                         tlpFeatures.Controls.Add(variableRow, 0, i + offset);
                     }
                 }
-
             }
         }
 
@@ -128,19 +125,18 @@ namespace LiveSplit.VAS.UI
                 }
             });
         }
-
     }
-    
+
     internal class VariableRow : TableLayoutPanel
     {
-        public Label    lblName     { get; }
-        public CheckBox ckbEnabled  { get; private set; }
-        public Label    lblValue    { get; private set; }
-        public Label    lblMaximum  { get; private set; }
-        public Label    lblMinimum  { get; private set; }
+        public Label LblName { get; private set; }
+        public CheckBox CkbEnabled { get; private set; }
+        public Label LblValue { get; private set; }
+        public Label LblMaximum { get; private set; }
+        public Label LblMinimum { get; private set; }
 
-        private Queue<double> ValueQueue;
-        private int QueueSize;
+        private readonly Queue<double> ValueQueue;
+        private readonly int QueueSize;
 
         private static readonly Label lblNumeric = new Label()
         {
@@ -164,38 +160,38 @@ namespace LiveSplit.VAS.UI
             Margin = new Padding(0);
             Name = name; // Might break
 
-            lblName = new Label()
+            LblName = new Label()
             {
                 Anchor = AnchorStyles.Left,
                 AutoSize = true,
                 Text = name,
                 TextAlign = ContentAlignment.MiddleLeft
             };
-            ckbEnabled = new CheckBox()
+            CkbEnabled = new CheckBox()
             {
                 CheckState = CheckState.Indeterminate,
                 Padding = new Padding(0, 2, 0, 0)
             };
-            ckbEnabled.Click += ckbEnabled_Click;
-            lblValue   = lblNumeric.Clone();
-            lblMaximum = lblNumeric.Clone();
-            lblMinimum = lblNumeric.Clone();
+            CkbEnabled.Click += CkbEnabled_Click;
+            LblValue = lblNumeric.Clone();
+            LblMaximum = lblNumeric.Clone();
+            LblMinimum = lblNumeric.Clone();
 
             ValueQueue = new Queue<double>(queueSize);
             QueueSize = queueSize;
 
-            Controls.Add(lblName,     0, 0);
-            Controls.Add(ckbEnabled,  1, 0);
-            Controls.Add(lblValue,    2, 0);
-            Controls.Add(lblMaximum,  3, 0);
-            Controls.Add(lblMinimum,  4, 0);
+            Controls.Add(LblName, 0, 0);
+            Controls.Add(CkbEnabled, 1, 0);
+            Controls.Add(LblValue, 2, 0);
+            Controls.Add(LblMaximum, 3, 0);
+            Controls.Add(LblMinimum, 4, 0);
         }
 
         public virtual void Update(dynamic value, bool? varEnabled = null)
         {
             if (value is double || value is int || value is short || value is byte || value is long || value is float)
             {
-                lblValue.Text = value.ToString("F4"); // Todo: Formatting based on ErrorMetric.
+                LblValue.Text = value.ToString("F4"); // Todo: Formatting based on ErrorMetric.
 
                 ValueQueue.Enqueue(value);
                 if (ValueQueue.Count >= QueueSize)
@@ -203,21 +199,21 @@ namespace LiveSplit.VAS.UI
                     ValueQueue.Dequeue();
                 }
 
-                lblMaximum.Text = ValueQueue.Max().ToString("F4");
-                lblMinimum.Text = ValueQueue.Min().ToString("F4");
+                LblMaximum.Text = ValueQueue.Max().ToString("F4");
+                LblMinimum.Text = ValueQueue.Min().ToString("F4");
             }
             else
             {
-                lblValue.Text = value.ToString();
+                LblValue.Text = value.ToString();
             }
 
             if (varEnabled.HasValue)
             {
-                ckbEnabled.Checked = varEnabled.Value;
+                CkbEnabled.Checked = varEnabled.Value;
             }
         }
 
-        internal void ckbEnabled_Click(object sender, EventArgs e)
+        internal void CkbEnabled_Click(object sender, EventArgs e)
         {
             throw new NotImplementedException("Todo lol");
         }
@@ -227,7 +223,5 @@ namespace LiveSplit.VAS.UI
         {
             return Name;
         }
-
     }
-
 }

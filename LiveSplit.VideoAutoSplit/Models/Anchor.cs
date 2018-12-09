@@ -1,5 +1,5 @@
-﻿using ImageMagick;
-using System;
+﻿using System;
+using ImageMagick;
 
 namespace LiveSplit.VAS.Models
 {
@@ -10,10 +10,10 @@ namespace LiveSplit.VAS.Models
         Top = 1,
         Bottom = 2,
         Left = 4,
-        Right = 8,
         TopLeft = Top | Left,
-        TopRight = Top | Right,
         BottomLeft = Bottom | Left,
+        Right = 8,
+        TopRight = Top | Right,
         BottomRight = Bottom | Right,
         Center = 16
     }
@@ -53,6 +53,5 @@ namespace LiveSplit.VAS.Models
                 default: return Anchor.Undefined;
             }
         }
-
     }
 }
