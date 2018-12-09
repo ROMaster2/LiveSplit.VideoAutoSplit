@@ -16,15 +16,12 @@ namespace LiveSplit.VAS
     {
         public static void Error(int id)
         {
-            DialogResult dr = MessageBox.Show(
-                "This shouldn't happen. Error code: " +
-                    id.ToString() +
-                    "\r\n" +
-                    "If you could, report this to [Link] with details on how you got this, it'd really help.",
+            MessageBox.Show(String.Format(
+                "This shouldn't happen. Error code: {0}\r\n If you could, report this to [Link] with details on how you got this, it'd really help.", id),
                 "Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.None
-                );
+            );
         }
 
         public static void Flicker(Control form, int milliseconds, Color color)
@@ -76,18 +73,11 @@ namespace LiveSplit.VAS
         /// <param name="processorLimit"></param>
         public static void SetCPULimit(int processorLimit)
         {
-            if (processorLimit < 0)
-            {
-                processorLimit = Environment.ProcessorCount + processorLimit;
-            }
-
-            if (processorLimit <= 0 || processorLimit > Environment.ProcessorCount)
-            {
-                processorLimit = Environment.ProcessorCount;
-            }
+            // @TODO: Why is processorLimit set twice on processorLimit < 0?
+            if (processorLimit < 0) processorLimit = Environment.ProcessorCount + processorLimit;
+            if (processorLimit <= 0 || processorLimit > Environment.ProcessorCount) processorLimit = Environment.ProcessorCount;
 
             processorLimit = (int)Math.Pow(processorLimit, 2);
-
             Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)processorLimit;
         }
 
@@ -102,6 +92,7 @@ namespace LiveSplit.VAS
 
         public static double CalculateStdDev(IEnumerable<double> values)
         {
+            // @TODO: This could throw a DivideByZeroException when values.Count() == 1
             double ret = 0;
             if (values.Any())
             {
@@ -117,12 +108,10 @@ namespace LiveSplit.VAS
 
         public static decimal DivideString(string str)
         {
+            // @TODO: Consider using TryParse() instead
             var s = str.Split('/');
             decimal i = decimal.Parse(s[0]);
-            for (var n = 1; n < s.Length; n++)
-            {
-                i /= decimal.Parse(s[n]);
-            }
+            for (var n = 1; n < s.Length; n++) i /= decimal.Parse(s[n]);
             return i;
         }
 
@@ -133,6 +122,7 @@ namespace LiveSplit.VAS
 
         public static TimeSpan TimeStringToTimeSpan(string text, bool require = false)
         {
+            // @TODO: This is quite hacky, consider using TryParse() instead
             if (!ValidateTimeOCR(text))
             {
                 if (require)
@@ -171,10 +161,7 @@ namespace LiveSplit.VAS
 
             TimeSpan result = new TimeSpan(v[0], v[1], v[2], v[3], v[4]);
 
-            if (isNegative)
-            {
-                result = result.Negate();
-            }
+            if (isNegative) result = result.Negate();
             return result;
         }
 
@@ -183,20 +170,20 @@ namespace LiveSplit.VAS
             int num1, num2;
             if (a > b)
             {
-                num1 = a; num2 = b;
+                num1 = a;
+                num2 = b;
             }
             else
             {
-                num1 = b; num2 = a;
+                num1 = b;
+                num2 = a;
             }
 
             for (int i = 1; i < num2; i++)
             {
-                if ((num1 * i) % num2 == 0)
-                {
-                    return i * num1;
-                }
+                if ((num1 * i) % num2 == 0) return i * num1;
             }
+
             return num1 * num2;
         }
 
@@ -204,14 +191,8 @@ namespace LiveSplit.VAS
         {
             while (a != 0 && b != 0)
             {
-                if (a > b)
-                {
-                    a %= b;
-                }
-                else
-                {
-                    b %= a;
-                }
+                if (a > b) a %= b;
+                else b %= a;
             }
 
             return a == 0 ? b : a;
@@ -267,7 +248,8 @@ namespace LiveSplit.VAS
         DIRECT_IMPERSONATION = (0x0200)
     }
 
-    public static class ProcessExtension
+    // @TODO: Consider catching the associated exceptions when using P/Invoke
+    public static class ProcessExtensions
     {
         public static double StdDev(this IEnumerable<int> values)
         {
