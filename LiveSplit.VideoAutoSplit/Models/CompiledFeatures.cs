@@ -23,7 +23,7 @@ namespace LiveSplit.VAS.Models
         {
             _CaptureGeometry = cropGeometry;
             _HasDupeCheck = false;
-            PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
+            PixelLimit = pixelLimit; // @TODO: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
             PixelCount = 0;
 
             var nameDictionary = new Dictionary<string, int>();
@@ -73,7 +73,7 @@ namespace LiveSplit.VAS.Models
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
 
                             AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
-                            PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
+                            PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // @TODO: Un-hardcode the rounding
                             indexCount++;
                         }
 
@@ -86,7 +86,7 @@ namespace LiveSplit.VAS.Models
                         CWatches[i2] = new CWatcher(new CWatchImage[] { new CWatchImage(watcher.Name, indexCount) }, watcher);
 
                         AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, string.Empty);
-                        PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
+                        PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // @TODO: Un-hardcode the rounding
                         indexCount++;
                     }
                     else
@@ -148,7 +148,7 @@ namespace LiveSplit.VAS.Models
             mi.RePage();
         }
 
-        // Todo: Test this more...and clean it up.
+        // @TODO: Test this more...and clean it up.
         private void PreciseResize(ref MagickImage mi, Geometry wzGeo, Geometry gameGeo, Geometry cropGeo, ColorSpace cs)
         {
             var underlay = new MagickImage(MagickColors.Transparent, (int)gameGeo.Width, (int)gameGeo.Height) { ColorSpace = cs };
@@ -165,7 +165,7 @@ namespace LiveSplit.VAS.Models
         }
 
         // May need to update to support multiple channels.
-        // Todo: Put this elsewhere. It's copied from Scanner.cs...
+        // @TODO: Put this elsewhere. It's copied from Scanner.cs...
         private static void GetComposedImage(ref MagickImage mi, int channelIndex)
         {
             if (channelIndex > -1)
