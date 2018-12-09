@@ -13,7 +13,39 @@ namespace LiveSplit.VAS.Models
     /// </summary>
     public class DropDownTreeNode : TreeNode
     {
+        #region Property - ComboBox
+        private ComboBox _m_ComboBox = new ComboBox();
+
+        /// <summary>
+        /// Gets or sets the ComboBox.  Lets you access all of the properties of the internal ComboBox.
+        /// </summary>
+        /// <example>
+        /// For example,
+        /// <code>
+        /// DropDownTreeNode node1 = new DropDownTreeNode("Some text");
+        /// node1.ComboBox.Items.Add("Some text");
+        /// node1.ComboBox.Items.Add("Some more text");
+        /// node1.IsDropDown = true;
+        /// </code>
+        /// </example>
+        /// <value>The combo box.</value>
+        public ComboBox ComboBox
+        {
+            get
+            {
+                _m_ComboBox.DropDownStyle = ComboBoxStyle.Simple;
+                return _m_ComboBox;
+            }
+            set
+            {
+                _m_ComboBox = value;
+                _m_ComboBox.DropDownStyle = ComboBoxStyle.Simple;
+            }
+        }
+        #endregion
+
         #region Constructors
+
         /// <summary>
         /// Initializes a new instance of the <see cref="T:DropDownTreeNode"/> class.
         /// </summary>
@@ -74,37 +106,6 @@ namespace LiveSplit.VAS.Models
         {
         }
         #endregion
-
-        #region Property - ComboBox
-        private ComboBox m_ComboBox = new ComboBox();
-
-        /// <summary>
-        /// Gets or sets the ComboBox.  Lets you access all of the properties of the internal ComboBox.
-        /// </summary>
-        /// <example>
-        /// For example,
-        /// <code>
-        /// DropDownTreeNode node1 = new DropDownTreeNode("Some text");
-        /// node1.ComboBox.Items.Add("Some text");
-        /// node1.ComboBox.Items.Add("Some more text");
-        /// node1.IsDropDown = true;
-        /// </code>
-        /// </example>
-        /// <value>The combo box.</value>
-        public ComboBox ComboBox
-        {
-            get
-            {
-                this.m_ComboBox.DropDownStyle = ComboBoxStyle.Simple;
-                return this.m_ComboBox;
-            }
-            set
-            {
-                this.m_ComboBox = value;
-                this.m_ComboBox.DropDownStyle = ComboBoxStyle.Simple;
-            }
-        }
-        #endregion
     }
 
     /// <summary>
@@ -137,25 +138,25 @@ namespace LiveSplit.VAS.Models
             // Are we dealing with a dropdown node?
             if (e.Node is DropDownTreeNode)
             {
-                this.m_CurrentNode = (DropDownTreeNode)e.Node;
+                m_CurrentNode = (DropDownTreeNode)e.Node;
 
                 // Need to add the node's ComboBox to the TreeView's list of controls for it to work
-                this.Controls.Add(this.m_CurrentNode.ComboBox);
+                Controls.Add(m_CurrentNode.ComboBox);
 
                 // Set the bounds of the ComboBox, with a little adjustment to make it look right
-                this.m_CurrentNode.ComboBox.SetBounds(
-                    this.m_CurrentNode.TreeView.Width - 60,
-                    this.m_CurrentNode.Bounds.Y,
+                m_CurrentNode.ComboBox.SetBounds(
+                    m_CurrentNode.TreeView.Width - 60,
+                    m_CurrentNode.Bounds.Y,
                     60,
                     20);
 
                 // Listen to the SelectedValueChanged event of the node's ComboBox
-                this.m_CurrentNode.ComboBox.SelectedValueChanged += ComboBox_SelectedValueChanged;
-                this.m_CurrentNode.ComboBox.DropDownClosed += ComboBox_DropDownClosed;
+                m_CurrentNode.ComboBox.SelectedValueChanged += ComboBox_SelectedValueChanged;
+                m_CurrentNode.ComboBox.DropDownClosed += ComboBox_DropDownClosed;
 
                 // Now show the ComboBox
-                this.m_CurrentNode.ComboBox.Show();
-                this.m_CurrentNode.ComboBox.DroppedDown = true;
+                m_CurrentNode.ComboBox.Show();
+                m_CurrentNode.ComboBox.DroppedDown = true;
             }
             base.OnNodeMouseClick(e);
         }
@@ -198,24 +199,24 @@ namespace LiveSplit.VAS.Models
         /// </summary>
         private void HideComboBox()
         {
-            if (this.m_CurrentNode != null)
+            if (m_CurrentNode != null)
             {
                 // Unregister the event listener
-                this.m_CurrentNode.ComboBox.SelectedValueChanged -= ComboBox_SelectedValueChanged;
-                this.m_CurrentNode.ComboBox.DropDownClosed -= ComboBox_DropDownClosed;
+                m_CurrentNode.ComboBox.SelectedValueChanged -= ComboBox_SelectedValueChanged;
+                m_CurrentNode.ComboBox.DropDownClosed -= ComboBox_DropDownClosed;
 
                 // Copy the selected text from the ComboBox to the TreeNode
-                this.m_CurrentNode.Text = this.m_CurrentNode.ComboBox.Text;
+                m_CurrentNode.Text = m_CurrentNode.ComboBox.Text;
 
                 // Hide the ComboBox
-                this.m_CurrentNode.ComboBox.Hide();
-                this.m_CurrentNode.ComboBox.DroppedDown = false;
+                m_CurrentNode.ComboBox.Hide();
+                m_CurrentNode.ComboBox.DroppedDown = false;
 
                 // Remove the control from the TreeView's list of currently-displayed controls
-                this.Controls.Remove(this.m_CurrentNode.ComboBox);
+                Controls.Remove(m_CurrentNode.ComboBox);
 
                 // And return to the default state (no ComboBox displayed)
-                this.m_CurrentNode = null;
+                m_CurrentNode = null;
             }
         }
 
