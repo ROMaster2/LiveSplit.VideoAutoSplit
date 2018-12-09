@@ -16,38 +16,44 @@ namespace LiveSplit.VAS
 {
     public class Scanner
     {
-        private readonly VASComponent Component;
-
-        public Thread FrameHandlerThread;
-
-        private GameProfile GameProfile => Component.GameProfile;
-        private string VideoDevice => Component.VideoDevice;
-        private readonly VideoCaptureDevice VideoSource = new VideoCaptureDevice();
-        public CompiledFeatures CompiledFeatures { get; private set; }
-        public DeltaManager DeltaManager { get; private set; }
-
-        public Frame CurrentFrame = Frame.Blank;
+        // Good/bad idea?
+        public double AverageFPS { get; internal set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
+        public double MinFPS { get; internal set; } = 60;
+        public double MaxFPS { get; internal set; } = 60;
+        public double AverageScanTime { get; internal set; } = double.NaN;
+        public double MinScanTime { get; internal set; } = double.NaN;
+        public double MaxScanTime { get; internal set; } = double.NaN;
+        public double AverageWaitTime { get; internal set; } = double.NaN;
+        public double MinWaitTime { get; internal set; } = double.NaN;
+        public double MaxWaitTime { get; internal set; } = double.NaN;
+        // Todo: Add something for downscaling before comparing for large images.
+        public int OverloadedCount = 0;
         public int CurrentIndex = 0;
         public bool IsScannerLocked = false;
         public int ScanningCount = 0;
         public bool IsScanning { get { return ScanningCount > 0; } }
         public bool Restarting { get; set; } = false;
+        public string DeviceMoniker => IsVideoSourceValid() ? Regex.Match(_VideoDevice, "@device.*}").Value : null;
 
-        private readonly NewFrameEventHandler NewFrameEventHandler;
-        private readonly VideoSourceErrorEventHandler VideoSourceErrorEventHandler;
+        public CompiledFeatures CompiledFeatures { get; private set; }
+        public DeltaManager DeltaManager { get; private set; }
+        public Frame CurrentFrame = Frame.Blank;
+        public Thread FrameHandlerThread;
+
+        internal int initCount = 0; // To stop wasting CPU when first starting.
+
+        private string _VideoDevice => _Component.VideoDevice;
+        private readonly VASComponent _Component;
+        private GameProfile _GameProfile => _Component.GameProfile;
+        private Geometry _CropGeometry = Geometry.Blank;
+        private Geometry _TrueCropGeometry = Geometry.Blank; // Bad name.
+        private Geometry _VideoGeometry = Geometry.Blank;
+        private readonly VideoCaptureDevice _VideoSource = new VideoCaptureDevice();
+
         public event EventHandler<DeltaOutput> NewResult;
 
-        // Todo: Add something for downscaling before comparing for large images.
-        public int OverloadedCount = 0;
-
-        public Scanner(VASComponent component)
-        {
-            Component = component;
-            NewFrameEventHandler = HandleNewFrame;
-            VideoSourceErrorEventHandler = HandleVideoError;
-        }
-
-        private Geometry _VideoGeometry = Geometry.Blank;
+        private readonly NewFrameEventHandler _NewFrameEventHandler;
+        private readonly VideoSourceErrorEventHandler _VideoSourceErrorEventHandler;
 
         public Geometry VideoGeometry
         {
@@ -57,8 +63,8 @@ namespace LiveSplit.VAS
                 {
                     if (!IsVideoSourceRunning() && IsVideoSourceValid())
                     {
-                        VideoSource.Source = DeviceMoniker;
-                        VideoSource.Start();
+                        _VideoSource.Source = DeviceMoniker;
+                        _VideoSource.Start();
                     }
                     if (IsVideoSourceRunning())
                     {
@@ -68,23 +74,6 @@ namespace LiveSplit.VAS
                 return _VideoGeometry;
             }
         }
-
-        private bool IsVideoGeometrySet()
-        {
-            return _VideoGeometry.HasSize;
-        }
-
-        // Hacky but it saves on CPU for the scanner.
-        private void SetFrameSize(object sender, NewFrameEventArgs e)
-        {
-            if (!_VideoGeometry.HasSize)
-            {
-                _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
-                UnsubscribeFromFrameHandler(SetFrameSize);
-            }
-        }
-
-        private Geometry _CropGeometry = Geometry.Blank;
 
         public Geometry CropGeometry
         {
@@ -103,22 +92,19 @@ namespace LiveSplit.VAS
             }
         }
 
-        // Bad name.
-        private Geometry _TrueCropGeometry = Geometry.Blank;
-
         public Geometry TrueCropGeometry
         {
             get
             {
                 if (!_TrueCropGeometry.HasSize)
                 {
-                    if (GameProfile != null)
+                    if (_GameProfile != null)
                     {
                         double x = 32768d;
                         double y = 32768d;
                         double width = -32768d;
                         double height = -32768d;
-                        foreach (var wz in GameProfile.Screens[0].WatchZones)
+                        foreach (var wz in _GameProfile.Screens[0].WatchZones)
                         {
                             var geo = wz.Geometry;
                             geo.RemoveAnchor(wz.Screen.Geometry);
@@ -130,7 +116,7 @@ namespace LiveSplit.VAS
                         width -= x;
                         height -= y;
                         var sGeo = new Geometry(x, y, width, height);
-                        sGeo.ResizeTo(CropGeometry, GameProfile.Screens[0].Geometry);
+                        sGeo.ResizeTo(CropGeometry, _GameProfile.Screens[0].Geometry);
                         sGeo.Update(CropGeometry.X, CropGeometry.Y);
                         _TrueCropGeometry = sGeo;
                     }
@@ -143,61 +129,57 @@ namespace LiveSplit.VAS
             }
         }
 
-        // Good/bad idea?
-        public double AverageFPS { get; internal set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
-        public double MinFPS { get; internal set; } = 60;
-        public double MaxFPS { get; internal set; } = 60;
-        public double AverageScanTime { get; internal set; } = double.NaN;
-        public double MinScanTime { get; internal set; } = double.NaN;
-        public double MaxScanTime { get; internal set; } = double.NaN;
-        public double AverageWaitTime { get; internal set; } = double.NaN;
-        public double MinWaitTime { get; internal set; } = double.NaN;
-        public double MaxWaitTime { get; internal set; } = double.NaN;
+        public Scanner(VASComponent component)
+        {
+            _Component = component;
+            _NewFrameEventHandler = HandleNewFrame;
+            _VideoSourceErrorEventHandler = HandleVideoError;
+        }
+
+        private bool IsVideoGeometrySet()
+        {
+            return _VideoGeometry.HasSize;
+        }
+
+        // Hacky but it saves on CPU for the scanner.
+        private void SetFrameSize(object sender, NewFrameEventArgs e)
+        {
+            if (!_VideoGeometry.HasSize)
+            {
+                _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
+                UnsubscribeFromFrameHandler(SetFrameSize);
+            }
+        }
 
         public bool IsVideoSourceValid()
         {
-            var v = Regex.Match(VideoDevice, "@device.*}");
+            var v = Regex.Match(_VideoDevice, "@device.*}");
             return v.Success && !string.IsNullOrEmpty(new FilterInfo(v.Value).Name);
-        }
-
-        public string DeviceMoniker
-        {
-            get
-            {
-                if (IsVideoSourceValid())
-                {
-                    return Regex.Match(VideoDevice, "@device.*}").Value;
-                }
-                else
-                {
-                    return null;
-                }
-            }
         }
 
         public bool IsVideoSourceRunning()
         {
-            return VideoSource.IsRunning;
+            return _VideoSource.IsRunning;
         }
 
         public void SubscribeToFrameHandler(NewFrameEventHandler method)
         {
-            VideoSource.NewFrame += method;
+            _VideoSource.NewFrame += method;
         }
 
         public void UnsubscribeFromFrameHandler(NewFrameEventHandler method)
         {
-            VideoSource.NewFrame -= method;
+            _VideoSource.NewFrame -= method;
         }
 
         public void SubscribeToErrorHandler(VideoSourceErrorEventHandler method)
         {
-            VideoSource.VideoSourceError += method;
+            _VideoSource.VideoSourceError += method;
         }
 
         public void UnsubscribeFromErrorHandler(VideoSourceErrorEventHandler method)
         {
-            VideoSource.VideoSourceError -= method;
+            _VideoSource.VideoSourceError -= method;
         }
 
         public Geometry ResetCropGeometry()
@@ -210,11 +192,11 @@ namespace LiveSplit.VAS
         public void Stop()
         {
             IsScannerLocked = true;
-            VideoSource?.SignalToStop();
-            UnsubscribeFromFrameHandler(NewFrameEventHandler);
+            _VideoSource?.SignalToStop();
+            UnsubscribeFromFrameHandler(_NewFrameEventHandler);
             CurrentIndex = 0;
             DeltaManager = null;
-            VideoSource?.WaitForStop();
+            _VideoSource?.WaitForStop();
             _VideoGeometry = Geometry.Blank;
             FrameHandlerThread?.Abort();
         }
@@ -232,17 +214,17 @@ namespace LiveSplit.VAS
         public void Start()
         {
             UpdateCropGeometry();
-            if (GameProfile != null && IsVideoSourceValid())
+            if (_GameProfile != null && IsVideoSourceValid())
             {
                 CurrentIndex = 0;
                 DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
                 initCount = 0;
 
-                SubscribeToFrameHandler(NewFrameEventHandler);
-                SubscribeToErrorHandler(VideoSourceErrorEventHandler);
+                SubscribeToFrameHandler(_NewFrameEventHandler);
+                SubscribeToErrorHandler(_VideoSourceErrorEventHandler);
 
-                VideoSource.Source = DeviceMoniker;
-                VideoSource.Start();
+                _VideoSource.Source = DeviceMoniker;
+                _VideoSource.Start();
             }
         }
 
@@ -250,13 +232,9 @@ namespace LiveSplit.VAS
         {
             if (!Restarting)
             {
-                Component.LogEvent("Fatal error encountered, restarting scanner...");
+                _Component.LogEvent("Fatal error encountered, restarting scanner...");
                 Restarting = true;
-                if (IsScannerLocked)
-                {
-                    Thread.Sleep(1);
-                }
-
+                if (IsScannerLocked) Thread.Sleep(1);
                 Stop();
                 Thread.Sleep(1000);
                 Start();
@@ -267,18 +245,18 @@ namespace LiveSplit.VAS
         public void UpdateCropGeometry()
         {
             _TrueCropGeometry = Geometry.Blank;
-            if (GameProfile != null)
+            if (_GameProfile != null)
             {
                 IsScannerLocked = true;
 
-                // TO REMOVE
+                // @TODO: TO REMOVE
                 // I'm afraid that removing it will break things so that'll happen later.
                 int i = 0;
-                foreach (var wz in GameProfile.Screens[0].WatchZones)
+                foreach (var wz in _GameProfile.Screens[0].WatchZones)
                 {
                     var g = wz.Geometry;
                     g.RemoveAnchor(wz.Screen.Geometry);
-                    g.ResizeTo(CropGeometry, GameProfile.Screens[0].Geometry);
+                    g.ResizeTo(CropGeometry, _GameProfile.Screens[0].Geometry);
                     g.Update(CropGeometry.X, CropGeometry.Y);
                     wz.CropGeometry = g;
 
@@ -290,12 +268,9 @@ namespace LiveSplit.VAS
                     }
                 }
                 // Using this until implementation of multiple screens in the aligner form.
-                foreach (var s in GameProfile.Screens)
-                {
-                    s.CropGeometry = CropGeometry;
-                }
+                foreach (var s in _GameProfile.Screens) s.CropGeometry = CropGeometry;
 
-                CompiledFeatures = new CompiledFeatures(GameProfile, CropGeometry);
+                CompiledFeatures = new CompiledFeatures(_GameProfile, CropGeometry);
                 IsScannerLocked = false;
             }
         }
@@ -303,37 +278,31 @@ namespace LiveSplit.VAS
         // Does this dispose properly?
         private static IMagickImage GetComposedImage(Bitmap input, int channelIndex, ColorSpace colorSpace)
         {
-            if (input == null)
-            {
-                return null;
-            }
+            if (input == null) return null;
 
             IMagickImage mi = new MagickImage(input)
             {
                 ColorSpace = colorSpace
             };
-            if (channelIndex > -1)
-            {
-                mi = mi.Separate().ElementAt(channelIndex);
-            }
-            return mi;
+
+            return (channelIndex > -1) ? mi = mi.Separate().ElementAt(channelIndex) : mi;
         }
 
         private void HandleVideoError(object sender, VideoSourceErrorEventArgs e)
         {
-            Component.LogEvent(e.Description);
+            _Component.LogEvent(e.Description);
+
             if (e.Exception != null)
             {
-                Component.LogEvent("Accord exception details:");
-                Component.LogEvent(e.Exception);
+                _Component.LogEvent("Accord exception details:");
+                _Component.LogEvent(e.Exception);
             }
+
             if (IsVideoSourceRunning())
             {
                 Restart();
             }
         }
-
-        internal int initCount = 0; // To stop wasting CPU when first starting.
 
         public void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
@@ -360,12 +329,12 @@ namespace LiveSplit.VAS
             }
             else if (ScanningCount >= 20)
             {
-                // Todo: Make this do something more.
+                // @TODO: Make this do something more.
                 LiveSplit.Options.Log.Warning("VAS: Frame handler is overloaded!!!");
             }
         }
 
-        // Todo: prevFile isn't necessary. Instead store the features of the current scan to be used on the next.
+        // @TODO: prevFile isn't necessary. Instead store the features of the current scan to be used on the next.
         // That could cause sync problems so it needs to be investigated.
         private void NewRun(Scan scan, int index)
         {
