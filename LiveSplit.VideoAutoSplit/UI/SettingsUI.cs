@@ -15,16 +15,15 @@ namespace LiveSplit.VAS.UI
     {
         internal readonly Dictionary<string, CheckBox> BasicSettings;
 
-        private string ProfilePath { get { return Component.ProfilePath; } set { Component.ProfilePath = value; } }
-        private string VideoDevice { get { return Component.VideoDevice; } set { Component.VideoDevice = value; } }
-        private string GameVersion { get { return Component.GameVersion; } set { Component.GameVersion = value; } }
-        private IDictionary<string, bool> BasicSettingsState => Component.BasicSettingsState;
-        private IDictionary<string, dynamic> CustomSettingsState => Component.CustomSettingsState;
+        private string _ProfilePath { get { return Component.ProfilePath; } set { Component.ProfilePath = value; } }
+        private string _VideoDevice { get { return Component.VideoDevice; } set { Component.VideoDevice = value; } }
+        private string _GameVersion { get { return Component.GameVersion; } set { Component.GameVersion = value; } }
+        private IDictionary<string, bool> _BasicSettingsState => Component.BasicSettingsState;
+        private IDictionary<string, dynamic> _CustomSettingsState => Component.CustomSettingsState;
 
         public SettingsUI(VASComponent component) : base(component)
         {
             InitializeComponent();
-
             UpdateCustomSettingsVisibility();
 
             BasicSettings = new Dictionary<string, CheckBox>
@@ -35,18 +34,12 @@ namespace LiveSplit.VAS.UI
                 ["Reset"] = ckbReset,
             };
 
-            Component.ProfileChanged += (sender, gameProfile) => txtGameProfile.Text = ProfilePath;
+            Component.ProfileChanged += (o, e) => txtGameProfile.Text = _ProfilePath;
         }
 
-        public override void Rerender()
-        {
-            FillboxCaptureDevice();
-        }
+        public override void Rerender() => FillboxCaptureDevice();
 
-        public override void Derender()
-        {
-            boxCaptureDevice.Items.Clear();
-        }
+        public override void Derender() => boxCaptureDevice.Items.Clear();
 
         internal override void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
@@ -58,9 +51,9 @@ namespace LiveSplit.VAS.UI
             foreach (VASLSetting setting in settings.OrderedSettings)
             {
                 var value = setting.Value;
-                if (CustomSettingsState.ContainsKey(setting.Id))
+                if (_CustomSettingsState.ContainsKey(setting.Id))
                 {
-                    value = CustomSettingsState[setting.Id];
+                    value = _CustomSettingsState[setting.Id];
                 }
 
                 var node = new DropDownTreeNode(setting.Label)
@@ -68,37 +61,26 @@ namespace LiveSplit.VAS.UI
                     Tag = setting,
                     ToolTipText = setting.ToolTip
                 };
+
                 node.ComboBox.Text = value.ToString();
                 setting.Value = value;
 
-                if (setting.Parent == null)
-                {
-                    treeCustomSettings.Nodes.Add(node);
-                }
-                else if (flat.ContainsKey(setting.Parent))
-                {
-                    flat[setting.Parent].Nodes.Add(node);
-                }
+                if (setting.Parent == null) treeCustomSettings.Nodes.Add(node);
+                else if (flat.ContainsKey(setting.Parent)) flat[setting.Parent].Nodes.Add(node);
 
                 flat.Add(setting.Id, node);
             }
 
             foreach (var item in flat)
             {
-                if (!item.Value.Checked)
-                {
-                    UpdateGrayedOut(item.Value);
-                }
+                if (!item.Value.Checked) UpdateGrayedOut(item.Value);
             }
 
             treeCustomSettings.ExpandAll();
             treeCustomSettings.EndUpdate();
 
             // Scroll up to the top
-            if (treeCustomSettings.Nodes.Count > 0)
-            {
-                treeCustomSettings.Nodes[0].EnsureVisible();
-            }
+            if (treeCustomSettings.Nodes.Count > 0) treeCustomSettings.Nodes[0].EnsureVisible();
 
             UpdateCustomSettingsVisibility();
             InitBasicSettings(settings);
@@ -115,9 +97,9 @@ namespace LiveSplit.VAS.UI
                 int selectedIndex = boxCaptureDevice.SelectedIndex;
                 boxCaptureDevice.Items.Clear();
 
-                if (!string.IsNullOrEmpty(VideoDevice))
+                if (!string.IsNullOrEmpty(_VideoDevice))
                 {
-                    var savedDevices = videoDevices.Where(d => d.ToString() == VideoDevice);
+                    var savedDevices = videoDevices.Where(d => d.ToString() == _VideoDevice);
                     if (savedDevices.Any())
                     {
                         var savedDevice = savedDevices.First();
@@ -210,10 +192,7 @@ namespace LiveSplit.VAS.UI
             var setting = (VASLSetting)node.Tag;
             dynamic value = func(setting);
 
-            if (node.ComboBox.Text != value.ToString())
-            {
-                node.ComboBox.Text = value.ToString();
-            }
+            if (node.ComboBox.Text != value.ToString()) node.ComboBox.Text = value.ToString();
         }
 
         private void UpdateGrayedOut(DropDownTreeNode node)
@@ -242,9 +221,9 @@ namespace LiveSplit.VAS.UI
                     checkbox.Tag = setting;
                     var value = setting.Value;
 
-                    if (BasicSettingsState.ContainsKey(name))
+                    if (_BasicSettingsState.ContainsKey(name))
                     {
-                        value = BasicSettingsState[name];
+                        value = _BasicSettingsState[name];
                     }
 
                     checkbox.Checked = value;
@@ -258,8 +237,6 @@ namespace LiveSplit.VAS.UI
                 }
             }
         }
-
-        // Events
 
         private void BtnGameProfile_Click(object sender, EventArgs e)
         {
@@ -281,14 +258,14 @@ namespace LiveSplit.VAS.UI
                 Title = "Load a Game Profile"
             })
             {
-                if (File.Exists(ProfilePath))
+                if (File.Exists(_ProfilePath))
                 {
-                    ofd.InitialDirectory = Path.GetDirectoryName(ProfilePath);
-                    ofd.FileName = Path.GetFileName(ProfilePath);
+                    ofd.InitialDirectory = Path.GetDirectoryName(_ProfilePath);
+                    ofd.FileName = Path.GetFileName(_ProfilePath);
                 }
-                else if (Directory.Exists(ProfilePath))
+                else if (Directory.Exists(_ProfilePath))
                 {
-                    ofd.InitialDirectory = Path.GetDirectoryName(ProfilePath);
+                    ofd.InitialDirectory = Path.GetDirectoryName(_ProfilePath);
                 }
 
                 if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists)
@@ -302,13 +279,13 @@ namespace LiveSplit.VAS.UI
         {
             using (var fbd = new FolderBrowserDialog() { ShowNewFolderButton = false })
             {
-                if (Directory.Exists(ProfilePath))
+                if (Directory.Exists(_ProfilePath))
                 {
-                    fbd.SelectedPath = ProfilePath;
+                    fbd.SelectedPath = _ProfilePath;
                 }
-                else if (File.Exists(ProfilePath))
+                else if (File.Exists(_ProfilePath))
                 {
-                    fbd.SelectedPath = Path.GetDirectoryName(ProfilePath);
+                    fbd.SelectedPath = Path.GetDirectoryName(_ProfilePath);
                 }
 
                 if (fbd.ShowDialog() == DialogResult.OK && Directory.Exists(fbd.SelectedPath))
@@ -318,6 +295,7 @@ namespace LiveSplit.VAS.UI
             }
         }
 
+        // @TODO: https://imgs.xkcd.com/comics/goto.png
         private void TryLoadGameProfile(string filePath)
         {
 retry:
@@ -339,7 +317,7 @@ retry:
             }
             else
             {
-                ProfilePath = txtGameProfile.Text = filePath;
+                _ProfilePath = txtGameProfile.Text = filePath;
                 //Component.UpdateScript(null, null);
             }
         }
@@ -355,7 +333,7 @@ retry:
 
             if (setting != null)
             {
-                BasicSettingsState[setting.Id] = setting.Value = checkbox.Checked;
+                _BasicSettingsState[setting.Id] = setting.Value = checkbox.Checked;
             }
         }
 
@@ -366,7 +344,7 @@ retry:
             var node = (DropDownTreeNode)e.Node;
             VASLSetting setting = (VASLSetting)node.Tag;
             setting.Value = node.Checked;
-            CustomSettingsState[setting.Id] = setting.Value;
+            _CustomSettingsState[setting.Id] = setting.Value;
 
             UpdateGrayedOut(node);
         }
@@ -455,6 +433,7 @@ retry:
             UpdateNodeValue(s => s.DefaultValue, (DropDownTreeNode)treeCustomSettings.SelectedNode);
         }
 
+        // @TODO: https://imgs.xkcd.com/comics/goto.png
         private void BtnCaptureDevice_Click(object sender, EventArgs e)
         {
 retry:
@@ -475,10 +454,11 @@ retry:
             }
         }
 
+        // @TODO: https://imgs.xkcd.com/comics/goto.png
         private void BoxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
         {
             // May need to tweak more
-            if (boxCaptureDevice.SelectedItem.ToString() == VideoDevice)
+            if (boxCaptureDevice.SelectedItem.ToString() == _VideoDevice)
             {
                 return;
             }
@@ -495,7 +475,7 @@ retry:
             {
                 var match = matches.First();
                 //Component.Scanner.SetVideoSource(match.MonikerString);
-                VideoDevice = match.ToString();
+                _VideoDevice = match.ToString();
             }
             else
             {
