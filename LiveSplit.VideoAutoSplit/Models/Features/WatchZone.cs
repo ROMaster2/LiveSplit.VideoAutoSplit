@@ -8,24 +8,13 @@ namespace LiveSplit.VAS.Models
 {
     public class WatchZone
     {
-        internal WatchZone(Screen screen, string name, ScaleType scaleType, Geometry geometry)
-        {
-            Screen = screen;
-            Name = name;
-            ScaleType = scaleType;
-            Geometry = geometry;
-        }
-
-        internal WatchZone() { }
-
         public string Name;
         public Geometry Geometry;
+        public ScaleType ScaleType;
+        public List<Watcher> Watches = new List<Watcher>();
 
         [XmlIgnore]
         public Geometry CropGeometry;
-
-        public ScaleType ScaleType;
-        public List<Watcher> Watches = new List<Watcher>();
 
         [XmlIgnore]
         public Screen Screen { get; internal set; }
@@ -33,6 +22,16 @@ namespace LiveSplit.VAS.Models
         [XmlIgnore]
         public List<WatchImage> WatchImages
         { get { var a = new List<WatchImage>(); a.AddRange(Watches.SelectMany(w => w.WatchImages)); return a; } }
+
+        internal WatchZone() { }
+
+        internal WatchZone(Screen screen, string name, ScaleType scaleType, Geometry geometry)
+        {
+            Screen = screen;
+            Name = name;
+            ScaleType = scaleType;
+            Geometry = geometry;
+        }
 
         public Watcher AddWatcher(string name, double frequency = 1d, ColorSpace colorSpace = ColorSpace.RGB)
         {
