@@ -11,51 +11,32 @@ namespace LiveSplit.VAS.UI
 {
     public partial class ScanRegionUI : AbstractUI
     {
-        private GameProfile GameProfile { get { return Component.GameProfile; } }
-        private Scanner Scanner => Component.Scanner;
+        private bool _RenderingFrame = false;
+        private GameProfile _GameProfile { get { return Component.GameProfile; } }
+        private Geometry _CropGeometry { get { return Component.CropGeometry; } set { Component.CropGeometry = value; } }
+        private Geometry _VideoGeometry => _Scanner.VideoGeometry;
+        private static readonly MagickColor _EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
+        private DateTime _NextUpdate = DateTime.UtcNow;
+        private Scanner _Scanner => Component.Scanner;
 
-        // Temporary. Remove later.
-        private Geometry CropGeometry { get { return Component.CropGeometry; } set { Component.CropGeometry = value; } }
+        private const Gravity _STANDARD_GRAVITY = Gravity.Northwest;
+        private const FilterType _DEFAULT_SCALE_FILTER = FilterType.Box;
 
-        private Geometry VideoGeometry => Scanner.VideoGeometry;
-
-        private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
-        private const FilterType DEFAULT_SCALE_FILTER = FilterType.Box;
-        private static readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
-
-        private DateTime NextUpdate = DateTime.UtcNow;
-
-        private bool RenderingFrame = false;
-
-        private Geometry MinGeometry
+        private Geometry _MinGeometry
         {
             get
             {
-                var geo = VideoGeometry;
-                if (geo.IsBlank)
-                {
-                    return new Geometry(-8192, -8192, 4, 4);
-                }
-                else
-                {
-                    return new Geometry(-VideoGeometry.Width, -VideoGeometry.Height, 4, 4);
-                }
+                if (_VideoGeometry.IsBlank) return new Geometry(-8192, -8192, 4, 4);
+                return new Geometry(-_VideoGeometry.Width, -_VideoGeometry.Height, 4, 4);
             }
         }
 
-        private Geometry MAX_VALUES
+        private Geometry _MaxValues
         {
             get
             {
-                var geo = VideoGeometry;
-                if (geo.IsBlank)
-                {
-                    return new Geometry(8192, 8192, 8192, 8192);
-                }
-                else
-                {
-                    return new Geometry(VideoGeometry.Width, VideoGeometry.Height, VideoGeometry.Width * 2, VideoGeometry.Height * 2);
-                }
+                if (_VideoGeometry.IsBlank) return new Geometry(8192, 8192, 8192, 8192);
+                return new Geometry(_VideoGeometry.Width, _VideoGeometry.Height, _VideoGeometry.Width * 2, _VideoGeometry.Height * 2);
             }
         }
 
@@ -66,14 +47,14 @@ namespace LiveSplit.VAS.UI
 
         public override void Rerender()
         {
-            SetAllNumValues(CropGeometry, false);
+            SetAllNumValues(_CropGeometry, false);
             FillboxPreviewFeature();
-            Scanner.SubscribeToFrameHandler(HandleNewFrame);
+            _Scanner.SubscribeToFrameHandler(HandleNewFrame);
         }
 
         public override void Derender()
         {
-            Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);
+            _Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);
             boxPreviewFeature.Items.Clear();
             pictureBox.Image = new Bitmap(1, 1);
         }
@@ -104,7 +85,7 @@ namespace LiveSplit.VAS.UI
                 newGeo.Width = (double)numWidth.Value;
                 newGeo.Height = (double)numHeight.Value;
             }
-            CropGeometry = newGeo.Min(MAX_VALUES).Max(MinGeometry);
+            _CropGeometry = newGeo.Min(_MaxValues).Max(_MinGeometry);
         }
 
         private void FillboxPreviewType()
@@ -119,9 +100,9 @@ namespace LiveSplit.VAS.UI
         private void FillboxPreviewFeature()
         {
             boxPreviewFeature.Items.Add("<None>");
-            if (GameProfile != null)
+            if (_GameProfile != null)
             {
-                foreach (var wi in GameProfile.WatchImages)
+                foreach (var wi in _GameProfile.WatchImages)
                 {
                     wi.SetName(wi.Screen, wi.WatchZone, wi.Watcher);
                     boxPreviewFeature.Items.Add(wi);
@@ -133,8 +114,8 @@ namespace LiveSplit.VAS.UI
         // Would be better if something like this was in Geometry.cs
         private Geometry GetScaledGeometry(Geometry refGeo)
         {
-            var referenceWidth = refGeo.IsBlank ? CropGeometry.Width : refGeo.Width;
-            var referenceHeight = refGeo.IsBlank ? CropGeometry.Height : refGeo.Height;
+            var referenceWidth = refGeo.IsBlank ? _CropGeometry.Width : refGeo.Width;
+            var referenceHeight = refGeo.IsBlank ? _CropGeometry.Height : refGeo.Height;
 
             // Tried to not have hardcoded, but Microsoft disagreed.
             var parent = pictureBox.Parent;
@@ -153,9 +134,9 @@ namespace LiveSplit.VAS.UI
 
         private void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
-            if (!RenderingFrame)
+            if (!_RenderingFrame)
             {
-                RenderingFrame = true;
+                _RenderingFrame = true;
                 var frame = (Bitmap)e.Frame.Clone();
                 Task.Run(() => RefreshThumbnail(frame));
             }
@@ -179,31 +160,26 @@ namespace LiveSplit.VAS.UI
         private async void RefreshThumbnailAsync(Bitmap frame, int featureIndex, WatchImage feature)
         {
             await Task.Delay(0).ConfigureAwait(false);
-            Geometry minGeo = Geometry.Min(CropGeometry, GetScaledGeometry(Geometry.Blank));
+            Geometry minGeo = Geometry.Min(_CropGeometry, GetScaledGeometry(Geometry.Blank));
 
             MagickImage mi = new MagickImage(frame);
-            var tmp = VideoGeometry;
+            var tmp = _VideoGeometry;
 
-            if (!VideoGeometry.Contains(CropGeometry))
-            {
-                mi.Extent(CropGeometry.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
-            }
-            else
-            {
-                mi.Crop(CropGeometry.ToMagick(), STANDARD_GRAVITY);
-            }
+            if (!_VideoGeometry.Contains(_CropGeometry)) mi.Extent(_CropGeometry.ToMagick(), _STANDARD_GRAVITY, _EXTENT_COLOR);
+            else mi.Crop(_CropGeometry.ToMagick(), _STANDARD_GRAVITY);
+
             mi.RePage();
 
             if (featureIndex > 0)
             {
                 var wi = feature;
                 var tGeo = wi.WatchZone.CropGeometry;
-                tGeo.Update(-CropGeometry.X, -CropGeometry.Y);
+                tGeo.Update(-_CropGeometry.X, -_CropGeometry.Y);
 
                 var baseMGeo = new MagickGeometry(100, 100, (int)Math.Round(tGeo.Width), (int)Math.Round(tGeo.Height));
 
                 tGeo.Update(-100, -100, 200, 200);
-                mi.Extent(tGeo.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
+                mi.Extent(tGeo.ToMagick(), _STANDARD_GRAVITY, _EXTENT_COLOR);
 
                 using (var baseM = new MagickImage(
                     MagickColor.FromRgba(0, 0, 0, 0),
@@ -227,13 +203,15 @@ namespace LiveSplit.VAS.UI
                     {
                         mi.ColorSpace = wi.Watcher.ColorSpace;
                         deltaImage.ColorSpace = wi.Watcher.ColorSpace;
-                        mi.Crop(baseMGeo, STANDARD_GRAVITY);
+                        mi.Crop(baseMGeo, _STANDARD_GRAVITY);
                         mi.Alpha(AlphaOption.Off); // Why is this necessary? It wasn't necessary before.
+
                         if (wi.Watcher.Equalize)
                         {
                             deltaImage.Equalize();
                             mi.Equalize();
                         }
+
                         deltaImage.RePage();
                         mi.RePage();
                         lblDelta.Text = mi.Compare(deltaImage, ErrorMetric.PeakSignalToNoiseRatio).ToString("0.####");
@@ -245,14 +223,16 @@ namespace LiveSplit.VAS.UI
             }
 
             var drawingSize = minGeo.Size.ToDrawing();
+
             if (mi.Width > drawingSize.Width || mi.Height > drawingSize.Height)
             {
                 var mGeo = minGeo.ToMagick();
                 mGeo.IgnoreAspectRatio = false;
                 //mi.ColorSpace = ColorSpace.HCL;
-                mi.FilterType = DEFAULT_SCALE_FILTER;
+                mi.FilterType = _DEFAULT_SCALE_FILTER;
                 mi.Resize(mGeo);
             }
+
             UpdatepictureBox(drawingSize, mi.ToBitmap(System.Drawing.Imaging.ImageFormat.MemoryBmp));
         }
 
@@ -262,7 +242,7 @@ namespace LiveSplit.VAS.UI
             {
                 pictureBox.Size = minGeo;
                 pictureBox.Image = bitmap;
-                RenderingFrame = false;
+                _RenderingFrame = false;
             });
         }
     }
