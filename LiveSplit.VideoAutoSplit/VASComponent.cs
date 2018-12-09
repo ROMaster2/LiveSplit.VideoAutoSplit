@@ -17,15 +17,34 @@ namespace LiveSplit.VAS
 {
     public class VASComponent : LogicComponent
     {
-        //internal static readonly string[] BASIC_SETTING_TYPES = new string[] { "Start", "Split", "Reset"};
-
         public override string ComponentName => "Video Auto Splitter";
 
-        private readonly LiveSplitState State;
+        private readonly LiveSplitState _LiveSplitState;
+        private readonly ComponentUI _ComponentUI;
+        private readonly FileSystemWatcher _FSWatcher;
 
-        private readonly ComponentUI ComponentUI;
-
+        // Is this name okay? It feels like it conflicts with existing standards, but I don't know exactly which ones.
+        private string _EventLog = string.Empty;
         private string _ProfilePath = string.Empty;
+        private string _GameVersion = string.Empty;
+        private string _VideoDevice = string.Empty;
+
+        private GameProfile _GameProfile;
+        private VASLScript _Script;
+
+        // Temporary. Remove later.
+        public Geometry CropGeometry { get { return Scanner.CropGeometry; } set { Scanner.CropGeometry = value; } }
+        public Scanner Scanner { get; internal set; }
+
+        public IDictionary<string, Geometry> CropGeometries { get; internal set; }
+        public IDictionary<string, bool> BasicSettingsState { get; internal set; }
+        public IDictionary<string, dynamic> CustomSettingsState { get; internal set; }
+
+        public event EventHandler<GameProfile> ProfileChanged;
+        public event EventHandler<string> VideoDeviceChanged;
+        public event EventHandler<string> GameVersionChanged;
+        public event EventHandler<string> EventLogUpdated;
+        //public event EventHandler<Geometry> CropGeometryChanged;
 
         public string ProfilePath
         {
@@ -58,8 +77,6 @@ namespace LiveSplit.VAS
             }
         }
 
-        private GameProfile _GameProfile = null;
-
         public GameProfile GameProfile
         {
             get
@@ -71,25 +88,24 @@ namespace LiveSplit.VAS
                         LogEvent("Loading new game profile: " + ProfilePath);
 
                         _GameProfile = GameProfile.FromPath(ProfilePath);
-                        // Todo: Unset GameVersion if the existing one isn't in the new profile. Maybe.
+                        // @TODO: Unset GameVersion if the existing one isn't in the new profile. Maybe.
 
                         if (File.Exists(ProfilePath))
                         {
-                            FSWatcher.Path = Path.GetDirectoryName(ProfilePath);
-                            FSWatcher.Filter = Path.GetFileName(ProfilePath + "*");
+                            _FSWatcher.Path = Path.GetDirectoryName(ProfilePath);
+                            _FSWatcher.Filter = Path.GetFileName(ProfilePath + "*");
                         }
                         else
                         {
-                            FSWatcher.Path = ProfilePath;
-                            FSWatcher.Filter = null;
+                            _FSWatcher.Path = ProfilePath;
+                            _FSWatcher.Filter = null;
                         }
 
-                        FSWatcher.EnableRaisingEvents = true;
-
+                        _FSWatcher.EnableRaisingEvents = true;
                         LogEvent("Game profile successfully loaded!");
 
                         // Todo: Log this separately. Just don't want to atm.
-                        VASLSettings settings = Script.RunStartup(State);
+                        VASLSettings settings = Script.RunStartup(_LiveSplitState);
                         SetVASLSettings(settings);
                     }
                     catch (Exception e)
@@ -102,8 +118,6 @@ namespace LiveSplit.VAS
                 return _GameProfile;
             }
         }
-
-        private VASLScript _Script = null;
 
         public VASLScript Script
         {
@@ -130,8 +144,6 @@ namespace LiveSplit.VAS
             }
         }
 
-        private string _GameVersion = string.Empty;
-
         public string GameVersion
         {
             get
@@ -147,9 +159,6 @@ namespace LiveSplit.VAS
                 }
             }
         }
-
-        // To expand upon
-        private string _VideoDevice = string.Empty;
 
         public string VideoDevice
         {
@@ -168,18 +177,6 @@ namespace LiveSplit.VAS
             }
         }
 
-        public IDictionary<string, Geometry> CropGeometries { get; internal set; }
-        public IDictionary<string, bool> BasicSettingsState { get; internal set; }
-        public IDictionary<string, dynamic> CustomSettingsState { get; internal set; }
-
-        // Temporary. Remove later.
-        public Geometry CropGeometry { get { return Scanner.CropGeometry; } set { Scanner.CropGeometry = value; } }
-
-        public Scanner Scanner { get; internal set; }
-
-        // Is this name okay? It feels like it conflicts with existing standards, but I don't know exactly which ones.
-        private string _EventLog = string.Empty;
-
         public string EventLog
         {
             get
@@ -194,22 +191,13 @@ namespace LiveSplit.VAS
             }
         }
 
-        private readonly FileSystemWatcher FSWatcher;
-
-        public event EventHandler<GameProfile> ProfileChanged;
-        public event EventHandler<string> VideoDeviceChanged;
-        public event EventHandler<string> GameVersionChanged;
-        //public event EventHandler<Geometry> CropGeometryChanged;
-
-        public event EventHandler<string> EventLogUpdated;
-
         public VASComponent(LiveSplitState state)
         {
             LogEvent("Establishing Video Auto Splitter, standby...");
 
-            State = state;
+            _LiveSplitState = state;
 
-            ComponentUI = new ComponentUI(this);
+            _ComponentUI = new ComponentUI(this);
 
             CropGeometries = new Dictionary<string, Geometry>();
             BasicSettingsState = new Dictionary<string, bool>();
@@ -217,8 +205,8 @@ namespace LiveSplit.VAS
 
             Scanner = new Scanner(this);
 
-            FSWatcher = new FileSystemWatcher();
-            FSWatcher.Changed += async (sender, args) =>
+            _FSWatcher = new FileSystemWatcher();
+            _FSWatcher.Changed += async (sender, args) =>
             {
                 await Task.Delay(200).ConfigureAwait(false);
                 ProfileCleanup();
@@ -227,7 +215,7 @@ namespace LiveSplit.VAS
             Scanner.NewResult += (sender, dm) => RunScript(sender, dm);
         }
 
-        public override Control GetSettingsControl(LayoutMode mode) => ComponentUI;
+        public override Control GetSettingsControl(LayoutMode mode) => _ComponentUI;
 
         #region Save Settings
 
@@ -240,6 +228,7 @@ namespace LiveSplit.VAS
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "VideoDevice", VideoDevice));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "GameVersion", GameVersion));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "CropGeometry", CropGeometry));
+
             AppendBasicSettingsToXml(document, settingsNode);
             AppendCustomSettingsToXml(document, settingsNode);
 
@@ -248,7 +237,7 @@ namespace LiveSplit.VAS
 
         private void AppendBasicSettingsToXml(XmlDocument document, XmlNode settingsNode)
         {
-            var basicSettings = ComponentUI?.SettingsUI?.BasicSettings;
+            var basicSettings = _ComponentUI?.SettingsUI?.BasicSettings;
             if (basicSettings?.Count > 0)
             {
                 foreach (var setting in basicSettings)
@@ -302,17 +291,14 @@ namespace LiveSplit.VAS
 
             // Hacky? Probably. Geometry should have proper XML support.
             var geo = Geometry.FromString(element["CropGeometry"].InnerText);
-            if (geo.HasSize)
-            {
-                CropGeometry = geo;
-            }
+            if (geo.HasSize) CropGeometry = geo;
 
             VideoDevice = SettingsHelper.ParseString(element["VideoDevice"], string.Empty);
         }
 
         private void ParseBasicSettingsFromXml(XmlElement element)
         {
-            var basicSettings = ComponentUI?.SettingsUI?.BasicSettings;
+            var basicSettings = _ComponentUI?.SettingsUI?.BasicSettings;
             if (basicSettings?.Count > 0)
             {
                 foreach (var setting in basicSettings)
@@ -320,12 +306,7 @@ namespace LiveSplit.VAS
                     if (element[setting.Key] != null)
                     {
                         var value = bool.Parse(element[setting.Key].InnerText);
-
-                        if (setting.Value.Enabled)
-                        {
-                            setting.Value.Checked = value;
-                        }
-
+                        if (setting.Value.Enabled) setting.Value.Checked = value;
                         BasicSettingsState[setting.Key.ToLower()] = value;
                     }
                 }
@@ -340,10 +321,7 @@ namespace LiveSplit.VAS
             {
                 foreach (XmlElement element in customSettingsNode.ChildNodes)
                 {
-                    if (element.Name != "Setting")
-                    {
-                        continue;
-                    }
+                    if (element.Name != "Setting") continue;
 
                     string id = element.Attributes["id"]?.Value;
                     //string type = element.Attributes["type"].Value;
@@ -352,6 +330,9 @@ namespace LiveSplit.VAS
                     if (id != null)
                     {
                         dynamic value;
+
+#pragma warning disable CS0162 // Unreachable code detected
+
                         switch (type)
                         {
                             case "bool":
@@ -381,6 +362,9 @@ namespace LiveSplit.VAS
                             default:
                                 throw new NotSupportedException("Data type is either incorrect or unsupported.");
                         }
+
+#pragma warning restore CS0162 // Unreachable code detected
+
                         CustomSettingsState[id] = value;
                     }
                 }
@@ -420,36 +404,29 @@ namespace LiveSplit.VAS
             }
 
             // sigh...
-            if (ComponentUI.InvokeRequired)
+            if (_ComponentUI.InvokeRequired)
             {
-                ComponentUI.Invoke((MethodInvoker)delegate
+                _ComponentUI.Invoke((MethodInvoker)delegate
                 {
-                    ComponentUI.InitVASLSettings(settings, scriptLoaded);
+                    _ComponentUI.InitVASLSettings(settings, scriptLoaded);
                 });
             }
             else
             {
-                ComponentUI.InitVASLSettings(settings, scriptLoaded);
+                _ComponentUI.InitVASLSettings(settings, scriptLoaded);
             }
         }
 
-        public void SetVASLSettings(VASLSettings settings)
-        {
-            InitVASLSettings(settings, true);
-        }
-
-        public void ResetVASLSettings()
-        {
-            InitVASLSettings(new VASLSettings(), false);
-        }
+        public void SetVASLSettings(VASLSettings settings) => InitVASLSettings(settings, true);
+        public void ResetVASLSettings() => InitVASLSettings(new VASLSettings(), false);
 
         #endregion VASL Settings
 
-        internal void RunScript(object sender, DeltaOutput d)
+        internal void RunScript(object _, DeltaOutput d)
         {
             try
             {
-                Script.Update(State, d);
+                Script.Update(_LiveSplitState, d);
             }
             catch (Exception e)
             {
@@ -479,7 +456,6 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
-                //LogEvent("Failed to load VASL settings:");
                 LogEvent(e);
                 ProfileCleanup();
             }
@@ -490,11 +466,8 @@ namespace LiveSplit.VAS
             LogEvent("Cleaning up profile...");
             try
             {
-                FSWatcher.EnableRaisingEvents = false;
-                if (_Script != null)
-                {
-                    Script.RunShutdown(State);
-                }
+                _FSWatcher.EnableRaisingEvents = false;
+                if (_Script != null) Script.RunShutdown(_LiveSplitState);
             }
             catch (Exception e)
             {
@@ -507,15 +480,6 @@ namespace LiveSplit.VAS
                 ResetVASLSettings();
             }
             LogEvent("Profile cleanup finished.");
-        }
-
-        public override void Dispose()
-        {
-            LogEvent("Disposing...");
-            //Scanner.Stop();
-            ProfileCleanup();
-            FSWatcher?.Dispose();
-            LogEvent("Closing...");
         }
 
         // Todo: Use TraceListener instead?
@@ -534,6 +498,15 @@ namespace LiveSplit.VAS
         internal void ClearEventLog()
         {
             _EventLog = string.Empty;
+        }
+
+        public override void Dispose()
+        {
+            LogEvent("Disposing...");
+            //Scanner.Stop();
+            ProfileCleanup();
+            _FSWatcher?.Dispose();
+            LogEvent("Closing...");
         }
 
         public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode) { }
