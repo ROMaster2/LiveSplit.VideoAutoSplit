@@ -6,10 +6,11 @@ using System.Text;
 
 namespace LiveSplit.VAS.VASL
 {
+    // @TODO: Implement Exception Constructors
+    // @TODO: Don't throw exceptions within exceptions
     public class VASLCompilerException : Exception
     {
         public VASLMethod Method { get; private set; }
-
         public CompilerErrorCollection CompilerErrors { get; private set; }
 
         public VASLCompilerException(VASLMethod method, CompilerErrorCollection errors)
@@ -21,15 +22,8 @@ namespace LiveSplit.VAS.VASL
 
         private static string GetMessage(VASLMethod method, CompilerErrorCollection errors)
         {
-            if (method == null)
-            {
-                throw new ArgumentNullException(nameof(method));
-            }
-
-            if (errors == null)
-            {
-                throw new ArgumentNullException(nameof(errors));
-            }
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (errors == null) throw new ArgumentNullException(nameof(errors));
 
             var sb = new StringBuilder($"'{method.Name ?? "(no name)"}' method compilation errors:");
             foreach (CompilerError error in errors)
@@ -41,6 +35,8 @@ namespace LiveSplit.VAS.VASL
         }
     }
 
+    // @TODO: Implement Exception Constructors
+    // @TODO: Don't throw exceptions within exceptions
     public class VASLRuntimeException : Exception
     {
         public VASLRuntimeException(VASLMethod method, Exception innerException)
@@ -49,15 +45,8 @@ namespace LiveSplit.VAS.VASL
 
         private static string GetMessage(VASLMethod method, Exception innerException)
         {
-            if (method == null)
-            {
-                throw new ArgumentNullException(nameof(method));
-            }
-
-            if (innerException == null)
-            {
-                throw new ArgumentNullException(nameof(innerException));
-            }
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (innerException == null) throw new ArgumentNullException(nameof(innerException));
 
             var stackTrace = new StackTrace(innerException, true);
             var stackTraceSb = new StringBuilder();
