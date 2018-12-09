@@ -6,28 +6,17 @@ namespace LiveSplit.VAS.Models
 {
     public class Screen
     {
-        internal Screen(GameProfile gameProfile, string name, bool useAdvanced, Geometry geometry)
-        {
-            GameProfile = gameProfile;
-            Name = name;
-            UseAdvanced = useAdvanced;
-            Geometry = geometry;
-        }
-
-        internal Screen() { }
-
         public string Name;
         public Geometry Geometry;
+        public bool UseAdvanced;
+        public List<WatchZone> WatchZones = new List<WatchZone>();
+        public WatchImage Autofitter;
 
         [XmlIgnore]
         public Geometry CropGeometry; // Temporary place
 
         [XmlIgnore]
         public Geometry GameGeometry; // Temporary place
-
-        public bool UseAdvanced;
-        public List<WatchZone> WatchZones = new List<WatchZone>();
-        public WatchImage Autofitter;
 
         [XmlIgnore]
         public GameProfile GameProfile { get; internal set; }
@@ -39,6 +28,16 @@ namespace LiveSplit.VAS.Models
         [XmlIgnore]
         public List<WatchImage> WatchImages
         { get { var a = new List<WatchImage>(); a.AddRange(Watches.SelectMany(w => w.WatchImages)); return a; } }
+
+        internal Screen(GameProfile gameProfile, string name, bool useAdvanced, Geometry geometry)
+        {
+            GameProfile = gameProfile;
+            Name = name;
+            UseAdvanced = useAdvanced;
+            Geometry = geometry;
+        }
+
+        internal Screen() { }
 
         public void ReSyncRelationships()
         {
