@@ -7,17 +7,39 @@ namespace LiveSplit.VAS.Models
 {
     public class WatchImage
     {
-        internal WatchImage(Watcher watcher, string filePath)
+        public int Index;
+        public string FilePath;
+
+        // TO REMOVE
+        [XmlIgnore]
+        public MagickImage MagickImage { get; internal set; }
+
+        [XmlIgnore]
+        public Screen Screen { get { return WatchZone.Screen; } }
+
+        [XmlIgnore]
+        public WatchZone WatchZone { get { return Watcher.WatchZone; } }
+
+        [XmlIgnore]
+        public Watcher Watcher { get; internal set; }
+
+        public string FileName
         {
-            Watcher = watcher;
-            FilePath = filePath;
+            get
+            {
+                var s = FilePath.LastIndexOf('\\');
+                var d = FilePath.LastIndexOf('.');
+                return FilePath.Substring(s + 1, d - s - 1);
+            }
         }
 
-        // Todo: Add exception handling when file does not exist anymore.
-
-        internal WatchImage() { }
-
-        public string FilePath;
+        public string FullName
+        {
+            get
+            {
+                return Screen.Name + "/" + WatchZone.Name + "/" + Watcher.Name + " - " + FileName;
+            }
+        }
 
         private string _Name;
 
@@ -66,38 +88,14 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        // TO REMOVE
-        [XmlIgnore]
-        public MagickImage MagickImage { get; internal set; }
-
-        [XmlIgnore]
-        public Screen Screen { get { return WatchZone.Screen; } }
-
-        [XmlIgnore]
-        public WatchZone WatchZone { get { return Watcher.WatchZone; } }
-
-        [XmlIgnore]
-        public Watcher Watcher { get; internal set; }
-
-        public int Index;
-
-        public string FileName
+        internal WatchImage(Watcher watcher, string filePath)
         {
-            get
-            {
-                var s = FilePath.LastIndexOf('\\');
-                var d = FilePath.LastIndexOf('.');
-                return FilePath.Substring(s + 1, d - s - 1);
-            }
+            Watcher = watcher;
+            FilePath = filePath;
         }
 
-        public string FullName
-        {
-            get
-            {
-                return Screen.Name + "/" + WatchZone.Name + "/" + Watcher.Name + " - " + FileName;
-            }
-        }
+        // @TODO: Add exception handling when file does not exist anymore.
+        internal WatchImage() { }
 
         // TO REMOVE
         public void SetName(Screen screen, WatchZone watchZone, Watcher watcher)
@@ -143,6 +141,7 @@ namespace LiveSplit.VAS.Models
             MagickImage = mi;
         }
         */
+
         public void Dispose()
         {
             _Image?.Dispose();
@@ -150,14 +149,8 @@ namespace LiveSplit.VAS.Models
 
         public override string ToString()
         {
-            if (!string.IsNullOrWhiteSpace(Name))
-            {
-                return Name;
-            }
-            else
-            {
-                return FileName;
-            }
+            if (!string.IsNullOrWhiteSpace(Name)) return Name;
+            else return FileName;
         }
     }
 }
