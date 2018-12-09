@@ -6,12 +6,11 @@ namespace LiveSplit.VAS.Models.Delta
 {
     public class DeltaManager
     {
-        internal CompiledFeatures CompiledFeatures { get; private set; }
-
+        // @TODO: Let scripts modify this.
+        public int DefaultOffset { get; set; } = 100; // 100 milliseconds.
         public DeltaHistory History { get; private set; }
 
-        // Todo: Let scripts modify this.
-        public int DefaultOffset { get; set; } = 100; // 100 milliseconds.
+        internal CompiledFeatures CompiledFeatures { get; private set; }
 
         public DeltaManager(CompiledFeatures compiledFeatures, int capacity)
         {
