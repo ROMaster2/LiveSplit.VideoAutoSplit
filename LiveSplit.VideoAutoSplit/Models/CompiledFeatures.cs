@@ -9,25 +9,24 @@ namespace LiveSplit.VAS.Models
     public struct CompiledFeatures
     {
         private const int INIT_PIXEL_LIMIT = 16777216;
-
-        private Geometry CaptureGeometry;
-
         public CWatchZone[] CWatchZones { get; private set; }
         public int FeatureCount { get; private set; }
-        private bool HasDupeCheck { get; set; }
         public int PixelLimit { get; private set; }
         public int PixelCount { get; private set; }
         public IReadOnlyDictionary<string, int> IndexNames { get; private set; }
 
+        private bool _HasDupeCheck { get; set; }
+        private Geometry _CaptureGeometry;
+
+        // @TODO: Implement the functionality instead of throwing new NotImplementedException
         public CompiledFeatures(GameProfile gameProfile, Geometry cropGeometry, int pixelLimit = INIT_PIXEL_LIMIT)
         {
-            CaptureGeometry = cropGeometry;
-            HasDupeCheck = false;
+            _CaptureGeometry = cropGeometry;
+            _HasDupeCheck = false;
             PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
             PixelCount = 0;
 
             var nameDictionary = new Dictionary<string, int>();
-
             var cWatchZones = new CWatchZone[gameProfile.WatchZones.Count];
             var indexCount = 0;
 
@@ -82,7 +81,7 @@ namespace LiveSplit.VAS.Models
                     }
                     else if (watcher.WatcherType == WatcherType.DuplicateFrame)
                     {
-                        HasDupeCheck = true;
+                        _HasDupeCheck = true;
 
                         CWatches[i2] = new CWatcher(new CWatchImage[] { new CWatchImage(watcher.Name, indexCount) }, watcher);
 
@@ -136,7 +135,7 @@ namespace LiveSplit.VAS.Models
             {
                 if (!indexes.Contains(i))
                 {
-                    LiveSplit.Options.Log.Warning("Feature #" + i.ToString() + "'s name was not indexed.");
+                    Options.Log.Warning("Feature #" + i.ToString() + "'s name was not indexed.");
                 }
             }
         }
@@ -156,7 +155,7 @@ namespace LiveSplit.VAS.Models
             var point = wzGeo.LocationWithoutAnchor(gameGeo);
             underlay.Composite(mi, new PointD(point.X, point.Y), CompositeOperator.Copy);
             underlay.RePage();
-            var mGeo = CaptureGeometry.ToMagick(false);
+            var mGeo = _CaptureGeometry.ToMagick(false);
             mGeo.IgnoreAspectRatio = true;
             underlay.Resize(mGeo);
             underlay.RePage();
@@ -195,7 +194,7 @@ namespace LiveSplit.VAS.Models
         {
             get
             {
-                return this.Equals(Blank);
+                return Equals(Blank);
             }
         }
 
@@ -241,12 +240,12 @@ namespace LiveSplit.VAS.Models
 
         public bool UsesDupeCheck()
         {
-            return HasDupeCheck;
+            return _HasDupeCheck;
         }
 
         public bool UsesDupeCheck(DateTime dateTime)
         {
-            return HasDupeCheck && CWatchZones.Any(wz => wz.UsesDupeCheck(dateTime));
+            return _HasDupeCheck && CWatchZones.Any(wz => wz.UsesDupeCheck(dateTime));
         }
 
         public CWatchZone this[int i]
