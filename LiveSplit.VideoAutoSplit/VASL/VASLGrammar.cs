@@ -19,7 +19,7 @@ namespace LiveSplit.VAS.VASL
             NonGrammarTerminals.Add(singleLineComment);
             NonGrammarTerminals.Add(delimitedComment);
 
-            // Todo: Aliases
+            // @TODO: Aliases
 
             var init = new KeyTerm("init", "init");
             var exit = new KeyTerm("exit", "exit");
