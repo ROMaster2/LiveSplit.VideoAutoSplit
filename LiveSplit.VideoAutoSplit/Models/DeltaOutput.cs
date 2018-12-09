@@ -5,9 +5,7 @@ namespace LiveSplit.VAS.Models.Delta
 {
     public class DeltaOutput
     {
-        private readonly DeltaManager Manager;
-
-        public DeltaHistory History => Manager.History;
+        public DeltaHistory History => _Manager.History;
         public int HistorySize => History.Count;
 
         public int OriginalIndex { get; private set; }
@@ -15,6 +13,7 @@ namespace LiveSplit.VAS.Models.Delta
         public double FrameRate { get; private set; }
 
         private int[] _FeatureIndexes;
+        private readonly DeltaManager _Manager;
 
         private int[] FeatureIndexes
         {
@@ -32,9 +31,9 @@ namespace LiveSplit.VAS.Models.Delta
 
         internal DeltaOutput(DeltaManager manager, int index, double frameRate)
         {
-            Manager = manager;
+            _Manager = manager;
             OriginalIndex = index;
-            FrameIndex = index % Manager.History.Count;
+            FrameIndex = index % _Manager.History.Count;
             FrameRate = frameRate;
 
             _FeatureIndexes = null;
@@ -53,7 +52,7 @@ namespace LiveSplit.VAS.Models.Delta
             {
                 return Math.Max(1, (int)Math.Round(FrameRate * milliseconds / 1000d));
             }
-            catch (Exception e)
+            catch
             {
                 var millisecondOffsetLimit = (int)Math.Ceiling((HistorySize - 1) / FrameRate * 1000);
                 if (milliseconds < 0)
@@ -62,12 +61,7 @@ namespace LiveSplit.VAS.Models.Delta
                 }
                 else if (milliseconds > millisecondOffsetLimit)
                 {
-                    throw new IndexOutOfRangeException(
-                        "Offset cannot exceed the history's count, which is currently " +
-                        HistorySize.ToString() +
-                        ", and this is trying to access previous frame #" +
-                        Math.Round(FrameRate * milliseconds / 1000d).ToString() +
-                        ".");
+                    throw new IndexOutOfRangeException(String.Format("Offset cannot exceed the history's count, which is currently {0}, and this is trying to access previous frame #{1}.", HistorySize.ToString(), Math.Round(FrameRate * milliseconds / 1000d).ToString()));
                 }
                 else
                 {
@@ -90,7 +84,7 @@ namespace LiveSplit.VAS.Models.Delta
 
             if (duration <= 0)
             {
-                endOffset = FrameOffset(startMilliseconds + Manager.DefaultOffset);
+                endOffset = FrameOffset(startMilliseconds + _Manager.DefaultOffset);
             }
             else
             {
@@ -117,7 +111,7 @@ namespace LiveSplit.VAS.Models.Delta
                 for (int n = 0; n < featureIndexes.Length; n++)
                 {
                     var t = n + (i * featureIndexes.Length);
-                    result[t] = Manager.History[frameIndex, featureIndexes[n]]; // Todo: Handle NaN.
+                    result[t] = _Manager.History[frameIndex, featureIndexes[n]]; // @TODO: Handle NaN.
                 }
             }
 
@@ -145,7 +139,7 @@ namespace LiveSplit.VAS.Models.Delta
                 var frameIndex = IndexFromOffset(i + startOffset);
                 for (int n = 0; n < featureIndexes.Length; n++)
                 {
-                    featureArray[n] = Manager.History[frameIndex, featureIndexes[n]]; // Todo: Handle NaN.
+                    featureArray[n] = _Manager.History[frameIndex, featureIndexes[n]]; // @TODO: Handle NaN.
                 }
                 result[i] = func(featureArray);
             }
@@ -174,7 +168,7 @@ namespace LiveSplit.VAS.Models.Delta
                 for (int n = 0; n < offsetDiff; n++)
                 {
                     var frameIndex = IndexFromOffset(n + startOffset);
-                    indexArray[n] = Manager.History[frameIndex, featureIndexes[i]];
+                    indexArray[n] = _Manager.History[frameIndex, featureIndexes[i]];
                 }
                 result[i] = func(indexArray);
             }
@@ -212,7 +206,7 @@ namespace LiveSplit.VAS.Models.Delta
         {
             get
             {
-                return Manager.History[FrameIndex, FeatureIndexes[0]];
+                return _Manager.History[FrameIndex, FeatureIndexes[0]];
             }
         }
 
@@ -220,39 +214,39 @@ namespace LiveSplit.VAS.Models.Delta
         {
             if (milliseconds <= 0)
             {
-                milliseconds = Manager.DefaultOffset;
+                milliseconds = _Manager.DefaultOffset;
             }
 
             var prevFrameIndex = IndexFromOffset(FrameOffset(milliseconds));
-            return Manager.History[prevFrameIndex, FeatureIndexes[0]];
+            return _Manager.History[prevFrameIndex, FeatureIndexes[0]];
         }
 
         // For the below, actual timestamps will be used once splitting can be offset'd.
         public void Pause(double milliseconds = 0d)
         {
-            var untilDate = milliseconds > 0d ? Manager.History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
+            var untilDate = milliseconds > 0d ? _Manager.History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
             //var untilDate = milliseconds > 0d ? TimeStamp.CurrentDateTime.Time.AddMilliseconds(milliseconds) : DateTime.MaxValue;
             foreach (var f in FeatureIndexes)
             {
-                Manager.CompiledFeatures.PauseFeature(f, untilDate);
+                _Manager.CompiledFeatures.PauseFeature(f, untilDate);
             }
         }
 
         public void Resume(double milliseconds = 0d)
         {
-            var untilDate = milliseconds > 0d ? Manager.History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
+            var untilDate = milliseconds > 0d ? _Manager.History[FrameIndex].FrameEnd.AddMilliseconds(milliseconds) : DateTime.MaxValue;
             foreach (var f in FeatureIndexes)
             {
-                Manager.CompiledFeatures.ResumeFeature(f, untilDate);
+                _Manager.CompiledFeatures.ResumeFeature(f, untilDate);
             }
         }
 
         public void PauseAll()
         {
             var untilDate = DateTime.MaxValue;
-            for (int i = 0; i < Manager.CompiledFeatures.FeatureCount; i++)
+            for (int i = 0; i < _Manager.CompiledFeatures.FeatureCount; i++)
             {
-                Manager.CompiledFeatures.PauseFeature(i, untilDate);
+                _Manager.CompiledFeatures.PauseFeature(i, untilDate);
             }
         }
 
@@ -263,7 +257,7 @@ namespace LiveSplit.VAS.Models.Delta
                 var result = false;
                 foreach (var f in FeatureIndexes)
                 {
-                    if (double.IsNaN(Manager.History[FrameIndex, f]))
+                    if (double.IsNaN(_Manager.History[FrameIndex, f]))
                     {
                         result = true;
                         break;
@@ -375,7 +369,7 @@ namespace LiveSplit.VAS.Models.Delta
                 int[] numbers = new int[strings.Length];
                 for (int n = 0; n < strings.Length; n++)
                 {
-                    if (!Manager.CompiledFeatures.IndexNames.TryGetValue(strings[n], out var i))
+                    if (!_Manager.CompiledFeatures.IndexNames.TryGetValue(strings[n], out var i))
                     {
                         throw new ArgumentException("This name does not exist.");
                     }
