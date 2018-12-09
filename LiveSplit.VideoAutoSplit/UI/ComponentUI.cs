@@ -6,7 +6,7 @@ namespace LiveSplit.VAS.UI
 {
     public partial class ComponentUI : UserControl
     {
-        private VASComponent Component { get; set; }
+        private VASComponent _Component { get; set; }
 
         // Children are hardcoded until a better solution is found.
         // tbh it's probably easier to read anyway.
@@ -19,12 +19,12 @@ namespace LiveSplit.VAS.UI
         {
             InitializeComponent();
 
-            Component = component;
+            _Component = component;
 
-            SettingsUI = new SettingsUI(Component);
-            ScanRegionUI = new ScanRegionUI(Component);
-            FeaturesUI = new FeaturesUI(Component);
-            DebugUI = new DebugUI(Component);
+            SettingsUI = new SettingsUI(_Component);
+            ScanRegionUI = new ScanRegionUI(_Component);
+            FeaturesUI = new FeaturesUI(_Component);
+            DebugUI = new DebugUI(_Component);
             SetChildControlSettings(SettingsUI, tabSettings, "Settings");
             SetChildControlSettings(ScanRegionUI, tabScanRegion, "ScanRegion");
             SetChildControlSettings(FeaturesUI, tabFeatures, "Features");
