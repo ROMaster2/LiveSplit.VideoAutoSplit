@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace LiveSplit.VAS
 {
-    public class Scanner
+    public class Scanner : IDisposable
     {
         private VASComponent Component;
 
@@ -35,10 +35,10 @@ namespace LiveSplit.VAS
 
         private NewFrameEventHandler NewFrameEventHandler;
         private VideoSourceErrorEventHandler VideoSourceErrorEventHandler;
+        public event EventHandler<Scan> ScanFinished;
         public event EventHandler<DeltaOutput> NewResult;
 
         // Todo: Add something for downscaling before comparing for large images.
-        public int OverloadedCount = 0;
 
         public Scanner(VASComponent component)
         {
@@ -52,7 +52,7 @@ namespace LiveSplit.VAS
         {
             get
             {
-                if (!IsVideoGeometrySet())
+                if (!_VideoGeometry.HasSize)
                 {
                     if (!IsVideoSourceRunning() && IsVideoSourceValid())
                     {
@@ -61,16 +61,11 @@ namespace LiveSplit.VAS
                     }
                     if (IsVideoSourceRunning())
                     {
-                        Task.Factory.StartNew(() => SubscribeToFrameHandler(SetFrameSize));
+                        VideoSource.NewFrame += SetFrameSize;
                     }
                 }
                 return _VideoGeometry;
             }
-        }
-
-        private bool IsVideoGeometrySet()
-        {
-            return _VideoGeometry.HasSize;
         }
 
         // Hacky but it saves on CPU for the scanner.
@@ -79,7 +74,7 @@ namespace LiveSplit.VAS
             if (!_VideoGeometry.HasSize)
             {
                 _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
-                UnsubscribeFromFrameHandler(SetFrameSize);
+                VideoSource.NewFrame -= SetFrameSize;
             }
         }
 
@@ -96,8 +91,11 @@ namespace LiveSplit.VAS
             }
             set
             {
-                _CropGeometry = value;
-                UpdateCropGeometry();
+                if (_CropGeometry != value)
+                {
+                    _CropGeometry = value;
+                    UpdateCropGeometry();
+                }
             }
         }
 
@@ -177,24 +175,14 @@ namespace LiveSplit.VAS
             return VideoSource.IsRunning;
         }
 
-        public void SubscribeToFrameHandler(NewFrameEventHandler method)
+        public void SubscribeToFrameHandler(EventHandler<Scan> method)
         {
-            VideoSource.NewFrame += method;
+            ScanFinished += method;
         }
 
-        public void UnsubscribeFromFrameHandler(NewFrameEventHandler method)
+        public void UnsubscribeFromFrameHandler(EventHandler<Scan> method)
         {
-            VideoSource.NewFrame -= method;
-        }
-
-        public void SubscribeToErrorHandler(VideoSourceErrorEventHandler method)
-        {
-            VideoSource.VideoSourceError += method;
-        }
-
-        public void UnsubscribeFromErrorHandler(VideoSourceErrorEventHandler method)
-        {
-            VideoSource.VideoSourceError -= method;
+            ScanFinished -= method;
         }
 
         public Geometry ResetCropGeometry()
@@ -208,7 +196,7 @@ namespace LiveSplit.VAS
         {
             IsScannerLocked = true;
             VideoSource?.SignalToStop();
-            UnsubscribeFromFrameHandler(NewFrameEventHandler);
+            VideoSource.NewFrame -= NewFrameEventHandler;
             CurrentIndex = 0;
             DeltaManager = null;
             VideoSource?.WaitForStop();
@@ -235,8 +223,8 @@ namespace LiveSplit.VAS
                 DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
                 initCount = 0;
 
-                SubscribeToFrameHandler(NewFrameEventHandler);
-                SubscribeToErrorHandler(VideoSourceErrorEventHandler);
+                VideoSource.NewFrame += NewFrameEventHandler;
+                VideoSource.VideoSourceError += VideoSourceErrorEventHandler;
 
                 VideoSource.Source = DeviceMoniker;
                 VideoSource.Start();
@@ -260,34 +248,9 @@ namespace LiveSplit.VAS
         public void UpdateCropGeometry()
         {
             _TrueCropGeometry = Geometry.Blank;
-            if (GameProfile != null)
+            if (Component.IsScriptLoaded() && GameProfile != null)
             {
                 IsScannerLocked = true;
-
-                // TO REMOVE
-                // I'm afraid that removing it will break things so that'll happen later.
-                int i = 0;
-                foreach (var wz in GameProfile.Screens[0].WatchZones)
-                {
-                    var g = wz.Geometry;
-                    g.RemoveAnchor(wz.Screen.Geometry);
-                    g.ResizeTo(CropGeometry, GameProfile.Screens[0].Geometry);
-                    g.Update(CropGeometry.X, CropGeometry.Y);
-                    wz.CropGeometry = g;
-
-                    foreach (var wi in wz.WatchImages)
-                    {
-                        //wi.SetMagickImage(false);
-                        wi.Index = i;
-                        i++;
-                    }
-                }
-                // Using this until implementation of multiple screens in the aligner form.
-                foreach (var s in GameProfile.Screens)
-                {
-                    s.CropGeometry = CropGeometry;
-                }
-
                 CompiledFeatures = new CompiledFeatures(GameProfile, CropGeometry);
                 IsScannerLocked = false;
             }
@@ -371,25 +334,10 @@ namespace LiveSplit.VAS
                 foreach (var cWatchZone in CompiledFeatures.CWatchZones)
                     CropScan(ref deltas, ref benchmarks, now, fileImageBase, prevFileImageBase, cWatchZone);
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
-                LiveSplit.Options.Log.Error(e);
-                if (IsVideoSourceRunning() && !IsScannerLocked)
-                {
-                    ScanningCount--;
-                }
-            }
-            catch (InvalidOperationException e)
-            {
-                LiveSplit.Options.Log.Error(e);
-                if (IsVideoSourceRunning() && !IsScannerLocked)
-                {
-                    ScanningCount--;
-                }
-            }
-            catch (AccessViolationException e)
-            {
-                LiveSplit.Options.Log.Error(e);
+                scan.Dispose();
+                Component.LogEvent(e);
                 if (IsVideoSourceRunning() && !IsScannerLocked)
                 {
                     ScanningCount--;
@@ -400,11 +348,13 @@ namespace LiveSplit.VAS
                 var scanEnd = TimeStamp.CurrentDateTime.Time;
 
                 DeltaManager.AddResult(index, scan, scanEnd, deltas, benchmarks);
-
-                NewResult(null, new DeltaOutput(DeltaManager, index, AverageFPS));
+                NewResult(this, new DeltaOutput(DeltaManager, index, AverageFPS));
 
                 ScanningCount--;
-                scan.Dispose();
+
+                if (ScanFinished != null) ScanFinished(this, scan);
+
+                //scan.Dispose();
 
                 // It's on its own thread so running it here should be okay.
                 if (index % Math.Ceiling(AverageFPS) == 0)
@@ -540,7 +490,6 @@ namespace LiveSplit.VAS
                     if (cWatchImage.HasAlpha)
                     {
                         fileImageCompare.Composite(cWatchImage.AlphaChannel, CompositeOperator.Over);
-                        //fileImageCompare.Write(@"C:\test7.png");
                     }
 
                     SetDelta(ref deltas, fileImageCompare, deltaImage, cWatcher, cWatchImage);
@@ -589,6 +538,13 @@ namespace LiveSplit.VAS
         private static void SetBenchmark(ref double[] benchmarks, TimeStamp timeStamp, CWatchImage cWatchImage)
         {
             benchmarks[cWatchImage.Index] = (TimeStamp.Now - timeStamp).TotalSeconds;
+        }
+
+        public void Dispose()
+        {
+            Stop();
+            IsScannerLocked = true;
+            FrameHandlerThread.Abort();
         }
 
     }

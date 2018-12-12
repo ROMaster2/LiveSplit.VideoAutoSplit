@@ -21,12 +21,14 @@ namespace LiveSplit.VAS.UI
 
         override public void Rerender()
         {
-            Component.Script.ScriptUpdateFinished += UpdateRowsAsync;
+            if (_Component.IsScriptLoaded())
+                _Component.Script.ScriptUpdateFinished += UpdateRowsAsync;
         }
 
         override public void Derender()
         {
-            Component.Script.ScriptUpdateFinished -= UpdateRowsAsync;
+            if (_Component.IsScriptLoaded())
+                _Component.Script.ScriptUpdateFinished -= UpdateRowsAsync;
         }
 
         // Because two rows exist for different purposes, the first for headers and last for layout balance,
@@ -37,7 +39,7 @@ namespace LiveSplit.VAS.UI
             ClearRows();
             if (scriptLoaded)
             {
-                var features = Component.GameProfile.WatchImages;
+                var features = _Component.GameProfile.WatchImages;
 
                 if (features.Count > 0)
                 {
@@ -55,7 +57,7 @@ namespace LiveSplit.VAS.UI
                 // Get the defined vars from the raw script.
                 // The vars aren't added to the ExpandoObject until they're invoked. This gets around that.
                 // There's probably a better solution but idk what it could be atm.
-                var varsResults = Regex.Matches(Component.GameProfile.RawScript, @"vars\.[a-z][0-9a-z]*", RegexOptions.IgnoreCase);
+                var varsResults = Regex.Matches(_Component.GameProfile.RawScript, @"vars\.[a-z][0-9a-z]*", RegexOptions.IgnoreCase);
 
                 if (varsResults.Count > 0)
                 {
@@ -119,7 +121,7 @@ namespace LiveSplit.VAS.UI
                     featureRow.Invoke((MethodInvoker)delegate { featureRow.Update(value, varState); });
                 }
 
-                var vars = (IDictionary<string, object>)Component.Script.Vars;
+                var vars = (IDictionary<string, object>)_Component.Script.Vars;
                 for (int i = deltaCount + 1; i < tlpFeatures.RowCount - 1; i++)
                 {
                     var variableRow = (VariableRow)tlpFeatures.Controls[i];

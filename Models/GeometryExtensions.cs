@@ -21,6 +21,22 @@ namespace LiveSplit.VAS.Models
                     ImageMagick.Gravity gravity = ImageMagick.Gravity.Undefined)
             : this(mGeo.X, mGeo.Y, mGeo.Width, mGeo.Height, gravity.ToAnchor()) { }
 
+        /// <summary>
+        /// Constructor for converting ImageMagick.MagickGeometry to this format.
+        /// </summary>
+        public Geometry(System.Drawing.Rectangle rectangle,
+                    Anchor anchor = Anchor.Undefined)
+            : this(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, anchor)
+        { }
+
+        /// <summary>
+        /// Constructor for converting ImageMagick.MagickGeometry to this format.
+        /// </summary>
+        public Geometry(System.Drawing.RectangleF rectangleF,
+                    Anchor anchor = Anchor.Undefined)
+            : this(rectangleF.X, rectangleF.Y, rectangleF.Width, rectangleF.Height, anchor)
+        { }
+
         #endregion Constructors
 
         #region Public Methods

@@ -10,14 +10,14 @@ namespace LiveSplit.VAS.UI
     public abstract class AbstractUI : UserControl
 #endif
     {
-        internal VASComponent Component { get; }
+        internal VASComponent _Component { get; }
 
         public TabPage PageParent => (TabPage)Parent;
         public TabControl TabParent => (TabControl)Parent.Parent;
 
         public AbstractUI(VASComponent component) : base()
         {
-            Component = component;
+            _Component = component;
         }
 
 #if DEBUG

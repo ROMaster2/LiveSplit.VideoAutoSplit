@@ -42,8 +42,10 @@
             this.txtDebug.Multiline = true;
             this.txtDebug.Name = "txtDebug";
             this.txtDebug.ReadOnly = true;
+            this.txtDebug.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.txtDebug.Size = new System.Drawing.Size(454, 440);
             this.txtDebug.TabIndex = 1;
+            this.txtDebug.Text = "FrankerZ";
             this.txtDebug.WordWrap = false;
             // 
             // btnExport

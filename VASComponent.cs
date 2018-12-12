@@ -435,6 +435,11 @@ namespace LiveSplit.VAS
 
         #endregion VASL Settings
 
+        public bool IsScriptLoaded()
+        {
+            return _Script != null;
+        }
+
         internal void RunScript(object sender, DeltaOutput d)
         {
             try
@@ -499,15 +504,6 @@ namespace LiveSplit.VAS
             LogEvent("Profile cleanup finished.");
         }
 
-        public override void Dispose()
-        {
-            LogEvent("Disposing...");
-            //Scanner.Stop();
-            ProfileCleanup();
-            FSWatcher?.Dispose();
-            LogEvent("Closing...");
-        }
-
         // Todo: Use TraceListener instead?
         internal void LogEvent(Exception e)
         {
@@ -524,6 +520,17 @@ namespace LiveSplit.VAS
         internal void ClearEventLog()
         {
             _EventLog = string.Empty;
+        }
+
+        public override void Dispose()
+        {
+            LogEvent("Disposing...");
+            _ProfilePath = null;
+            ProfileCleanup();
+            Scanner.Dispose();
+            FSWatcher?.Dispose();
+            ComponentUI.Dispose();
+            LogEvent("Closing...");
         }
 
         public override void Update(IInvalidator i, LiveSplitState s, float w, float h, LayoutMode m) { }

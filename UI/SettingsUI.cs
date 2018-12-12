@@ -15,11 +15,11 @@ namespace LiveSplit.VAS.UI
     {
         internal readonly Dictionary<string, CheckBox> BasicSettings;
 
-        private string ProfilePath { get { return Component.ProfilePath; } set { Component.ProfilePath = value; } }
-        private string VideoDevice { get { return Component.VideoDevice; } set { Component.VideoDevice = value; } }
-        private string GameVersion { get { return Component.GameVersion; } set { Component.GameVersion = value; } }
-        private IDictionary<string, bool> BasicSettingsState => Component.BasicSettingsState;
-        private IDictionary<string, dynamic> CustomSettingsState => Component.CustomSettingsState;
+        private string ProfilePath { get { return _Component.ProfilePath; } set { _Component.ProfilePath = value; } }
+        private string VideoDevice { get { return _Component.VideoDevice; } set { _Component.VideoDevice = value; } }
+        private string GameVersion { get { return _Component.GameVersion; } set { _Component.GameVersion = value; } }
+        private IDictionary<string, bool> BasicSettingsState => _Component.BasicSettingsState;
+        private IDictionary<string, dynamic> CustomSettingsState => _Component.CustomSettingsState;
 
         public SettingsUI(VASComponent component) : base(component)
         {
@@ -35,7 +35,7 @@ namespace LiveSplit.VAS.UI
                 ["Reset"] = ckbReset,
             };
 
-            Component.ProfileChanged += (sender, gameProfile) => txtGameProfile.Text = ProfilePath;
+            _Component.ProfileChanged += (sender, gameProfile) => txtGameProfile.Text = ProfilePath;
         }
 
         override public void Rerender()
@@ -50,54 +50,58 @@ namespace LiveSplit.VAS.UI
 
         override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
-            treeCustomSettings.BeginUpdate();
-            treeCustomSettings.Nodes.Clear();
-
-            var flat = new Dictionary<string, DropDownTreeNode>();
-
-            foreach (VASLSetting setting in settings.OrderedSettings)
+            if (this.IsHandleCreated)
+            this.Invoke((MethodInvoker)delegate
             {
-                var value = setting.Value;
-                if (CustomSettingsState.ContainsKey(setting.Id))
-                    value = CustomSettingsState[setting.Id];
+                treeCustomSettings.BeginUpdate();
+                treeCustomSettings.Nodes.Clear();
 
-                var node = new DropDownTreeNode(setting.Label)
-                {
-                    Tag = setting,
-                    ToolTipText = setting.ToolTip
-                };
-                node.ComboBox.Text = value.ToString();
-                setting.Value = value;
+                var flat = new Dictionary<string, DropDownTreeNode>();
 
-                if (setting.Parent == null)
+                foreach (VASLSetting setting in settings.OrderedSettings)
                 {
-                    treeCustomSettings.Nodes.Add(node);
+                    var value = setting.Value;
+                    if (CustomSettingsState.ContainsKey(setting.Id))
+                        value = CustomSettingsState[setting.Id];
+
+                    var node = new DropDownTreeNode(setting.Label)
+                    {
+                        Tag = setting,
+                        ToolTipText = setting.ToolTip
+                    };
+                    node.ComboBox.Text = value.ToString();
+                    setting.Value = value;
+
+                    if (setting.Parent == null)
+                    {
+                        treeCustomSettings.Nodes.Add(node);
+                    }
+                    else if (flat.ContainsKey(setting.Parent))
+                    {
+                        flat[setting.Parent].Nodes.Add(node);
+                    }
+
+                    flat.Add(setting.Id, node);
                 }
-                else if (flat.ContainsKey(setting.Parent))
+
+                foreach (var item in flat)
                 {
-                    flat[setting.Parent].Nodes.Add(node);
+                    if (!item.Value.Checked)
+                    {
+                        UpdateGrayedOut(item.Value);
+                    }
                 }
 
-                flat.Add(setting.Id, node);
-            }
+                treeCustomSettings.ExpandAll();
+                treeCustomSettings.EndUpdate();
 
-            foreach (var item in flat)
-            {
-                if (!item.Value.Checked)
-                {
-                    UpdateGrayedOut(item.Value);
-                }
-            }
+                // Scroll up to the top
+                if (treeCustomSettings.Nodes.Count > 0)
+                    treeCustomSettings.Nodes[0].EnsureVisible();
 
-            treeCustomSettings.ExpandAll();
-            treeCustomSettings.EndUpdate();
-
-            // Scroll up to the top
-            if (treeCustomSettings.Nodes.Count > 0)
-                treeCustomSettings.Nodes[0].EnsureVisible();
-
-            UpdateCustomSettingsVisibility();
-            InitBasicSettings(settings);
+                UpdateCustomSettingsVisibility();
+                InitBasicSettings(settings);
+            });
         }
 
         internal bool FillboxCaptureDevice()
@@ -318,7 +322,6 @@ namespace LiveSplit.VAS.UI
             else
             {
                 ProfilePath = txtGameProfile.Text = filePath;
-                //Component.UpdateScript(null, null);
             }
         }
 
@@ -460,8 +463,8 @@ namespace LiveSplit.VAS.UI
             if (boxCaptureDevice.SelectedItem.ToString() == VideoDevice)
                 return;
 
-            if (Component.Scanner.IsVideoSourceRunning())
-                Component.Scanner.Stop();
+            if (_Component.Scanner.IsVideoSourceRunning())
+                _Component.Scanner.Stop();
             retry:
             var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             var matches = videoDevices.Where(v => v.ToString() == boxCaptureDevice.Text);
@@ -490,7 +493,7 @@ namespace LiveSplit.VAS.UI
                     FillboxCaptureDevice();
                 }
             }
-            Component.Scanner.AsyncStart();
+            _Component.Scanner.AsyncStart();
         }
 
         private void SettingsUI_VisibleChanged(object sender, EventArgs e)

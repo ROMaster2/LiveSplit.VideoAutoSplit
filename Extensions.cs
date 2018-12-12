@@ -106,9 +106,9 @@ namespace LiveSplit.VAS
             return result;
         }
 
-        public static System.Drawing.Bitmap DeepCopy(this System.Drawing.Bitmap bitmap)
+        public static System.Drawing.Bitmap DeepClone(this System.Drawing.Bitmap bitmap)
         {
-            return bitmap.Clone(new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height), bitmap.PixelFormat);
+            return new System.Drawing.Bitmap(bitmap);
         }
 
         public static T Clone<T>(this T controlToClone) where T : System.Windows.Forms.Control

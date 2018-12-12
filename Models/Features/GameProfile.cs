@@ -73,7 +73,7 @@ namespace LiveSplit.VAS.Models
             else if (Directory.Exists(path))
                 gp = FromFolder(path);
             else
-                throw new FileNotFoundException();
+                return null;
 
             return gp;
         }

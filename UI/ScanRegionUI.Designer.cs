@@ -71,7 +71,7 @@
             this.tlpCore.Location = new System.Drawing.Point(7, 7);
             this.tlpCore.Name = "tlpCore";
             this.tlpCore.RowCount = 2;
-            this.tlpCore.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tlpCore.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 150F));
             this.tlpCore.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpCore.Size = new System.Drawing.Size(454, 472);
             this.tlpCore.TabIndex = 0;
@@ -89,7 +89,7 @@
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(454, 100);
+            this.panel1.Size = new System.Drawing.Size(454, 150);
             this.panel1.TabIndex = 0;
             // 
             // lblScreen
@@ -165,11 +165,11 @@
             this.boxPreviewType.Name = "boxPreviewType";
             this.boxPreviewType.Size = new System.Drawing.Size(121, 21);
             this.boxPreviewType.TabIndex = 224;
+            this.boxPreviewType.SelectedIndexChanged += new System.EventHandler(this.boxPreviewType_SelectedIndexChanged);
             // 
             // boxPreviewFeature
             // 
             this.boxPreviewFeature.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.boxPreviewFeature.Enabled = false;
             this.boxPreviewFeature.FormattingEnabled = true;
             this.boxPreviewFeature.Location = new System.Drawing.Point(103, 30);
             this.boxPreviewFeature.Name = "boxPreviewFeature";
@@ -205,6 +205,7 @@
             this.btnReset.TabIndex = 223;
             this.btnReset.Text = "Reset";
             this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
             // tableLayoutPanel1
             // 
@@ -283,6 +284,7 @@
             this.numX.Size = new System.Drawing.Size(64, 20);
             this.numX.TabIndex = 218;
             this.numX.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numX.Validated += new System.EventHandler(this.numX_Validated);
             // 
             // numHeight
             // 
@@ -303,6 +305,7 @@
             this.numHeight.Size = new System.Drawing.Size(64, 20);
             this.numHeight.TabIndex = 221;
             this.numHeight.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numHeight.Validated += new System.EventHandler(this.numHeight_Validated);
             // 
             // numY
             // 
@@ -323,6 +326,7 @@
             this.numY.Size = new System.Drawing.Size(64, 20);
             this.numY.TabIndex = 219;
             this.numY.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numY.Validated += new System.EventHandler(this.numY_Validated);
             // 
             // numWidth
             // 
@@ -343,6 +347,7 @@
             this.numWidth.Size = new System.Drawing.Size(64, 20);
             this.numWidth.TabIndex = 220;
             this.numWidth.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numWidth.Validated += new System.EventHandler(this.numWidth_Validated);
             // 
             // lblX
             // 
@@ -358,20 +363,20 @@
             // pictureBox
             // 
             this.pictureBox.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.pictureBox.Location = new System.Drawing.Point(27, 136);
+            this.pictureBox.Location = new System.Drawing.Point(27, 161);
             this.pictureBox.Margin = new System.Windows.Forms.Padding(5);
             this.pictureBox.Name = "pictureBox";
             this.pictureBox.Size = new System.Drawing.Size(400, 300);
             this.pictureBox.TabIndex = 1;
             this.pictureBox.TabStop = false;
             // 
-            // ScanRegion
+            // ScanRegionUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tlpCore);
             this.Margin = new System.Windows.Forms.Padding(0);
-            this.Name = "ScanRegion";
+            this.Name = "ScanRegionUI";
             this.Padding = new System.Windows.Forms.Padding(7);
             this.Size = new System.Drawing.Size(468, 486);
             this.tlpCore.ResumeLayout(false);

@@ -110,7 +110,7 @@ namespace LiveSplit.VAS.UI
             return new Geometry(width, height);
         }
 
-        private void HandleNewFrame(object sender, NewFrameEventArgs e)
+        private void HandleNewFrame(object sender, Scan scan)
         {
             // Heisenbug
             try
@@ -120,7 +120,7 @@ namespace LiveSplit.VAS.UI
                     if (DateTime.UtcNow.Subtract(LastUpdate) > TimeSpan.FromSeconds(1))
                     {
                         LastUpdate = DateTime.UtcNow;
-                        CurrentFrame = (Bitmap)e.Frame.Clone();
+                        CurrentFrame = (Bitmap)scan.CurrentFrame.Bitmap.Clone();
                         RefreshThumbnail();
                     }
                 });

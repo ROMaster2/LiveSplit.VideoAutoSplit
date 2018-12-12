@@ -12,11 +12,11 @@ namespace LiveSplit.VAS.Models
     {
         private const int INIT_PIXEL_LIMIT = 16777216;
 
-        private Geometry CaptureGeometry;
+        private readonly bool _HasDupeCheck;
 
+        public Geometry CaptureGeometry { get; }
         public CWatchZone[] CWatchZones { get; }
         public int FeatureCount { get; }
-        private bool HasDupeCheck { get; }
         public int PixelLimit { get; }
         public int PixelCount { get; }
         public IReadOnlyDictionary<string, int> IndexNames { get; }
@@ -24,7 +24,7 @@ namespace LiveSplit.VAS.Models
         public CompiledFeatures(GameProfile gameProfile, Geometry cropGeometry, int pixelLimit = INIT_PIXEL_LIMIT)
         {
             CaptureGeometry = cropGeometry;
-            HasDupeCheck = false;
+            _HasDupeCheck = false;
             PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
             PixelCount = 0;
 
@@ -32,6 +32,12 @@ namespace LiveSplit.VAS.Models
 
             var cWatchZones = new CWatchZone[gameProfile.WatchZones.Count];
             var indexCount = 0;
+
+            // Using this until full implementation of multiple screens.
+            foreach (var s in gameProfile.Screens)
+            {
+                s.CropGeometry = CaptureGeometry;
+            }
 
             for (int i1 = 0; i1 < gameProfile.WatchZones.Count; i1++)
             {
@@ -79,7 +85,7 @@ namespace LiveSplit.VAS.Models
                     }
                     else if (watcher.WatcherType == WatcherType.DuplicateFrame)
                     {
-                        HasDupeCheck = true;
+                        _HasDupeCheck = true;
 
                         CWatches[i2] = new CWatcher(new CWatchImage[] { new CWatchImage(watcher.Name, indexCount) }, watcher);
 
@@ -93,6 +99,7 @@ namespace LiveSplit.VAS.Models
                     }
                 }
 
+                wzCropGeo.Intersect(CaptureGeometry);
                 cWatchZones[i1] = new CWatchZone(watchZone.Name, wzCropGeo, CWatches);
             }
 
@@ -236,12 +243,12 @@ namespace LiveSplit.VAS.Models
 
         public bool UsesDupeCheck()
         {
-            return HasDupeCheck;
+            return _HasDupeCheck;
         }
 
         public bool UsesDupeCheck(DateTime dateTime)
         {
-            return HasDupeCheck && CWatchZones.Any(wz => wz.UsesDupeCheck(dateTime));
+            return _HasDupeCheck && CWatchZones.Any(wz => wz.UsesDupeCheck(dateTime));
         }
 
         public CWatchZone this[int i]
@@ -255,23 +262,26 @@ namespace LiveSplit.VAS.Models
 
     public struct CWatchZone
     {
+        private bool _HasDupeCheck;
+
+        public string Name { get; }
+        public Geometry Geometry { get; }
+        public Rectangle Rectangle { get; }
+        public CWatcher[] CWatches { get; }
+
         public CWatchZone(string name, Geometry geometry, CWatcher[] cWatches)
         {
             Name = name;
             Geometry = geometry;
             Rectangle = geometry.ToRectangle();
             CWatches = cWatches;
-            HasDupeCheck = CWatches.Any(w => w.IsDuplicateFrame);
+
+            _HasDupeCheck = CWatches.Any(w => w.IsDuplicateFrame);
         }
-        public string Name { get; }
-        public Geometry Geometry { get; }
-        public Rectangle Rectangle { get; }
-        public CWatcher[] CWatches { get; }
-        private bool HasDupeCheck { get; }
 
         public bool UsesDupeCheck(DateTime dateTime)
         {
-            return HasDupeCheck && CWatches.Any(w => w.IsDuplicateFrame && !w.IsPaused(dateTime));
+            return _HasDupeCheck && CWatches.Any(w => w.IsDuplicateFrame && !w.IsPaused(dateTime));
         }
 
         public bool IsPaused(DateTime dateTime)
@@ -314,6 +324,17 @@ namespace LiveSplit.VAS.Models
 
     public struct CWatcher
     {
+        public string Name { get; }
+        public WatcherType WatcherType { get; }
+        public ColorSpace ColorSpace { get; }
+        public int Channel { get; }
+        public bool Equalize { get; }
+        public ErrorMetric ErrorMetric { get; }
+        public CWatchImage[] CWatchImages { get; }
+
+        public bool IsStandard { get; }
+        public bool IsDuplicateFrame { get; }
+
         public CWatcher(
             CWatchImage[] cWatchImages,
             string name,
@@ -335,6 +356,7 @@ namespace LiveSplit.VAS.Models
             IsStandard = WatcherType.Equals(WatcherType.Standard);
             IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
         }
+
         public CWatcher(CWatchImage[] cWatchImages, Watcher watcher)
         {
             Name = watcher.Name;
@@ -348,17 +370,6 @@ namespace LiveSplit.VAS.Models
             IsStandard = WatcherType.Equals(WatcherType.Standard);
             IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
         }
-
-        public string Name { get; }
-        public WatcherType WatcherType { get; }
-        public ColorSpace ColorSpace { get; }
-        public int Channel { get; }
-        public bool Equalize { get; }
-        public ErrorMetric ErrorMetric { get; }
-        public CWatchImage[] CWatchImages { get; }
-
-        public bool IsStandard { get; }
-        public bool IsDuplicateFrame { get; }
 
         public bool IsPaused(DateTime dateTime)
         {
@@ -400,6 +411,17 @@ namespace LiveSplit.VAS.Models
 
     public struct CWatchImage
     {
+        private static readonly MagickColor _AlphaReplacement = MagickColors.Black;
+
+        private long _PauseTicks;
+
+        public string Name { get; }
+        public int Index { get; }
+        public IMagickImage MagickImage { get; }
+        public IMagickImage AlphaChannel { get; }
+        public bool HasAlpha { get; }
+        public double TransparencyRate { get; }
+
         // Standard
         public CWatchImage(string name, int index, IMagickImage magickImage)
         {
@@ -410,18 +432,20 @@ namespace LiveSplit.VAS.Models
             TransparencyRate = MagickImage.GetTransparencyRate();
             AlphaChannel = null;
 
-            PauseTicks = DateTime.MinValue.Ticks;
+            _PauseTicks = DateTime.MinValue.Ticks;
             
             if (HasAlpha)
             {
                 // Does Separate() clone the channels? If so, does it dispose of them during this?
                 var tmpMi = MagickImage.Separate().Last().Clone();
                 tmpMi.Negate();
-                AlphaChannel = new MagickImage(MagickColors.Black, MagickImage.Width, MagickImage.Height);
+                AlphaChannel = new MagickImage(_AlphaReplacement, MagickImage.Width, MagickImage.Height);
                 AlphaChannel.Composite(tmpMi, CompositeOperator.CopyAlpha);
+                AlphaChannel.RePage();
                 tmpMi.Dispose();
 
-                MagickImage.ColorAlpha(MagickColors.Black);
+                MagickImage.ColorAlpha(_AlphaReplacement);
+                MagickImage.RePage();
             }
         }
 
@@ -435,33 +459,24 @@ namespace LiveSplit.VAS.Models
             HasAlpha = false;
             TransparencyRate = 0;
 
-            PauseTicks = DateTime.MinValue.Ticks;
+            _PauseTicks = DateTime.MinValue.Ticks;
         }
-
-        public string Name { get; }
-        public int Index { get; }
-        public IMagickImage MagickImage { get; }
-        public IMagickImage AlphaChannel { get; }
-        public bool HasAlpha { get; }
-        public double TransparencyRate { get; }
-
-        private long PauseTicks;
 
         public bool IsPaused(DateTime dateTime)
         {
             var now = dateTime.Ticks;
-            var test = PauseTicks;
-            return PauseTicks >= 0L ? PauseTicks > now : -PauseTicks < now;
+            var test = _PauseTicks;
+            return _PauseTicks >= 0L ? _PauseTicks > now : -_PauseTicks < now;
         }
 
         public void Pause(DateTime? dateTime = null)
         {
-            PauseTicks = dateTime?.Ticks ?? DateTime.MaxValue.Ticks;
+            _PauseTicks = dateTime?.Ticks ?? DateTime.MaxValue.Ticks;
         }
 
         public void Resume(DateTime? dateTime = null)
         {
-            PauseTicks = -dateTime?.Ticks ?? DateTime.MinValue.Ticks;
+            _PauseTicks = -dateTime?.Ticks ?? DateTime.MinValue.Ticks;
         }
 
         public void Dispose()

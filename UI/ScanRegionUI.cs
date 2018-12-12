@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,109 +21,135 @@ namespace LiveSplit.VAS.UI
 {
     public partial class ScanRegionUI : AbstractUI
     {
-        private GameProfile GameProfile { get { return Component.GameProfile; } }
-        private Scanner Scanner => Component.Scanner;
-
-        // Temporary. Remove later.
-        private Geometry CropGeometry { get { return Component.CropGeometry; } set { Component.CropGeometry = value; } }
-
-        private Geometry VideoGeometry => Scanner.VideoGeometry;
-
         private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
-        private const FilterType DEFAULT_SCALE_FILTER = FilterType.Box;
+        private const FilterType DEFAULT_SCALE_FILTER = FilterType.Triangle;
         private static readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
 
-        private DateTime NextUpdate = DateTime.UtcNow;
+        private GameProfile _GameProfile => _Component.GameProfile;
+        private Scanner _Scanner => _Component.Scanner;
+        private CompiledFeatures _CompiledFeatures => _Component.Scanner.CompiledFeatures;
+        //private IDictionary<string, Geometry> _CropGeometries => _Component.CropGeometries;
+        private Geometry _CropGeometry => _Component.CropGeometry;
+        private Geometry _TrueCropGeometry => _Component.Scanner.TrueCropGeometry;
+        private Geometry _VideoGeometry => _Scanner.VideoGeometry;
 
-        private bool RenderingFrame = false;
+        private bool _RenderingFrame = false;
 
-        private Geometry minGeometry
+        public Geometry NumGeometry
         {
             get
             {
-                var geo = VideoGeometry;
-                if (geo.IsBlank)
-                    return new Geometry(-8192, -8192, 4, 4);
+                Geometry vGeo = _VideoGeometry;
+                Geometry maxGeometry;
+                Geometry minGeometry;
+                if (vGeo.IsBlank)
+                {
+                    maxGeometry = new Geometry(8192, 8192, 8192, 8192);
+                    minGeometry = new Geometry(-8192, -8192, 4, 4);
+                }
                 else
-                    return new Geometry(-VideoGeometry.Width, -VideoGeometry.Height, 4, 4);
+                {
+                    maxGeometry = new Geometry(vGeo.Width, vGeo.Height, vGeo.Width * 2, vGeo.Height * 2);
+                    minGeometry = new Geometry(-vGeo.Width, -vGeo.Height, 4, 4);
+                }
+
+                return new Geometry(
+                    (double)numX.Value,
+                    (double)numY.Value,
+                    (double)numWidth.Value,
+                    (double)numHeight.Value).Clamp(maxGeometry, minGeometry);
+            }
+            set
+            {
+                numX.Value      = (decimal)value.X;
+                numY.Value      = (decimal)value.Y;
+                numWidth.Value  = (decimal)value.Width;
+                numHeight.Value = (decimal)value.Height;
             }
         }
-        private Geometry MAX_VALUES
+
+        private PreviewType _ActivePreviewType
         {
             get
             {
-                var geo = VideoGeometry;
-                if (geo.IsBlank)
-                    return new Geometry(8192, 8192, 8192, 8192);
-                else
-                    return new Geometry(VideoGeometry.Width, VideoGeometry.Height, VideoGeometry.Width * 2, VideoGeometry.Height * 2);
+                var str = ((string)boxPreviewType.SelectedItem).Replace(" ", "");
+                return (PreviewType)Enum.Parse(typeof(PreviewType), str);
             }
         }
 
         public ScanRegionUI(VASComponent component) : base(component)
         {
             InitializeComponent();
+            FillboxPreviewType();
         }
 
         override public void Rerender()
         {
-            SetAllNumValues(CropGeometry, false);
+            SetAllNumValues(_CropGeometry);
             FillboxPreviewFeature();
-            Scanner.SubscribeToFrameHandler(HandleNewFrame);
+            _Scanner.SubscribeToFrameHandler(HandleNewScan);
         }
 
         override public void Derender()
         {
-            Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);
+            _Scanner.UnsubscribeFromFrameHandler(HandleNewScan);
             boxPreviewFeature.Items.Clear();
-            pictureBox.Image = new Bitmap(1,1);
+
+            pictureBox?.Image?.Dispose();
+            pictureBox.Image = null;
+            _RenderingFrame = false;
         }
 
-        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
-        {
+        // While the profile and scanner affect this UI and vice versa, the profile's script does not.
+        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded) { }
 
+        private void UpdateCropGeometry()
+        {
+            _Component.CropGeometry = NumGeometry;
         }
 
-        private void SetAllNumValues(Geometry geo, bool updateGeo = true)
+        private void SetAllNumValues(Geometry geo)
         {
-            numX.Value      = (decimal)geo.X;
-            numY.Value      = (decimal)geo.Y;
-            numWidth.Value  = (decimal)geo.Width;
-            numHeight.Value = (decimal)geo.Height;
-            if (updateGeo) UpdateCropGeometry(geo);
+            NumGeometry = geo;
+            UpdateCropGeometry();
         }
 
-        private void UpdateCropGeometry(Geometry? geo = null)
+        // Validated triggers when the user manually changes the value, rather than anytime it changes.
+        private void numX_Validated(object sender, EventArgs e)      => UpdateCropGeometry();
+        private void numY_Validated(object sender, EventArgs e)      => UpdateCropGeometry();
+        private void numWidth_Validated(object sender, EventArgs e)  => UpdateCropGeometry();
+        private void numHeight_Validated(object sender, EventArgs e) => UpdateCropGeometry();
+
+        private void btnReset_Click(object sender, EventArgs e)
         {
-            Geometry newGeo = geo ?? Geometry.Blank;
-            if (geo == null)
-            {
-                newGeo.X      = (double)numX.Value;
-                newGeo.Y      = (double)numY.Value;
-                newGeo.Width  = (double)numWidth.Value;
-                newGeo.Height = (double)numHeight.Value;
-            }
-            CropGeometry = newGeo.Min(MAX_VALUES).Max(minGeometry);
+            SetAllNumValues(_VideoGeometry);
         }
 
         private void FillboxPreviewType()
         {
             boxPreviewType.Items.Add("Full Frame");
-            boxPreviewType.Items.Add("Optimal Frame Crop"); // TrueCropGeometry
-            boxPreviewType.Items.Add("Screen*");
-            boxPreviewType.Items.Add("Feature*");
+            boxPreviewType.Items.Add("Frame Crop");
+            boxPreviewType.Items.Add("All Features");
+            boxPreviewType.Items.Add("Feature");
             boxPreviewType.SelectedIndex = 0;
         }
 
         private void FillboxPreviewFeature()
         {
             boxPreviewFeature.Items.Add("<None>");
-            if (GameProfile != null)
+            if (!_CompiledFeatures.IsBlank)
             {
-                foreach (var wi in GameProfile.WatchImages)
+                foreach (var wz in _CompiledFeatures.CWatchZones)
                 {
-                    wi.SetName(wi.Screen, wi.WatchZone, wi.Watcher);
-                    boxPreviewFeature.Items.Add(wi);
+                    foreach (var w in wz.CWatches)
+                    {
+                        foreach (var wi in w.CWatchImages)
+                        {
+                            var name = wz.Name + "/" + w.Name + " - " + wi.Name;
+                            var pf = new PreviewFeature(name, wz, w, wi);
+                            boxPreviewFeature.Items.Add(pf);
+                        }
+                    }
                 }
             }
             boxPreviewFeature.SelectedIndex = 0;
@@ -131,13 +158,13 @@ namespace LiveSplit.VAS.UI
         // Would be better if something like this was in Geometry.cs
         private Geometry GetScaledGeometry(Geometry refGeo)
         {
-            var referenceWidth = refGeo.IsBlank ? CropGeometry.Width : refGeo.Width;
-            var referenceHeight = refGeo.IsBlank ? CropGeometry.Height : refGeo.Height;
+            var referenceWidth = refGeo.Width;
+            var referenceHeight = refGeo.Height;
 
             // Tried to not have hardcoded, but Microsoft disagreed.
             var parent = pictureBox.Parent;
             var parentWidth = parent.Width;
-            var parentHeight = parent.Height - 100;
+            var parentHeight = parent.Height - 150;
             var xMargin = pictureBox.Margin.Left + pictureBox.Margin.Right;
             var yMargin = pictureBox.Margin.Top + pictureBox.Margin.Bottom;
             var xRatio = (parentWidth - xMargin) / referenceWidth;
@@ -149,117 +176,202 @@ namespace LiveSplit.VAS.UI
             return new Geometry(width, height);
         }
 
-        private void HandleNewFrame(object sender, NewFrameEventArgs e)
+        private void HandleNewScan(object sender, Scan scan)
         {
-            if (!RenderingFrame)
+            if (!_RenderingFrame)
             {
-                RenderingFrame = true;
-                var frame = (Bitmap)e.Frame.Clone();
-                Task.Run(() => RefreshThumbnail(frame));
+                _RenderingFrame = true;
+                Task.Run(() => RefreshThumbnail(scan));
             }
         }
 
-        private void RefreshThumbnail(Bitmap frame)
+        private void RefreshThumbnail(Scan scan)
         {
-            int featureIndex = -1;
-            WatchImage feature = null;
-            boxPreviewFeature.Invoke((MethodInvoker)delegate
+            PreviewType previewType = PreviewType.FullFrame;
+            PreviewFeature feature = null;
+            if (boxPreviewFeature.Created)
             {
-                featureIndex = boxPreviewFeature.SelectedIndex;
-                if (featureIndex > 0)
-                    feature = (WatchImage)boxPreviewFeature.SelectedItem;
-            });
-            RefreshThumbnailAsync(frame, featureIndex, feature);
+                boxPreviewFeature.Invoke((MethodInvoker)delegate
+                {
+                    previewType = _ActivePreviewType;
+                    if (boxPreviewFeature.SelectedIndex > 0)
+                        feature = (PreviewFeature)boxPreviewFeature.SelectedItem;
+                });
+            }
+            RefreshThumbnailAsync(scan, previewType, feature);
         }
 
-        private async void RefreshThumbnailAsync(Bitmap frame, int featureIndex, WatchImage feature)
+        private async void RefreshThumbnailAsync(Scan scan, PreviewType previewType, PreviewFeature feature)
         {
             await Task.Delay(0);
-            Geometry minGeo = Geometry.Min(CropGeometry, GetScaledGeometry(Geometry.Blank));
 
-            MagickImage mi = new MagickImage(frame);
-            var tmp = VideoGeometry;
-
-            if (!VideoGeometry.Contains(CropGeometry))
+            try
             {
-                mi.Extent(CropGeometry.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
-            }
-            else
-            {
-                mi.Crop(CropGeometry.ToMagick(), STANDARD_GRAVITY);
-            }
-            mi.RePage();
+                Geometry minGeo;
+                MagickImage mi;
+                string confidence = string.Empty;
 
-            if (featureIndex > 0)
-            {
-                var wi = feature;
-                var tGeo = wi.WatchZone.CropGeometry;
-                tGeo.Update(-CropGeometry.X, -CropGeometry.Y);
-
-                var baseMGeo = new MagickGeometry(100, 100, (int)Math.Round(tGeo.Width), (int)Math.Round(tGeo.Height));
-
-                tGeo.Update(-100, -100, 200, 200);
-                mi.Extent(tGeo.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
-
-                using (var baseM = new MagickImage(
-                    MagickColor.FromRgba(0, 0, 0, 0),
-                    baseMGeo.Width,
-                    baseMGeo.Height))
-                using (var overlay = new MagickImage(
-                        MagickColor.FromRgba(170, 170, 170, 223),
-                        baseMGeo.Width + 200,
-                        baseMGeo.Height + 200))
+                if (previewType == PreviewType.FullFrame)
                 {
-                    overlay.Composite(baseM, new PointD(baseMGeo.X, baseMGeo.Y), CompositeOperator.Alpha);
-                    mi.Composite(overlay, CompositeOperator.Atop);
+                    minGeo = Geometry.Min(_VideoGeometry, GetScaledGeometry(_VideoGeometry));
+                    mi = new MagickImage(scan.CurrentFrame.Bitmap);
+                    // @TODO: Add preview zones for crop(s).
                 }
-                mi.RePage();
-
-                minGeo = minGeo.Min(GetScaledGeometry(tGeo));
-
-                if (ckbShowComparison.Checked)
+                else if (previewType == PreviewType.FrameCrop)
                 {
-                    using (var deltaImage = wi.MagickImage.Clone())
+                    minGeo = Geometry.Min(_CropGeometry, GetScaledGeometry(_CropGeometry));
+                    if (!_VideoGeometry.Contains(_CropGeometry))
                     {
-                        mi.ColorSpace = wi.Watcher.ColorSpace;
-                        deltaImage.ColorSpace = wi.Watcher.ColorSpace;
-                        mi.Crop(baseMGeo, STANDARD_GRAVITY);
-                        mi.Alpha(AlphaOption.Off); // Why is this necessary? It wasn't necessary before.
-                        if (wi.Watcher.Equalize)
-                        {
-                            deltaImage.Equalize();
-                            mi.Equalize();
-                        }
-                        deltaImage.RePage();
-                        mi.RePage();
-                        lblDelta.Text = mi.Compare(deltaImage, ErrorMetric.PeakSignalToNoiseRatio).ToString("0.####");
-                        mi.Composite(deltaImage, CompositeOperator.Difference);
+                        mi = new MagickImage(scan.CurrentFrame.Bitmap);
+                        mi.Extent(_CropGeometry.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
                     }
-
-                    minGeo = minGeo.Min(GetScaledGeometry(wi.WatchZone.CropGeometry));
+                    else
+                    {
+                        mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(_CropGeometry.ToRectangle(), PixelFormat.Format24bppRgb));
+                    }
                 }
-            }
+                else if (previewType == PreviewType.AllFeatures || (previewType == PreviewType.Feature && feature == null))
+                {
+                    minGeo = Geometry.Min(_TrueCropGeometry, GetScaledGeometry(_TrueCropGeometry));
+                    if (!_VideoGeometry.Contains(_TrueCropGeometry))
+                    {
+                        mi = new MagickImage(scan.CurrentFrame.Bitmap);
+                        mi.Extent(_TrueCropGeometry.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
+                    }
+                    else
+                    {
+                        mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(_TrueCropGeometry.ToRectangle(), PixelFormat.Format24bppRgb));
+                    }
+                }
+                else if (previewType == PreviewType.Feature && feature != null)
+                {
+                    var wzGeo = feature.WatchZone.Geometry;
 
-            var drawingSize = minGeo.Size.ToDrawing();
-            if (mi.Width > drawingSize.Width || mi.Height > drawingSize.Height)
-            {
-                var mGeo = minGeo.ToMagick();
-                mGeo.IgnoreAspectRatio = false;
-                //mi.ColorSpace = ColorSpace.HCL;
-                mi.FilterType = DEFAULT_SCALE_FILTER;
-                mi.Resize(mGeo);
+                    if (!ckbShowComparison.Checked)
+                    {
+                        var baseMGeo = new MagickGeometry(64, 64, (int)Math.Round(wzGeo.Width), (int)Math.Round(wzGeo.Height));
+
+                        wzGeo.Update(-64, -64, 128, 128);
+
+                        minGeo = Geometry.Min(wzGeo, GetScaledGeometry(wzGeo));
+                        if (!_VideoGeometry.Contains(wzGeo))
+                        {
+                            mi = new MagickImage(scan.CurrentFrame.Bitmap);
+                            mi.Extent(wzGeo.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
+                        }
+                        else
+                        {
+                            mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(wzGeo.ToRectangle(), PixelFormat.Format24bppRgb));
+                        }
+
+                        using (var baseM = new MagickImage(
+                            MagickColor.FromRgba(0, 0, 0, 0),
+                            baseMGeo.Width,
+                            baseMGeo.Height))
+                        using (var overlay = new MagickImage(
+                                MagickColor.FromRgba(170, 170, 170, 223),
+                                baseMGeo.Width + 128,
+                                baseMGeo.Height + 128))
+                        {
+                            overlay.Composite(baseM, new PointD(baseMGeo.X, baseMGeo.Y), CompositeOperator.Alpha);
+                            mi.Composite(overlay, CompositeOperator.Atop);
+                        }
+                    }
+                    else
+                    {
+                        minGeo = Geometry.Min(wzGeo, GetScaledGeometry(wzGeo));
+                        if (!_VideoGeometry.Contains(wzGeo))
+                        {
+                            mi = new MagickImage(scan.CurrentFrame.Bitmap);
+                            mi.Extent(wzGeo.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
+                        }
+                        else
+                        {
+                            mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(wzGeo.ToRectangle(), PixelFormat.Format24bppRgb));
+                        }
+
+                        // @TODO: Add previous frame stuff
+                        using (var deltaImage = feature.WatchImage.MagickImage.Clone())
+                        {
+                            mi.ColorSpace = feature.Watcher.ColorSpace;
+                            deltaImage.ColorSpace = feature.Watcher.ColorSpace;
+                            if (feature.WatchImage.HasAlpha)
+                            {
+                                mi.Composite(feature.WatchImage.AlphaChannel, CompositeOperator.Over);
+                            }
+                            if (feature.Watcher.Equalize) mi.Equalize();
+                            confidence = mi.Compare(deltaImage, feature.Watcher.ErrorMetric).ToString("F4");
+                            mi.Composite(deltaImage, CompositeOperator.Difference);
+                        }
+                    }
+                }
+                else
+                {
+                    _Component.LogEvent("I like turtles.");
+                    throw new Exception("How did this happen?");
+                }
+
+                var drawingSize = minGeo.Size.ToDrawing();
+                if (mi.Width > drawingSize.Width || mi.Height > drawingSize.Height)
+                {
+                    var mGeo = minGeo.ToMagick();
+                    mGeo.IgnoreAspectRatio = false;
+                    //mi.ColorSpace = ColorSpace.HCL;
+                    mi.FilterType = DEFAULT_SCALE_FILTER;
+                    mi.Resize(mGeo);
+                }
+                UpdatepictureBox(drawingSize, mi.ToBitmap(System.Drawing.Imaging.ImageFormat.MemoryBmp), confidence);
             }
-            UpdatepictureBox(drawingSize, mi.ToBitmap(System.Drawing.Imaging.ImageFormat.MemoryBmp));
+            catch (Exception e)
+            {
+                _Component.LogEvent(e);
+                scan.Dispose();
+                _RenderingFrame = false;
+            }
         }
 
-        private void UpdatepictureBox(Size minGeo, Bitmap bitmap)
+        private void UpdatepictureBox(Size minGeo, Bitmap bitmap, string confidence)
         {
-            pictureBox.Invoke((MethodInvoker)delegate
+            this.Invoke((MethodInvoker)delegate
             {
                 pictureBox.Size = minGeo;
                 pictureBox.Image = bitmap;
-                RenderingFrame = false;
+                lblDelta.Text = confidence;
             });
+            _RenderingFrame = false;
+        }
+
+        private void boxPreviewType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            boxPreviewFeature.Enabled =
+            ckbShowComparison.Enabled = _ActivePreviewType == PreviewType.Feature;
+        }
+
+        private enum PreviewType
+        {
+            FullFrame,
+            FrameCrop, // CropGeometry
+            AllFeatures, // TrueCropGeometry
+            Feature // WatchZone
+        }
+
+        private class PreviewFeature
+        {
+            public string Name;
+            public CWatchZone WatchZone;
+            public CWatcher Watcher;
+            public CWatchImage WatchImage;
+            public PreviewFeature(string name, CWatchZone watchZone, CWatcher watcher, CWatchImage watchImage)
+            {
+                Name = name;
+                WatchZone = watchZone;
+                Watcher = watcher;
+                WatchImage = watchImage;
+            }
+            public override string ToString()
+            {
+                return Name;
+            }
         }
 
     }

@@ -14,14 +14,14 @@ namespace LiveSplit.VAS.UI
 
         override public void Rerender()
         {
-            txtDebug.Text = Component.EventLog;
+            txtDebug.Text = _Component.EventLog;
 
-            Component.EventLogUpdated += UpdatetxtDebug;
+            _Component.EventLogUpdated += UpdatetxtDebug;
         }
 
         override public void Derender()
         {
-            Component.EventLogUpdated -= UpdatetxtDebug;
+            _Component.EventLogUpdated -= UpdatetxtDebug;
         }
 
         private void UpdatetxtDebug(object sender, string str)
@@ -29,13 +29,14 @@ namespace LiveSplit.VAS.UI
             txtDebug.Invoke((MethodInvoker)delegate
             {
                 txtDebug.Text += str;
+                txtDebug.ScrollToCaret();
             });
         }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
             txtDebug.Clear();
-            Component.ClearEventLog();
+            _Component.ClearEventLog();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -51,7 +52,7 @@ namespace LiveSplit.VAS.UI
             {
                 if (ofd.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(ofd.FileName))
                 {
-                    var finalLog = Component.EventLog + "\r\nLog saved at " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n";
+                    var finalLog = _Component.EventLog + "\r\nLog saved at " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n";
                     File.WriteAllText(ofd.FileName, finalLog);
                 }
             }

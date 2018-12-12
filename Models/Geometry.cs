@@ -663,6 +663,17 @@ namespace LiveSplit.VAS.Models
             return Min(geo2.X, geo2.Y, geo2.Width, geo2.Height);
         }
 
+        // @TODO: Explain more clearly.
+        /// <summary>
+        /// Clamp - Ensure the geometry is no bigger or or smaller than the given geometry.
+        /// </summary>
+        public Geometry Clamp(Geometry geo1, Geometry geo2)
+        {
+            var gMax = Max(geo1, geo2);
+            var gMin = Min(geo1, geo2);
+            return Min(gMax).Max(gMin);
+        }
+
         public void Update(double x = 0, double y = 0, double width = 0, double height = 0)
         {
             X += x;
@@ -676,7 +687,38 @@ namespace LiveSplit.VAS.Models
             Update(geo.X, geo.Y, geo.Width, geo.Height);
         }
 
-        // Todo: Handle fractional pixels.
+        // Don't use this lol
+        public override int GetHashCode()
+        {
+            throw new Exception("How could this happen?");
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Geometry && Equals(this, (Geometry)obj);
+        }
+
+        public static bool Equals(Geometry geo1, Geometry geo2)
+        {
+            return geo1._x == geo2._x
+                && geo1._y == geo2._y
+                && geo1._width == geo2._width
+                && geo1._height == geo2._height
+                // Hope northwest/undefined don't have trouble getting along...
+                && geo1._anchor == geo2._anchor;
+        }
+
+        public static bool operator ==(Geometry geo1, Geometry geo2)
+        {
+            return geo1.Equals(geo2);
+        }
+
+        public static bool operator !=(Geometry geo1, Geometry geo2)
+        {
+            return !geo1.Equals(geo2);
+        }
+
+        // @TODO: Handle fractional pixels.
 
         public Geometry Round(bool includePoint = true, int rounding = 0)
         {
@@ -909,7 +951,6 @@ namespace LiveSplit.VAS.Models
 
         /// <summary>
         /// Offset - translate the Location by the offset provided.
-        /// If this is Empty, this method is illegal.
         /// </summary>
         public void Offset(Vector offsetVector)
         {
@@ -919,7 +960,6 @@ namespace LiveSplit.VAS.Models
 
         /// <summary>
         /// Offset - translate the Location by the offset provided
-        /// If this is Empty, this method is illegal.
         /// </summary>
         public void Offset(double offsetX, double offsetY)
         {
