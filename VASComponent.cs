@@ -17,7 +17,7 @@ namespace LiveSplit.VAS
 {
     public class VASComponent : LogicComponent
     {
-        //internal static readonly string[] BASIC_SETTING_TYPES = new string[] { "Start", "Split", "Reset"};
+        public static readonly Version Version = typeof(VASComponent).Assembly.GetName().Version;
 
         public override string ComponentName => "Video Auto Splitter";
 
@@ -227,7 +227,7 @@ namespace LiveSplit.VAS
         {
             XmlElement settingsNode = document.CreateElement("Settings");
 
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Version", "0.1"));
+            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Version", VASComponent.Version));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "ProfilePath", ProfilePath));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "VideoDevice", VideoDevice));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "GameVersion", GameVersion));

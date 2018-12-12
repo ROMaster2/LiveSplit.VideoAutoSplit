@@ -12,7 +12,7 @@ namespace LiveSplit.UI.Components
         public string ComponentName => "Video Auto Splitter";
         public string Description => "Allows scripting of splitting behavior based on events from a video stream.";
         public ComponentCategory Category => ComponentCategory.Control;
-        public Version Version => Version.Parse("0.1.0");
+        public Version Version => VASComponent.Version;
 
         public string UpdateName => ComponentName;
         public string UpdateURL => "http://livesplit.org/update/";
