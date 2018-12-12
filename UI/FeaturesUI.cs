@@ -149,7 +149,8 @@ namespace LiveSplit.VAS.UI
             Anchor = AnchorStyles.Right,
             AutoSize = true,
             Text = "",
-            TextAlign = ContentAlignment.MiddleRight
+            TextAlign = ContentAlignment.MiddleRight,
+            BackColor = Color.Transparent
         };
 
         public VariableRow(string name, int queueSize)
@@ -171,7 +172,8 @@ namespace LiveSplit.VAS.UI
                 Anchor = AnchorStyles.Left,
                 AutoSize = true,
                 Text = name,
-                TextAlign = ContentAlignment.MiddleLeft
+                TextAlign = ContentAlignment.MiddleLeft,
+                BackColor = Color.Transparent
             };
             ckbEnabled = new CheckBox()
             {
