@@ -45,12 +45,15 @@ namespace LiveSplit.VAS.UI
                 if (vGeo.IsBlank)
                 {
                     maxGeometry = new Geometry(8192, 8192, 8192, 8192);
-                    minGeometry = new Geometry(-8192, -8192, 4, 4);
+                    //minGeometry = new Geometry(-8192, -8192, 4, 4);
+                    minGeometry = new Geometry(0, 0, 4, 4);
                 }
                 else
                 {
-                    maxGeometry = new Geometry(vGeo.Width, vGeo.Height, vGeo.Width * 2, vGeo.Height * 2);
-                    minGeometry = new Geometry(-vGeo.Width, -vGeo.Height, 4, 4);
+                    //maxGeometry = new Geometry(vGeo.Width, vGeo.Height, vGeo.Width * 2, vGeo.Height * 2);
+                    //minGeometry = new Geometry(-vGeo.Width, -vGeo.Height, 4, 4);
+                    maxGeometry = new Geometry(vGeo.Width - 4, vGeo.Height - 4, vGeo.Width, vGeo.Height);
+                    minGeometry = new Geometry(0, 0, 4, 4);
                 }
 
                 return new Geometry(
@@ -114,6 +117,12 @@ namespace LiveSplit.VAS.UI
             UpdateCropGeometry();
         }
 
+        private void ResetNumValues()
+        {
+            NumGeometry = (_VideoGeometry.Width < 8 || _VideoGeometry.Height < 8) ? new Geometry(640, 480) : _VideoGeometry;
+            UpdateCropGeometry();
+        }
+
         // Validated triggers when the user manually changes the value, rather than anytime it changes.
         private void numX_Validated(object sender, EventArgs e)      => UpdateCropGeometry();
         private void numY_Validated(object sender, EventArgs e)      => UpdateCropGeometry();
@@ -122,7 +131,7 @@ namespace LiveSplit.VAS.UI
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            SetAllNumValues(_VideoGeometry);
+            ResetNumValues();
         }
 
         private void FillboxPreviewType()
