@@ -329,7 +329,7 @@ namespace LiveSplit.VAS.UI
                     mi.FilterType = DEFAULT_SCALE_FILTER;
                     mi.Resize(mGeo);
                 }
-                UpdatepictureBox(drawingSize, mi.ToBitmap(System.Drawing.Imaging.ImageFormat.MemoryBmp), confidence);
+                UpdatepictureBox(drawingSize, mi.ToBitmap(), confidence);
             }
             catch (Exception e)
             {
