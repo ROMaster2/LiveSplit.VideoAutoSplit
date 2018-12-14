@@ -592,6 +592,7 @@ namespace LiveSplit.VAS
             Stop();
             IsScannerLocked = true;
             FrameHandlerThread?.Abort();
+            Log.Flush();
         }
 
     }
