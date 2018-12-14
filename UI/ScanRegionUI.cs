@@ -316,7 +316,7 @@ namespace LiveSplit.VAS.UI
                 }
                 else
                 {
-                    _Component.LogEvent("I like turtles.");
+                    Log.Error("I like turtles.");
                     throw new Exception("How did this happen?");
                 }
 
@@ -333,7 +333,8 @@ namespace LiveSplit.VAS.UI
             }
             catch (Exception e)
             {
-                _Component.LogEvent(e);
+                Log.Error("Thumbnail failed to render for the Scan Region");
+                Log.Error(e);
                 scan.Dispose();
                 _RenderingFrame = false;
             }

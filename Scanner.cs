@@ -208,9 +208,11 @@ namespace LiveSplit.VAS
         {
             if (FrameHandlerThread == null || FrameHandlerThread.ThreadState != ThreadState.Running)
             {
+                Log.Info("Creating scanner thread.");
                 ThreadStart t = new ThreadStart(Start);
                 FrameHandlerThread = new Thread(t);
                 FrameHandlerThread.Start();
+                Log.Info("Thread created.");
             }
         }
 
@@ -219,6 +221,7 @@ namespace LiveSplit.VAS
             UpdateCropGeometry();
             if (GameProfile != null && IsVideoSourceValid())
             {
+                Log.Info("Starting scanner...");
                 CurrentIndex = 0;
                 DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
                 initCount = 0;
@@ -235,13 +238,14 @@ namespace LiveSplit.VAS
         {
             if (!Restarting)
             {
-                Component.LogEvent("Fatal error encountered, restarting scanner...");
+                Log.Info("Restarting scanner...");
                 Restarting = true;
                 if (IsScannerLocked) Thread.Sleep(1);
                 Stop();
                 Thread.Sleep(1000);
                 Start();
                 Restarting = false;
+                Log.Info("Restart finished.");
             }
         }
 
@@ -250,9 +254,11 @@ namespace LiveSplit.VAS
             _TrueCropGeometry = Geometry.Blank;
             if (Component.IsScriptLoaded() && GameProfile != null)
             {
+                Log.Info("Adjusting profile to set dimensions...");
                 IsScannerLocked = true;
                 CompiledFeatures = new CompiledFeatures(GameProfile, CropGeometry);
                 IsScannerLocked = false;
+                Log.Info("Profile adjusted.");
             }
         }
 
@@ -275,11 +281,14 @@ namespace LiveSplit.VAS
 
         private void HandleVideoError(object sender, VideoSourceErrorEventArgs e)
         {
-            Component.LogEvent(e.Description);
+            Log.Error("Video capture (Accord) fatal error.");
+            if (e.Description.Length >= 2)
+            {
+                Log.Error(e.Description);
+            }
             if (e.Exception != null)
             {
-                Component.LogEvent("Accord exception details:");
-                Component.LogEvent(e.Exception);
+                Log.Error(e.Exception);
             }
             if (IsVideoSourceRunning())
             {
@@ -315,7 +324,7 @@ namespace LiveSplit.VAS
             else if (ScanningCount >= 20)
             {
                 // Todo: Make this do something more.
-                LiveSplit.Options.Log.Warning("VAS: Frame handler is overloaded!!!");
+                Log.Warning("Frame handler is overloaded!!!");
             }
         }
 
@@ -337,7 +346,8 @@ namespace LiveSplit.VAS
             catch (Exception e)
             {
                 scan.Dispose();
-                Component.LogEvent(e);
+                Log.Error("Error scanning frame.");
+                Log.Error(e);
                 if (IsVideoSourceRunning() && !IsScannerLocked)
                 {
                     ScanningCount--;
@@ -400,6 +410,7 @@ namespace LiveSplit.VAS
 
             if (index >= DeltaManager.History.Count && AverageFPS > 70d)
             {
+                Log.Warning("Framerate is abnormally high, usually an indicator the video feed is not active.");
                 Restart();
             }
         }

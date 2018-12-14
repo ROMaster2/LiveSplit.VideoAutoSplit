@@ -6,8 +6,6 @@ using System.Linq;
 using System.Text;
 using Irony.Parsing;
 using LiveSplit.Model;
-using LiveSplit.Options;
-using LiveSplit.UI.Components;
 using LiveSplit.VAS.Models.Delta;
 
 namespace LiveSplit.VAS.VASL

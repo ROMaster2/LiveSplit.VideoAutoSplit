@@ -64,6 +64,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Log.cs" />
     <Compile Include="Models\DeltaHistory.cs" />
     <Compile Include="Models\DeltaOutput.cs" />
     <Compile Include="VASComponent.cs" />

@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.Model;
-using LiveSplit.Options;
 using LiveSplit.UI;
 using LiveSplit.UI.Components;
 using LiveSplit.VAS.Models;
@@ -48,8 +47,8 @@ namespace LiveSplit.VAS
                     }
                     catch (Exception e)
                     {
-                        LogEvent("Test1234"); // Testing to see if it appears when it's not supposed to.
-                        LogEvent(e);
+                        Log.Error("Test1234"); // Testing to see if it appears when it's not supposed to.
+                        Log.Error(e);
                         _ProfilePath = string.Empty;
                         ProfileCleanup();
                     }
@@ -66,7 +65,7 @@ namespace LiveSplit.VAS
                 {
                     try
                     {
-                        LogEvent("Loading new game profile: " + ProfilePath);
+                        Log.Info("Loading new game profile: " + ProfilePath);
 
                         _GameProfile = GameProfile.FromPath(ProfilePath);
                         // Todo: Unset GameVersion if the existing one isn't in the new profile. Maybe.
@@ -84,7 +83,7 @@ namespace LiveSplit.VAS
 
                         FSWatcher.EnableRaisingEvents = true;
 
-                        LogEvent("Game profile successfully loaded!");
+                        Log.Info("Game profile successfully loaded!");
 
                         // Todo: Log this separately. Just don't want to atm.
                         VASLSettings settings = Script.RunStartup(State);
@@ -92,8 +91,8 @@ namespace LiveSplit.VAS
                     }
                     catch (Exception e)
                     {
-                        LogEvent("Error loading Game profile:");
-                        LogEvent(e);
+                        Log.Error("Error loading Game profile:");
+                        Log.Error(e);
                         ProfileCleanup();
                     }
                 }
@@ -111,15 +110,15 @@ namespace LiveSplit.VAS
                     try
                     {
                         var gp = GameProfile; // Invoke getter
-                        LogEvent("Loading VASL script within profile...");
+                        Log.Info("Loading VASL script within profile...");
                         _Script = new VASLScript(gp.RawScript);
-                        LogEvent("VASL script successfully loaded!");
+                        Log.Info("VASL script successfully loaded!");
                         TryStartScanner();
                     }
                     catch (Exception e)
                     {
-                        LogEvent("Error loading VASL script:");
-                        LogEvent(e);
+                        Log.Error("Error loading VASL script:");
+                        Log.Error(e);
                         ProfileCleanup();
                     }
                 }
@@ -171,22 +170,6 @@ namespace LiveSplit.VAS
 
         public Scanner Scanner { get; internal set; }
 
-        // Is this name okay? It feels like it conflicts with existing standards, but I don't know exactly which ones.
-        private string _EventLog = string.Empty;
-        public string EventLog
-        {
-            get
-            {
-                return _EventLog;
-            }
-            private set
-            {
-                var str = "[" + DateTime.Now.ToString("hh:mm:ss.fff") + "] " + value + "\r\n";
-                _EventLog += str;
-                EventLogUpdated?.Invoke(this, str);
-            }
-        }
-
         private FileSystemWatcher FSWatcher;
 
         public event EventHandler<GameProfile> ProfileChanged;
@@ -194,11 +177,9 @@ namespace LiveSplit.VAS
         public event EventHandler<string> GameVersionChanged;
         //public event EventHandler<Geometry> CropGeometryChanged;
 
-        public event EventHandler<string> EventLogUpdated;
-
         public VASComponent(LiveSplitState state)
         {
-            LogEvent("Establishing Video Auto Splitter, standby...");
+            Log.Info("Establishing Video Auto Splitter, standby...");
 
             State = state;
 
@@ -448,7 +429,7 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
-                LogEvent(e);
+                Log.Error(e);
             }
         }
 
@@ -474,15 +455,14 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
-                //LogEvent("Failed to load VASL settings:");
-                LogEvent(e);
+                Log.Error(e);
                 ProfileCleanup();
             }
         }
 
         private void ProfileCleanup()
         {
-            LogEvent("Cleaning up profile...");
+            Log.Info("Cleaning up profile...");
             try
             {
                 FSWatcher.EnableRaisingEvents = false;
@@ -493,7 +473,7 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
-                LogEvent(e);
+                Log.Error(e);
             }
             finally
             {
@@ -501,36 +481,18 @@ namespace LiveSplit.VAS
                 _Script = null;
                 ResetVASLSettings();
             }
-            LogEvent("Profile cleanup finished.");
-        }
-
-        // Todo: Use TraceListener instead?
-        internal void LogEvent(Exception e)
-        {
-            Log.Error(e);
-            EventLog = e.ToString();
-        }
-
-        internal void LogEvent(string message)
-        {
-            Log.Info("[VAS] " + message);
-            EventLog = message;
-        }
-
-        internal void ClearEventLog()
-        {
-            _EventLog = string.Empty;
+            Log.Info("Profile cleanup finished.");
         }
 
         public override void Dispose()
         {
-            LogEvent("Disposing...");
+            Log.Info("Disposing...");
             _ProfilePath = null;
             ProfileCleanup();
             Scanner.Dispose();
             FSWatcher?.Dispose();
             ComponentUI.Dispose();
-            LogEvent("Closing...");
+            Log.Info("Closing...");
         }
 
         public override void Update(IInvalidator i, LiveSplitState s, float w, float h, LayoutMode m) { }

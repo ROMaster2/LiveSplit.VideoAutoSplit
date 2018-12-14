@@ -139,7 +139,7 @@ namespace LiveSplit.VAS.Models
             for (int i = 0; i < FeatureCount; i++)
             {
                 if (!indexes.Contains(i))
-                    LiveSplit.Options.Log.Warning("Feature #" + i.ToString() + "'s name was not indexed.");
+                    Log.Warning("Feature #" + i.ToString() + "'s name was not indexed.");
             }
         }
 

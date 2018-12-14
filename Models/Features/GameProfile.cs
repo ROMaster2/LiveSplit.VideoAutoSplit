@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using System.IO.Compression;
-using LiveSplit.Options;
 
 namespace LiveSplit.VAS.Models
 {
@@ -174,7 +173,7 @@ namespace LiveSplit.VAS.Models
             }
             else if (scriptFiles.Count() > 1)
             {
-                LiveSplit.Options.Log.Warning("Multiple script files found, we only need one. Using first one.");
+                Log.Warning("Multiple script files found, we only need one. Using first one.");
             }
             using (var scriptStream = File.Open(scriptFiles.First(), FileMode.Open))
                 gp.RawScript = new StreamReader(scriptStream).ReadToEnd();
@@ -189,7 +188,7 @@ namespace LiveSplit.VAS.Models
                 }
                 else if (autofitFiles.Count() > 1)
                 {
-                    LiveSplit.Options.Log.Warning("Multiple autofit images found for screen " + s.Name + ". Using first one.");
+                    Log.Warning("Multiple autofit images found for screen " + s.Name + ". Using first one.");
                 }
                 var autofitFile = autofitFiles.First();
                 s.Autofitter.Image = new Bitmap(autofitFile);
@@ -204,7 +203,7 @@ namespace LiveSplit.VAS.Models
                 }
                 else if (imageFiles.Count() > 1)
                 {
-                    LiveSplit.Options.Log.Warning("Multiple images found for " + wi.FilePath + ", somehow. Using first one.");
+                    Log.Warning("Multiple images found for " + wi.FilePath + ", somehow. Using first one.");
                 }
                 var imageFile = imageFiles.First();
                 wi.Image = new Bitmap(imageFile);
