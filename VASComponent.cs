@@ -449,7 +449,6 @@ namespace LiveSplit.VAS
         {
             try
             {
-                Scanner.Stop();
                 if (!string.IsNullOrEmpty(VideoDevice))
                 {
                     ScannerTemp();
