@@ -211,13 +211,17 @@ namespace LiveSplit.VAS
                     if (_VideoSource.IsRunning) _VideoSource.WaitForStop();
                 }
                 _VideoGeometry = Geometry.Blank;
-                FrameHandlerThread?.Abort();
                 Log.Info("Scanner stopped.");
             }
             catch (Exception e)
             {
                 Log.Error("Scanner failed to stop. This isn't good...");
                 Log.Error(e);
+            }
+
+            if (FrameHandlerThread != null && FrameHandlerThread.IsAlive && FrameHandlerThread.ThreadState == ThreadState.Running)
+            {
+                FrameHandlerThread.Abort();
             }
         }
 
@@ -587,7 +591,7 @@ namespace LiveSplit.VAS
         {
             Stop();
             IsScannerLocked = true;
-            FrameHandlerThread.Abort();
+            FrameHandlerThread?.Abort();
         }
 
     }
