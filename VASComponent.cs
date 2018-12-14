@@ -65,29 +65,32 @@ namespace LiveSplit.VAS
                 {
                     try
                     {
-                        Log.Info("Loading new game profile: " + ProfilePath);
-
-                        _GameProfile = GameProfile.FromPath(ProfilePath);
-                        // Todo: Unset GameVersion if the existing one isn't in the new profile. Maybe.
-
-                        if (File.Exists(ProfilePath))
+                        if (!string.IsNullOrWhiteSpace(_ProfilePath))
                         {
-                            FSWatcher.Path = Path.GetDirectoryName(ProfilePath);
-                            FSWatcher.Filter = Path.GetFileName(ProfilePath + "*");
+                            Log.Info("Loading new game profile: " + ProfilePath);
+
+                            _GameProfile = GameProfile.FromPath(ProfilePath);
+                            // Todo: Unset GameVersion if the existing one isn't in the new profile. Maybe.
+
+                            if (File.Exists(ProfilePath))
+                            {
+                                FSWatcher.Path = Path.GetDirectoryName(ProfilePath);
+                                FSWatcher.Filter = Path.GetFileName(ProfilePath + "*");
+                            }
+                            else
+                            {
+                                FSWatcher.Path = ProfilePath;
+                                FSWatcher.Filter = null;
+                            }
+
+                            FSWatcher.EnableRaisingEvents = true;
+
+                            Log.Info("Game profile successfully loaded!");
+
+                            // Todo: Log this separately. Just don't want to atm.
+                            VASLSettings settings = Script.RunStartup(State);
+                            SetVASLSettings(settings);
                         }
-                        else
-                        {
-                            FSWatcher.Path = ProfilePath;
-                            FSWatcher.Filter = null;
-                        }
-
-                        FSWatcher.EnableRaisingEvents = true;
-
-                        Log.Info("Game profile successfully loaded!");
-
-                        // Todo: Log this separately. Just don't want to atm.
-                        VASLSettings settings = Script.RunStartup(State);
-                        SetVASLSettings(settings);
                     }
                     catch (Exception e)
                     {
