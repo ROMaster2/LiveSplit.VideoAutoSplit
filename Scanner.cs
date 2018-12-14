@@ -16,13 +16,14 @@ namespace LiveSplit.VAS
 {
     public class Scanner : IDisposable
     {
-        private VASComponent Component;
+        private VASComponent _Component;
 
         public Thread FrameHandlerThread;
 
-        private GameProfile GameProfile => Component.GameProfile;
-        private string VideoDevice => Component.VideoDevice;
-        private VideoCaptureDevice VideoSource = new VideoCaptureDevice();
+        private GameProfile _GameProfile => _Component.GameProfile;
+        private string _VideoDevice => _Component.VideoDevice;
+        private VideoCaptureDevice _VideoSource;
+
         public CompiledFeatures CompiledFeatures { get; private set; }
         public DeltaManager DeltaManager { get; private set; }
 
@@ -33,8 +34,9 @@ namespace LiveSplit.VAS
         public bool IsScanning { get { return ScanningCount > 0; } }
         public bool Restarting { get; set; } = false;
 
-        private NewFrameEventHandler NewFrameEventHandler;
-        private VideoSourceErrorEventHandler VideoSourceErrorEventHandler;
+        private NewFrameEventHandler _NewFrameEventHandler;
+        private VideoSourceErrorEventHandler _VideoSourceErrorEventHandler;
+
         public event EventHandler<Scan> ScanFinished;
         public event EventHandler<DeltaOutput> NewResult;
 
@@ -42,9 +44,10 @@ namespace LiveSplit.VAS
 
         public Scanner(VASComponent component)
         {
-            Component = component;
-            NewFrameEventHandler = HandleNewFrame;
-            VideoSourceErrorEventHandler = HandleVideoError;
+            _Component = component;
+            _VideoSource = new VideoCaptureDevice();
+            _NewFrameEventHandler = HandleNewFrame;
+            _VideoSourceErrorEventHandler = HandleVideoError;
         }
 
         private Geometry _VideoGeometry = Geometry.Blank;
@@ -56,12 +59,12 @@ namespace LiveSplit.VAS
                 {
                     if (!IsVideoSourceRunning() && IsVideoSourceValid())
                     {
-                        VideoSource.Source = DeviceMoniker;
-                        VideoSource.Start();
+                        _VideoSource.Source = DeviceMoniker;
+                        _VideoSource.Start();
                     }
                     if (IsVideoSourceRunning())
                     {
-                        VideoSource.NewFrame += SetFrameSize;
+                        _VideoSource.NewFrame += SetFrameSize;
                     }
                 }
                 return _VideoGeometry;
@@ -74,7 +77,7 @@ namespace LiveSplit.VAS
             if (!_VideoGeometry.HasSize)
             {
                 _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
-                VideoSource.NewFrame -= SetFrameSize;
+                _VideoSource.NewFrame -= SetFrameSize;
             }
         }
 
@@ -107,13 +110,13 @@ namespace LiveSplit.VAS
             {
                 if (!_TrueCropGeometry.HasSize)
                 {
-                    if (GameProfile != null)
+                    if (_GameProfile != null)
                     {
                         double x = 32768d;
                         double y = 32768d;
                         double width = -32768d;
                         double height = -32768d;
-                        foreach (var wz in GameProfile.Screens[0].WatchZones)
+                        foreach (var wz in _GameProfile.Screens[0].WatchZones)
                         {
                             var geo = wz.Geometry;
                             geo.RemoveAnchor(wz.Screen.Geometry);
@@ -125,7 +128,7 @@ namespace LiveSplit.VAS
                         width -= x;
                         height -= y;
                         var sGeo = new Geometry(x, y, width, height);
-                        sGeo.ResizeTo(CropGeometry, GameProfile.Screens[0].Geometry);
+                        sGeo.ResizeTo(CropGeometry, _GameProfile.Screens[0].Geometry);
                         sGeo.Update(CropGeometry.X, CropGeometry.Y);
                         _TrueCropGeometry = sGeo;
                     }
@@ -151,7 +154,7 @@ namespace LiveSplit.VAS
 
         public bool IsVideoSourceValid()
         {
-            var v = Regex.Match(VideoDevice, "@device.*}");
+            var v = Regex.Match(_VideoDevice, "@device.*}");
             return v.Success && !string.IsNullOrEmpty(new FilterInfo(v.Value).Name);
         }
 
@@ -161,7 +164,7 @@ namespace LiveSplit.VAS
             {
                 if (IsVideoSourceValid())
                 {
-                    return Regex.Match(VideoDevice, "@device.*}").Value;
+                    return Regex.Match(_VideoDevice, "@device.*}").Value;
                 }
                 else
                 {
@@ -172,7 +175,7 @@ namespace LiveSplit.VAS
 
         public bool IsVideoSourceRunning()
         {
-            return VideoSource.IsRunning;
+            return _VideoSource.IsRunning;
         }
 
         public void SubscribeToFrameHandler(EventHandler<Scan> method)
@@ -194,14 +197,28 @@ namespace LiveSplit.VAS
 
         public void Stop()
         {
-            IsScannerLocked = true;
-            VideoSource?.SignalToStop();
-            VideoSource.NewFrame -= NewFrameEventHandler;
-            CurrentIndex = 0;
-            DeltaManager = null;
-            VideoSource?.WaitForStop();
-            _VideoGeometry = Geometry.Blank;
-            FrameHandlerThread?.Abort();
+            Log.Info("Stopping scanner...");
+            try
+            {
+                IsScannerLocked = true;
+                CurrentIndex = 0;
+                DeltaManager = null;
+                if (_VideoSource != null)
+                {
+                    if (_VideoSource.IsRunning) _VideoSource.SignalToStop();
+                    _VideoSource.NewFrame -= _NewFrameEventHandler;
+                    _VideoSource.VideoSourceError -= _VideoSourceErrorEventHandler;
+                    if (_VideoSource.IsRunning) _VideoSource.WaitForStop();
+                }
+                _VideoGeometry = Geometry.Blank;
+                FrameHandlerThread?.Abort();
+                Log.Info("Scanner stopped.");
+            }
+            catch (Exception e)
+            {
+                Log.Error("Scanner failed to stop. This isn't good...");
+                Log.Error(e);
+            }
         }
 
         public void AsyncStart()
@@ -214,23 +231,38 @@ namespace LiveSplit.VAS
                 FrameHandlerThread.Start();
                 Log.Info("Thread created.");
             }
+            else
+            {
+                Restart();
+            }
         }
 
         public void Start()
         {
             UpdateCropGeometry();
-            if (GameProfile != null && IsVideoSourceValid())
+            Log.Info("Trying to start scanner.");
+            if (_GameProfile != null && IsVideoSourceValid())
             {
                 Log.Info("Starting scanner...");
                 CurrentIndex = 0;
                 DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
                 initCount = 0;
 
-                VideoSource.NewFrame += NewFrameEventHandler;
-                VideoSource.VideoSourceError += VideoSourceErrorEventHandler;
+                _VideoSource.NewFrame += _NewFrameEventHandler;
+                _VideoSource.VideoSourceError += _VideoSourceErrorEventHandler;
+                Log.Info("Scanner hooked onto video source.");
 
-                VideoSource.Source = DeviceMoniker;
-                VideoSource.Start();
+                var moniker = DeviceMoniker;
+                if (!string.IsNullOrWhiteSpace(moniker))
+                {
+                    _VideoSource.Source = moniker;
+                    _VideoSource.Start();
+                    Log.Info("Scanner started.");
+                }
+                else
+                {
+                    Log.Warning("Scanner failed to start, somehow. Did you change settings in less than 5 milliseconds?");
+                }
             }
         }
 
@@ -240,7 +272,7 @@ namespace LiveSplit.VAS
             {
                 Log.Info("Restarting scanner...");
                 Restarting = true;
-                if (IsScannerLocked) Thread.Sleep(1);
+                if (IsScannerLocked) Utilities.LightSleep(() => IsScannerLocked, 2000);
                 Stop();
                 Thread.Sleep(1000);
                 Start();
@@ -252,11 +284,11 @@ namespace LiveSplit.VAS
         public void UpdateCropGeometry()
         {
             _TrueCropGeometry = Geometry.Blank;
-            if (Component.IsScriptLoaded() && GameProfile != null)
+            if (_Component.IsScriptLoaded() && _GameProfile != null)
             {
                 Log.Info("Adjusting profile to set dimensions...");
                 IsScannerLocked = true;
-                CompiledFeatures = new CompiledFeatures(GameProfile, CropGeometry);
+                CompiledFeatures = new CompiledFeatures(_GameProfile, CropGeometry);
                 IsScannerLocked = false;
                 Log.Info("Profile adjusted.");
             }
