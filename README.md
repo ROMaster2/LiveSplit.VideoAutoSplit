@@ -30,7 +30,21 @@ Unfortunately, because of how component settings are saved, **the settings are t
 
 Creating a profile is very similar to creating a regular [Auto Splitter script](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md), but instead of monitoring memory values, it monitors regions of a video feed and compares it against an image, or in some cases, the previous frame, and returns a confidence value.
 
+(This section still needs to be finished)
+
 ### Structure File
 
 Note: A user interface will later be made to help with creating this file.
+
+## Contributing
+
+Any and all help with development, be it with finding or squashing bugs or adding new features, would be awesome.
+
+### How to Compile
+
+ 1. Create a clone of LiveSplit following [its instructions](https://github.com/LiveSplit/LiveSplit#contributing).
+ 2. In the `/LiveSplit/Components` folder of the above, create a clone of the VAS component: `git clone https://github.com/ROMaster2/LiveSplit.VideoAutoSplit.git`
+ 3. Inside Visual Studio, right click the `Components/Control` folder, hover over Add, and select "Existing Project...". Go through the folders to `/LiveSplit/Components/LiveSplit.ScriptableAutoSplit` and select `LiveSplit.VideoAutoSplit.csproj`.
+
+You should now be able to debug and compile the component with LiveSplit.
 
