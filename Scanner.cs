@@ -48,6 +48,7 @@ namespace LiveSplit.VAS
             _VideoSource = new VideoCaptureDevice();
             _NewFrameEventHandler = HandleNewFrame;
             _VideoSourceErrorEventHandler = HandleVideoError;
+            _CropGeometry = new Geometry(640, 480);
         }
 
         private Geometry _VideoGeometry = Geometry.Blank;
