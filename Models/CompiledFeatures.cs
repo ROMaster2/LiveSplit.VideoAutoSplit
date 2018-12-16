@@ -99,7 +99,7 @@ namespace LiveSplit.VAS.Models
                     }
                 }
 
-                wzCropGeo.Intersect(CaptureGeometry);
+                //wzCropGeo.Intersect(CaptureGeometry);
                 cWatchZones[i1] = new CWatchZone(watchZone.Name, wzCropGeo, CWatches);
             }
 
