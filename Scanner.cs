@@ -18,11 +18,14 @@ namespace LiveSplit.VAS
     {
         private VASComponent _Component;
 
-        public Thread FrameHandlerThread;
+        private Thread _FrameHandlerThread;
 
         private GameProfile _GameProfile => _Component.GameProfile;
         private string _VideoDevice => _Component.VideoDevice;
         private VideoCaptureDevice _VideoSource;
+
+        private NewFrameEventHandler _NewFrameEventHandler;
+        private VideoSourceErrorEventHandler _VideoSourceErrorEventHandler;
 
         public CompiledFeatures CompiledFeatures { get; private set; }
         public DeltaManager DeltaManager { get; private set; }
@@ -33,9 +36,6 @@ namespace LiveSplit.VAS
         public int ScanningCount = 0;
         public bool IsScanning { get { return ScanningCount > 0; } }
         public bool Restarting { get; set; } = false;
-
-        private NewFrameEventHandler _NewFrameEventHandler;
-        private VideoSourceErrorEventHandler _VideoSourceErrorEventHandler;
 
         public event EventHandler<Scan> ScanFinished;
         public event EventHandler<DeltaOutput> NewResult;
@@ -219,20 +219,20 @@ namespace LiveSplit.VAS
                 Log.Error(e);
             }
 
-            if (FrameHandlerThread != null && FrameHandlerThread.IsAlive && FrameHandlerThread.ThreadState == ThreadState.Running)
+            if (_FrameHandlerThread != null && _FrameHandlerThread.IsAlive && _FrameHandlerThread.ThreadState == ThreadState.Running)
             {
-                FrameHandlerThread.Abort();
+                _FrameHandlerThread.Abort();
             }
         }
 
         public void AsyncStart()
         {
-            if (FrameHandlerThread == null || FrameHandlerThread.ThreadState != ThreadState.Running)
+            if (_FrameHandlerThread == null || _FrameHandlerThread.ThreadState != ThreadState.Running)
             {
                 Log.Info("Creating scanner thread.");
                 ThreadStart t = new ThreadStart(Start);
-                FrameHandlerThread = new Thread(t);
-                FrameHandlerThread.Start();
+                _FrameHandlerThread = new Thread(t);
+                _FrameHandlerThread.Start();
                 Log.Info("Thread created.");
             }
             else
@@ -591,7 +591,7 @@ namespace LiveSplit.VAS
         {
             Stop();
             IsScannerLocked = true;
-            FrameHandlerThread?.Abort();
+            _FrameHandlerThread?.Abort();
             Log.Flush();
         }
 
