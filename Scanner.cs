@@ -58,14 +58,22 @@ namespace LiveSplit.VAS
             {
                 if (!_VideoGeometry.HasSize)
                 {
-                    if (!IsVideoSourceRunning() && IsVideoSourceValid())
+                    try
                     {
-                        _VideoSource.Source = DeviceMoniker;
-                        _VideoSource.Start();
+                        if (!IsVideoSourceRunning() && IsVideoSourceValid())
+                        {
+                            _VideoSource.Source = DeviceMoniker;
+                            _VideoSource.Start();
+                        }
+                        if (IsVideoSourceRunning())
+                        {
+                            _VideoSource.NewFrame += SetFrameSize;
+                        }
                     }
-                    if (IsVideoSourceRunning())
+                    catch (Exception e)
                     {
-                        _VideoSource.NewFrame += SetFrameSize;
+                        Log.Error("Couldn't obtain video Geometry.");
+                        Log.Error(e);
                     }
                 }
                 return _VideoGeometry;
