@@ -278,10 +278,7 @@ namespace LiveSplit.VAS
 
             // Hacky? Probably. Geometry should have proper XML support.
             var geo = Geometry.FromString(element["CropGeometry"].InnerText);
-            if (geo.HasSize)
-            {
-                CropGeometry = geo;
-            }
+            if (geo.HasSize) CropGeometry = geo;
 
             VideoDevice = SettingsHelper.ParseString(element["VideoDevice"], string.Empty);
         }
