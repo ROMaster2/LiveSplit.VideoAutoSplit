@@ -47,7 +47,6 @@ namespace LiveSplit.VAS.UI
         private bool _RenderingFrame = false;
 
         private Point _SelectionStart = new Point(0, 0);
-        private Point _SelectionEnd = new Point(0, 0);
         private bool _Selecting = false;
 
         public Geometry NumGeometry
@@ -464,9 +463,8 @@ namespace LiveSplit.VAS.UI
         {
             if (_ActivePreviewType == PreviewType.FullFrame)
             {
-                _SelectionEnd = e.Location;
-                _Selecting = false;
                 Click_Resize_Preview(e.Location);
+                _Selecting = false;
                 UpdateCropGeometry();
             }
         }
