@@ -22,7 +22,7 @@ namespace LiveSplit.VAS.UI
     public partial class ScanRegionUI : AbstractUI
     {
         private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
-        private const FilterType DEFAULT_SCALE_FILTER = FilterType.Triangle;
+        private const FilterType DEFAULT_SCALE_FILTER = FilterType.Box;
         private static readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
 
         private GameProfile _GameProfile => _Component.GameProfile;
