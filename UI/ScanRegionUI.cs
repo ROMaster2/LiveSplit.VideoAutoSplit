@@ -151,8 +151,7 @@ namespace LiveSplit.VAS.UI
         {
             boxPreviewType.Items.Add("Full Frame");
             boxPreviewType.Items.Add("Frame Crop");
-            boxPreviewType.Items.Add("All Features");
-            boxPreviewType.Items.Add("Feature");
+            boxPreviewType.Items.Add("Features");
             boxPreviewType.SelectedIndex = 0;
         }
 
@@ -306,7 +305,7 @@ namespace LiveSplit.VAS.UI
                         mi.Composite(_WatchZoneOverlay, xOffset, yOffset, CompositeOperator.Over);
                     }
                 }
-                else if (previewType == PreviewType.AllFeatures || (previewType == PreviewType.Feature && feature == null))
+                else if (previewType == PreviewType.Features && feature == null)
                 {
                     var trueGeo = _TrueCropGeometry;
 
@@ -326,7 +325,7 @@ namespace LiveSplit.VAS.UI
                         mi.Composite(_WatchZoneOverlay, CompositeOperator.Over);
                     }
                 }
-                else if (previewType == PreviewType.Feature && feature != null)
+                else if (previewType == PreviewType.Features && feature != null)
                 {
                     var wzGeo = feature.WatchZone.Geometry;
 
@@ -428,7 +427,7 @@ namespace LiveSplit.VAS.UI
         private void boxPreviewType_SelectedIndexChanged(object sender, EventArgs e)
         {
             boxPreviewFeature.Enabled =
-            ckbShowComparison.Enabled = _ActivePreviewType == PreviewType.Feature;
+            ckbShowComparison.Enabled = _ActivePreviewType == PreviewType.Features;
 
             pictureBox.Cursor = _ActivePreviewType == PreviewType.FullFrame ? Cursors.Cross : Cursors.No;
         }
@@ -494,8 +493,7 @@ namespace LiveSplit.VAS.UI
         {
             FullFrame,
             FrameCrop, // CropGeometry
-            AllFeatures, // TrueCropGeometry
-            Feature // WatchZone
+            Features // WatchZone
         }
 
         private class PreviewFeature
