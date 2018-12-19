@@ -24,10 +24,13 @@ namespace LiveSplit.VAS.UI
         private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
         private const FilterType DEFAULT_SCALE_FILTER = FilterType.Box;
 
-
+        // Semi-Transparent Magenta
         private static readonly MagickColor EXTENT_COLOR =         MagickColor.FromRgba(255,   0, 255, 127);
+        // 2/3 Transparent Yellow
         private static readonly MagickColor SCREEN_COLOR =         MagickColor.FromRgba(255, 255,   0,  85);
+        // 2/3 Transparent Cyan
         private static readonly MagickColor WATCHZONE_COLOR =      MagickColor.FromRgba(  0, 255, 255,  85);
+        // Mostly Opaque Dark Grey
         private static readonly MagickColor PREVIEW_EXTENT_COLOR = MagickColor.FromRgba(170, 170, 170, 223);
 
         private GameProfile _GameProfile => _Component.GameProfile;
