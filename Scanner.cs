@@ -210,8 +210,6 @@ namespace LiveSplit.VAS
             try
             {
                 IsScannerLocked = true;
-                CurrentIndex = 0;
-                DeltaManager = null;
                 if (_VideoSource != null)
                 {
                     if (_VideoSource.IsRunning) _VideoSource.SignalToStop();
@@ -219,6 +217,8 @@ namespace LiveSplit.VAS
                     _VideoSource.VideoSourceError -= _VideoSourceErrorEventHandler;
                     if (_VideoSource.IsRunning) _VideoSource.WaitForStop();
                 }
+                CurrentIndex = 0;
+                DeltaManager = null;
                 _VideoGeometry = Geometry.Blank;
                 Log.Info("Scanner stopped.");
             }
