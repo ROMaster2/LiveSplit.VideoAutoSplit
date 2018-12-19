@@ -86,8 +86,8 @@ namespace LiveSplit.VAS.UI
             }
             else
             {
-                ui.SuspendLayout();
                 ui.Derender();
+                ui.SuspendLayout();
             }
         }
 
