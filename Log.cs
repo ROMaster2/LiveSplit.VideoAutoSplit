@@ -6,6 +6,9 @@ namespace LiveSplit.VAS
 {
     public static class Log
     {
+        private const string PREFIX = "[VAS] ";
+        private const string STANDARD_FORMAT = "{0} {1}";
+
         private static TextWriter _TextWriter = new StringWriter();
 
 #if DEBUG
@@ -52,7 +55,7 @@ namespace LiveSplit.VAS
             {
                 if (VerboseEnabled)
                 {
-                    Trace.TraceInformation(message);
+                    Trace.TraceInformation(STANDARD_FORMAT, PREFIX, message);
                     Write(message);
                 }
             }
@@ -63,7 +66,7 @@ namespace LiveSplit.VAS
         {
             try
             {
-                Trace.TraceInformation(message);
+                Trace.TraceInformation(STANDARD_FORMAT, PREFIX, message);
                 Write(message);
             }
             catch { }
@@ -73,7 +76,7 @@ namespace LiveSplit.VAS
         {
             try
             {
-                Trace.TraceWarning(message);
+                Trace.TraceWarning(STANDARD_FORMAT, PREFIX, message);
                 Write(message);
             }
             catch { }
@@ -83,7 +86,7 @@ namespace LiveSplit.VAS
         {
             try
             {
-                Trace.TraceError(message);
+                Trace.TraceError(STANDARD_FORMAT, PREFIX, message);
                 Write(message);
             }
             catch { }
