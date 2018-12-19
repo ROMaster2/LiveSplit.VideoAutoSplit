@@ -79,7 +79,7 @@ namespace LiveSplit.VAS.UI
             var grandParent = (TabControl)Parent.Parent;
             var parent = (TabPage)Parent;
 
-            if (grandParent.SelectedTab == parent && tabControlCore.SelectedTab == ui.PageParent && !forceDerender)
+            if (grandParent.SelectedTab == parent && tabControlCore.SelectedTab == ui.Parent && !forceDerender)
             {
                 ui.ResumeLayout(false);
                 ui.Rerender();

@@ -12,9 +12,6 @@ namespace LiveSplit.VAS.UI
     {
         internal VASComponent _Component { get; }
 
-        public TabPage PageParent => (TabPage)Parent;
-        public TabControl TabParent => (TabControl)Parent.Parent;
-
         public AbstractUI(VASComponent component) : base()
         {
             _Component = component;
