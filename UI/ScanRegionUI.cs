@@ -229,6 +229,8 @@ namespace LiveSplit.VAS.UI
             _ScreenOverlay.Composite(_WatchZoneOverlay, xOffset, yOffset, CompositeOperator.Over);
         }
 
+        #region Thumbnail Rendering
+
         private void HandleNewScan(object sender, Scan scan)
         {
             if (!_RenderingFrame)
@@ -254,6 +256,7 @@ namespace LiveSplit.VAS.UI
             RefreshThumbnailAsync(scan, previewType, feature);
         }
 
+        // @TODO: Break into separate methods?
         private async void RefreshThumbnailAsync(Scan scan, PreviewType previewType, PreviewFeature feature)
         {
             await Task.Delay(0);
@@ -424,6 +427,8 @@ namespace LiveSplit.VAS.UI
             });
             _RenderingFrame = false;
         }
+
+        #endregion Thumbnail Rendering
 
         private void boxPreviewType_SelectedIndexChanged(object sender, EventArgs e)
         {
