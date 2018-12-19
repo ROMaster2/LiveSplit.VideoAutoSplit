@@ -7,6 +7,9 @@ namespace LiveSplit.VAS
     public static class Log
     {
         private static TextWriter _TextWriter = new StringWriter();
+
+        public static bool VerboseEnabled { get; set; } = false;
+
         public static event EventHandler<string> LogUpdated;
 
         static Log()
@@ -37,6 +40,19 @@ namespace LiveSplit.VAS
             var str = "[" + DateTime.Now.ToString("hh:mm:ss.fff") + "] " + message;
             _TextWriter.WriteLine(str);
             if (LogUpdated != null) LogUpdated(null, str);
+        }
+
+        public static void Verbose(string message)
+        {
+            try
+            {
+                if (VerboseEnabled)
+                {
+                    Trace.TraceInformation(message);
+                    Write(message);
+                }
+            }
+            catch { }
         }
 
         public static void Info(string message)
