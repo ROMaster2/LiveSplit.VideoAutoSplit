@@ -170,7 +170,7 @@ namespace LiveSplit.VAS.UI
             var referenceWidth = refGeo.Width;
             var referenceHeight = refGeo.Height;
 
-            // Tried to not have hardcoded, but Microsoft disagreed.
+            // Wanted to not have 150 hardcoded, but Microsoft disagreed.
             var parent = pictureBox.Parent;
             var parentWidth = parent.Width;
             var parentHeight = parent.Height - 150;
