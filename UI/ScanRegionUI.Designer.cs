@@ -67,7 +67,6 @@
             this.tlpCore.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpCore.Controls.Add(this.panel1, 0, 0);
             this.tlpCore.Controls.Add(this.pictureBox, 0, 1);
-            this.tlpCore.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tlpCore.Location = new System.Drawing.Point(7, 7);
             this.tlpCore.Name = "tlpCore";
             this.tlpCore.RowCount = 2;
@@ -363,6 +362,7 @@
             // pictureBox
             // 
             this.pictureBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.pictureBox.Cursor = System.Windows.Forms.Cursors.Cross;
             this.pictureBox.Location = new System.Drawing.Point(27, 161);
             this.pictureBox.Margin = new System.Windows.Forms.Padding(5);
             this.pictureBox.Name = "pictureBox";
@@ -375,6 +375,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tlpCore);
+            this.DoubleBuffered = true;
             this.Margin = new System.Windows.Forms.Padding(0);
             this.Name = "ScanRegionUI";
             this.Padding = new System.Windows.Forms.Padding(7);
