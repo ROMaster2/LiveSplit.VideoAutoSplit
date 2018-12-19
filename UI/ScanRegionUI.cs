@@ -397,8 +397,7 @@ namespace LiveSplit.VAS.UI
                 }
                 else
                 {
-                    Log.Error("I like turtles.");
-                    throw new Exception("How did this happen?");
+                    throw new InvalidEnumArgumentException("PreviewType out of bounds? This shouldn't happen.");
                 }
 
                 var drawingSize = minGeo.Size.ToDrawing();
@@ -414,8 +413,7 @@ namespace LiveSplit.VAS.UI
             }
             catch (Exception e)
             {
-                Log.Error("Thumbnail failed to render for the Scan Region");
-                Log.Error(e);
+                Log.Error(e, "Thumbnail failed to render for the Scan Region.");
                 scan.Dispose();
                 _RenderingFrame = false;
             }

@@ -72,8 +72,7 @@ namespace LiveSplit.VAS
                     }
                     catch (Exception e)
                     {
-                        Log.Error("Couldn't obtain video Geometry.");
-                        Log.Error(e);
+                        Log.Error(e, "Couldn't obtain video Geometry.");
                     }
                 }
                 return _VideoGeometry;
@@ -224,8 +223,7 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
-                Log.Error("Scanner failed to stop. This isn't good...");
-                Log.Error(e);
+                Log.Error(e, "Scanner failed to stop. This isn't good...");
             }
 
             if (_FrameHandlerThread != null && _FrameHandlerThread.IsAlive && _FrameHandlerThread.ThreadState == ThreadState.Running)
@@ -326,15 +324,8 @@ namespace LiveSplit.VAS
 
         private void HandleVideoError(object sender, VideoSourceErrorEventArgs e)
         {
-            Log.Error("Video capture (Accord) fatal error.");
-            if (e.Description.Length >= 2)
-            {
-                Log.Error(e.Description);
-            }
-            if (e.Exception != null)
-            {
-                Log.Error(e.Exception);
-            }
+            Log.Error(e.Exception, "Video capture fatal error. " + e.Description);
+
             if (IsVideoSourceRunning())
             {
                 Restart();
@@ -391,8 +382,7 @@ namespace LiveSplit.VAS
             catch (Exception e)
             {
                 scan.Dispose();
-                Log.Error("Error scanning frame.");
-                Log.Error(e);
+                Log.Error(e, "Error scanning frame.");
                 if (IsVideoSourceRunning() && !IsScannerLocked)
                 {
                     ScanningCount--;

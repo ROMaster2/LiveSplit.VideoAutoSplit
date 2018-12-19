@@ -82,20 +82,12 @@ namespace LiveSplit.VAS
             catch { }
         }
 
-        public static void Error(string message)
+        public static void Error(Exception ex, string description)
         {
             try
             {
-                Trace.TraceError(STANDARD_FORMAT, PREFIX, message);
-                Write(message);
-            }
-            catch { }
-        }
-
-        public static void Error(Exception ex)
-        {
-            try
-            {
+                Trace.TraceError(STANDARD_FORMAT, PREFIX, description);
+                Write(description);
                 Trace.TraceError("{0}\n\n{1}", ex.Message, ex.StackTrace);
                 Write(ex.Message);
                 Write(ex.StackTrace);

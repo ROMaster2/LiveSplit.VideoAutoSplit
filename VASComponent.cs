@@ -47,8 +47,7 @@ namespace LiveSplit.VAS
                     }
                     catch (Exception e)
                     {
-                        Log.Error("Test1234"); // Testing to see if it appears when it's not supposed to.
-                        Log.Error(e);
+                        Log.Error(e, "Profile path failed to set.");
                         _ProfilePath = string.Empty;
                         ProfileCleanup();
                     }
@@ -94,8 +93,7 @@ namespace LiveSplit.VAS
                     }
                     catch (Exception e)
                     {
-                        Log.Error("Error loading Game profile:");
-                        Log.Error(e);
+                        Log.Error(e, "Error loading Game profile:");
                         ProfileCleanup();
                     }
                 }
@@ -120,8 +118,7 @@ namespace LiveSplit.VAS
                     }
                     catch (Exception e)
                     {
-                        Log.Error("Error loading VASL script:");
-                        Log.Error(e);
+                        Log.Error(e, "Error loading VASL script:");
                         ProfileCleanup();
                     }
                 }
@@ -429,8 +426,7 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
-                Log.Error("VASL Script failed to process frame.");
-                Log.Error(e);
+                Log.Error(e, "VASL Script failed to process frame.");
             }
         }
 
@@ -455,7 +451,7 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
-                Log.Error(e);
+                Log.Error(e, "Scanner failed to initialize");
                 ProfileCleanup();
             }
         }
@@ -473,7 +469,7 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
-                Log.Error(e);
+                Log.Error(e, "Unable to run shutdown on script, skipping.");
             }
             finally
             {
