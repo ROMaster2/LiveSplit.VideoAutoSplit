@@ -355,6 +355,8 @@ namespace LiveSplit.VAS.UI
         {
             boxPreviewFeature.Enabled =
             ckbShowComparison.Enabled = _ActivePreviewType == PreviewType.Feature;
+
+            pictureBox.Cursor = _ActivePreviewType == PreviewType.FullFrame ? Cursors.Cross : Cursors.No;
         }
 
         private enum PreviewType
