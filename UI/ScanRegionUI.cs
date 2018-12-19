@@ -223,6 +223,7 @@ namespace LiveSplit.VAS.UI
                 Geometry minGeo;
                 MagickImage mi;
                 string confidence = string.Empty;
+                Geometry cropGeo = _CropGeometry;
 
                 if (previewType == PreviewType.FullFrame)
                 {
@@ -231,28 +232,30 @@ namespace LiveSplit.VAS.UI
                 }
                 else if (previewType == PreviewType.FrameCrop)
                 {
-                    minGeo = Geometry.Min(_CropGeometry, GetScaledGeometry(_CropGeometry));
-                    if (!_VideoGeometry.Contains(_CropGeometry))
+                    minGeo = Geometry.Min(cropGeo, GetScaledGeometry(cropGeo));
+                    if (!_VideoGeometry.Contains(cropGeo))
                     {
                         mi = new MagickImage(scan.CurrentFrame.Bitmap);
-                        mi.Extent(_CropGeometry.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
+                        mi.Extent(cropGeo.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
                     }
                     else
                     {
-                        mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(_CropGeometry.ToRectangle(), PixelFormat.Format24bppRgb));
+                        mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(cropGeo.ToRectangle(), PixelFormat.Format24bppRgb));
                     }
                 }
                 else if (previewType == PreviewType.AllFeatures || (previewType == PreviewType.Feature && feature == null))
                 {
-                    minGeo = Geometry.Min(_TrueCropGeometry, GetScaledGeometry(_TrueCropGeometry));
-                    if (!_VideoGeometry.Contains(_TrueCropGeometry))
+                    var trueGeo = _TrueCropGeometry;
+
+                    minGeo = Geometry.Min(trueGeo, GetScaledGeometry(trueGeo));
+                    if (!_VideoGeometry.Contains(trueGeo))
                     {
                         mi = new MagickImage(scan.CurrentFrame.Bitmap);
-                        mi.Extent(_TrueCropGeometry.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
+                        mi.Extent(trueGeo.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
                     }
                     else
                     {
-                        mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(_TrueCropGeometry.ToRectangle(), PixelFormat.Format24bppRgb));
+                        mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(trueGeo.ToRectangle(), PixelFormat.Format24bppRgb));
                     }
                 }
                 else if (previewType == PreviewType.Feature && feature != null)
