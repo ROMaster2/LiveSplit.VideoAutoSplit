@@ -178,7 +178,8 @@ namespace LiveSplit.VAS.UI
             ckbEnabled = new CheckBox()
             {
                 CheckState = CheckState.Indeterminate,
-                Padding = new Padding(0, 2, 0, 0)
+                Padding = new Padding(0, 2, 0, 0),
+                Enabled = false // @TODO: Remove
             };
             ckbEnabled.Click += ckbEnabled_Click;
             lblValue   = lblNumeric.Clone();
