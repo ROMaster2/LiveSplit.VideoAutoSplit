@@ -23,8 +23,12 @@ namespace LiveSplit.VAS.UI
     {
         private const Gravity STANDARD_GRAVITY = Gravity.Northwest;
         private const FilterType DEFAULT_SCALE_FILTER = FilterType.Box;
-        private static readonly MagickColor EXTENT_COLOR = MagickColor.FromRgba(255, 0, 255, 127);
 
+        private static readonly MagickColor EXTENT_COLOR =         MagickColor.FromRgba(255,   0, 255, 127);
+        private static readonly MagickColor SCREEN_COLOR =         MagickColor.FromRgba(255, 255,   0,  85);
+        private static readonly MagickColor WATCHZONE_COLOR =      MagickColor.FromRgba(  0, 255, 255,  85);
+        private static readonly MagickColor PREVIEW_EXTENT_COLOR = MagickColor.FromRgba(170, 170, 170, 223);
+        private static readonly Color SELECTION_COLOR =            Color.FromArgb(85, 255, 255, 0);
         private GameProfile _GameProfile => _Component.GameProfile;
         private Scanner _Scanner => _Component.Scanner;
         private CompiledFeatures _CompiledFeatures => _Component.Scanner.CompiledFeatures;
@@ -274,11 +278,11 @@ namespace LiveSplit.VAS.UI
                         }
 
                         using (var baseM = new MagickImage(
-                            MagickColor.FromRgba(0, 0, 0, 0),
+                            MagickColors.Transparent,
                             baseMGeo.Width,
                             baseMGeo.Height))
                         using (var overlay = new MagickImage(
-                                MagickColor.FromRgba(170, 170, 170, 223),
+                                PREVIEW_EXTENT_COLOR,
                                 baseMGeo.Width + 128,
                                 baseMGeo.Height + 128))
                         {
