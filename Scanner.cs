@@ -603,6 +603,5 @@ namespace LiveSplit.VAS
             _FrameHandlerThread?.Abort();
             Log.Flush();
         }
-
     }
 }

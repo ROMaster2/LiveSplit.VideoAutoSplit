@@ -59,6 +59,5 @@ namespace LiveSplit.VAS.Models.Delta
 
         public void AddResult(int index, Scan scan, DateTime scanEnd, double[] deltas, double[] benchmarks)
             => AddResult(index, scan.PreviousFrame.DateTime, scan.CurrentFrame.DateTime, scanEnd, deltas, benchmarks);
-
     }
 }

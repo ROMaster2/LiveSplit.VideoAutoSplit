@@ -396,6 +396,5 @@ namespace LiveSplit.VAS.Models.Delta
         }
 
         #endregion VASL Syntax
-
     }
 }

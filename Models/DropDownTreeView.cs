@@ -82,6 +82,7 @@ namespace LiveSplit.VAS.Models
 
         #region Property - ComboBox
         private ComboBox m_ComboBox = new ComboBox();
+
         /// <summary>
         /// Gets or sets the ComboBox.  Lets you access all of the properties of the internal ComboBox.
         /// </summary>
@@ -227,7 +228,6 @@ namespace LiveSplit.VAS.Models
                 // And return to the default state (no ComboBox displayed)
                 this.m_CurrentNode = null;
             }
-
         }
 
         /// <summary>

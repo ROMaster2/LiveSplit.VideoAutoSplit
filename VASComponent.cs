@@ -495,6 +495,5 @@ namespace LiveSplit.VAS
         }
 
         public override void Update(IInvalidator i, LiveSplitState s, float w, float h, LayoutMode m) { }
-
     }
 }

@@ -263,7 +263,6 @@ namespace LiveSplit.VAS
                 Thread.Sleep(millisecondsTimeout);
             }
         }
-
     }
 
     [Flags]
