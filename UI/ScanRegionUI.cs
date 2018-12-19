@@ -121,7 +121,7 @@ namespace LiveSplit.VAS.UI
         private void UpdateCropGeometry()
         {
             _Component.CropGeometry = NumGeometry;
-            CreateOverlays();
+            CreateOverlays(_CropGeometry, _TrueCropGeometry);
         }
 
         private void SetAllNumValues(Geometry geo)
@@ -198,15 +198,13 @@ namespace LiveSplit.VAS.UI
         }
 
         // @TODO: Eventually use distort overlay instead, for increased precision.
-        private void CreateOverlays()
+        private void CreateOverlays(Geometry cropGeo, Geometry trueCropGeo)
         {
-            var cropGeo = _CropGeometry;
-            var trueGeo = _TrueCropGeometry;
             var cropRect = cropGeo.ToRectangle();
-            var trueRect = trueGeo.ToRectangle();
+            var trueCropRect = trueCropGeo.ToRectangle();
 
             _ScreenOverlay = new MagickImage(SCREEN_COLOR, cropRect.Width, cropRect.Height);
-            _WatchZoneOverlay = new MagickImage(MagickColors.Transparent, trueRect.Width, trueRect.Height);
+            _WatchZoneOverlay = new MagickImage(MagickColors.Transparent, trueCropRect.Width, trueCropRect.Height);
 
             foreach (var wz in _CompiledFeatures.CWatchZones)
             {
@@ -215,16 +213,16 @@ namespace LiveSplit.VAS.UI
                 using (var wzmi = new MagickImage(WATCHZONE_COLOR, wzmg.Width, wzmg.Height))
                 using (var wzmia = new MagickImage(MagickColors.Transparent, wzmg.Width, wzmg.Height))
                 {
-                    var xOffsetWZ = (int)Math.Round(wzg.X - trueGeo.X);
-                    var yOffsetWZ = (int)Math.Round(wzg.Y - trueGeo.Y);
+                    var xOffsetWZ = (int)Math.Round(wzg.X - trueCropGeo.X);
+                    var yOffsetWZ = (int)Math.Round(wzg.Y - trueCropGeo.Y);
                     var xOffsetS = (int)Math.Round(wzg.X - cropGeo.X);
                     var yOffsetS = (int)Math.Round(wzg.Y - cropGeo.Y);
                     _WatchZoneOverlay.Composite(wzmi, xOffsetWZ, yOffsetWZ, CompositeOperator.Over);
                     _ScreenOverlay.Composite(wzmia, xOffsetS, yOffsetS, CompositeOperator.Copy);
                 }
             }
-            var xOffset = (int)Math.Round(trueGeo.X - cropGeo.X);
-            var yOffset = (int)Math.Round(trueGeo.Y - cropGeo.Y);
+            var xOffset = (int)Math.Round(trueCropGeo.X - cropGeo.X);
+            var yOffset = (int)Math.Round(trueCropGeo.Y - cropGeo.Y);
             _ScreenOverlay.Composite(_WatchZoneOverlay, xOffset, yOffset, CompositeOperator.Over);
         }
 
