@@ -145,10 +145,7 @@ namespace LiveSplit.VAS.UI
         private void numWidth_Validated(object sender, EventArgs e)  => UpdateCropGeometry();
         private void numHeight_Validated(object sender, EventArgs e) => UpdateCropGeometry();
 
-        private void btnReset_Click(object sender, EventArgs e)
-        {
-            ResetNumValues();
-        }
+        private void btnReset_Click(object sender, EventArgs e) => ResetNumValues();
 
         private void FillboxPreviewType()
         {
