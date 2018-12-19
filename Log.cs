@@ -6,7 +6,7 @@ namespace LiveSplit.VAS
 {
     public static class Log
     {
-        private static StringWriter _TextWriter = new StringWriter();
+        private static TextWriter _TextWriter = new StringWriter();
         public static event EventHandler<string> LogUpdated;
 
         static Log()
