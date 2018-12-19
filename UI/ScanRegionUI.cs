@@ -29,6 +29,7 @@ namespace LiveSplit.VAS.UI
         private static readonly MagickColor WATCHZONE_COLOR =      MagickColor.FromRgba(  0, 255, 255,  85);
         private static readonly MagickColor PREVIEW_EXTENT_COLOR = MagickColor.FromRgba(170, 170, 170, 223);
         private static readonly Color SELECTION_COLOR =            Color.FromArgb(85, 255, 255, 0);
+
         private GameProfile _GameProfile => _Component.GameProfile;
         private Scanner _Scanner => _Component.Scanner;
         private CompiledFeatures _CompiledFeatures => _Component.Scanner.CompiledFeatures;
@@ -37,7 +38,14 @@ namespace LiveSplit.VAS.UI
         private Geometry _TrueCropGeometry => _Component.Scanner.TrueCropGeometry;
         private Geometry _VideoGeometry => _Scanner.VideoGeometry;
 
+        private MagickImage _ScreenOverlay;
+        private MagickImage _WatchZoneOverlay;
+
         private bool _RenderingFrame = false;
+
+        private Point _SelectionStart = new Point(0, 0);
+        private Point _SelectionEnd = new Point(0, 0);
+        private bool _Selecting = false;
 
         public Geometry NumGeometry
         {
@@ -113,6 +121,7 @@ namespace LiveSplit.VAS.UI
         private void UpdateCropGeometry()
         {
             _Component.CropGeometry = NumGeometry;
+            CreateOverlays();
         }
 
         private void SetAllNumValues(Geometry geo)
@@ -189,6 +198,37 @@ namespace LiveSplit.VAS.UI
             return new Geometry(width, height);
         }
 
+        // @TODO: Eventually use distort overlay instead, for increased precision.
+        private void CreateOverlays()
+        {
+            var cropGeo = _CropGeometry;
+            var trueGeo = _TrueCropGeometry;
+            var cropRect = cropGeo.ToRectangle();
+            var trueRect = trueGeo.ToRectangle();
+
+            _ScreenOverlay = new MagickImage(SCREEN_COLOR, cropRect.Width, cropRect.Height);
+            _WatchZoneOverlay = new MagickImage(MagickColors.Transparent, trueRect.Width, trueRect.Height);
+
+            foreach (var wz in _CompiledFeatures.CWatchZones)
+            {
+                var wzg = wz.Geometry;
+                var wzmg = wzg.ToMagick();
+                using (var wzmi = new MagickImage(WATCHZONE_COLOR, wzmg.Width, wzmg.Height))
+                using (var wzmia = new MagickImage(MagickColors.Transparent, wzmg.Width, wzmg.Height))
+                {
+                    var xOffsetWZ = (int)Math.Round(wzg.X - trueGeo.X);
+                    var yOffsetWZ = (int)Math.Round(wzg.Y - trueGeo.Y);
+                    var xOffsetS = (int)Math.Round(wzg.X - cropGeo.X);
+                    var yOffsetS = (int)Math.Round(wzg.Y - cropGeo.Y);
+                    _WatchZoneOverlay.Composite(wzmi, xOffsetWZ, yOffsetWZ, CompositeOperator.Over);
+                    _ScreenOverlay.Composite(wzmia, xOffsetS, yOffsetS, CompositeOperator.Copy);
+                }
+            }
+            var xOffset = (int)Math.Round(trueGeo.X - cropGeo.X);
+            var yOffset = (int)Math.Round(trueGeo.Y - cropGeo.Y);
+            _ScreenOverlay.Composite(_WatchZoneOverlay, xOffset, yOffset, CompositeOperator.Over);
+        }
+
         private void HandleNewScan(object sender, Scan scan)
         {
             if (!_RenderingFrame)
@@ -229,6 +269,20 @@ namespace LiveSplit.VAS.UI
                 {
                     minGeo = Geometry.Min(_VideoGeometry, GetScaledGeometry(_VideoGeometry));
                     mi = new MagickImage(scan.CurrentFrame.Bitmap);
+
+                    if (!_Selecting)
+                    {
+                        var roundGeo = cropGeo.Round();
+                        mi.Composite(_ScreenOverlay, (int)roundGeo.X, (int)roundGeo.Y, CompositeOperator.Over);
+                    }
+                    else
+                    {
+                        var numRect = NumGeometry.ToRectangle();
+                        using (var overlay = new MagickImage(SCREEN_COLOR, numRect.Width, numRect.Height))
+                        {
+                            mi.Composite(overlay, numRect.X, numRect.Y, CompositeOperator.Over);
+                        }
+                    }
                 }
                 else if (previewType == PreviewType.FrameCrop)
                 {
@@ -241,6 +295,15 @@ namespace LiveSplit.VAS.UI
                     else
                     {
                         mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(cropGeo.ToRectangle(), PixelFormat.Format24bppRgb));
+                    }
+
+                    if (!_Selecting)
+                    {
+                        var roundGeo = cropGeo.Round();
+                        var roundTrueGeo = _TrueCropGeometry.Round();
+                        int xOffset = (int)(roundTrueGeo.X - cropGeo.X);
+                        int yOffset = (int)(roundTrueGeo.Y - cropGeo.Y);
+                        mi.Composite(_WatchZoneOverlay, xOffset, yOffset, CompositeOperator.Over);
                     }
                 }
                 else if (previewType == PreviewType.AllFeatures || (previewType == PreviewType.Feature && feature == null))
@@ -256,6 +319,11 @@ namespace LiveSplit.VAS.UI
                     else
                     {
                         mi = new MagickImage(scan.CurrentFrame.Bitmap.Clone(trueGeo.ToRectangle(), PixelFormat.Format24bppRgb));
+                    }
+
+                    if (!_Selecting)
+                    {
+                        mi.Composite(_WatchZoneOverlay, CompositeOperator.Over);
                     }
                 }
                 else if (previewType == PreviewType.Feature && feature != null)
@@ -364,6 +432,63 @@ namespace LiveSplit.VAS.UI
 
             pictureBox.Cursor = _ActivePreviewType == PreviewType.FullFrame ? Cursors.Cross : Cursors.No;
         }
+
+        #region Image Click Logic
+
+        private void pictureBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (_ActivePreviewType == PreviewType.FullFrame)
+            {
+                var vGeo = _VideoGeometry;
+                var widthMultiplier = (decimal)vGeo.Width / pictureBox.Width;
+                var heightMultiplier = (decimal)vGeo.Height / pictureBox.Height;
+                numX.Value = _SelectionStart.X * widthMultiplier;
+                numY.Value = _SelectionStart.Y * heightMultiplier;
+                numWidth.Value = 0m;
+                numHeight.Value = 0m;
+
+                _Selecting = true;
+
+                _SelectionStart = e.Location;
+            }
+        }
+
+        private void pictureBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_Selecting) Click_Resize_Preview(e.Location);
+        }
+
+        private void pictureBox_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (_ActivePreviewType == PreviewType.FullFrame)
+            {
+                _SelectionEnd = e.Location;
+                _Selecting = false;
+                Click_Resize_Preview(e.Location);
+                UpdateCropGeometry();
+            }
+        }
+
+        private void Click_Resize_Preview(Point newPoint)
+        {
+            var vGeo = _VideoGeometry;
+            decimal screenWidth = (decimal)vGeo.Width;
+            decimal screenHeight = (decimal)vGeo.Height;
+            decimal widthMultiplier = screenWidth / pictureBox.Width;
+            decimal heightMultiplier = screenHeight / pictureBox.Height;
+
+            int mouseX = Math.Min(Math.Max(0, newPoint.X), (int)Math.Round(screenWidth / widthMultiplier));
+            int mouseY = Math.Min(Math.Max(0, newPoint.Y), (int)Math.Round(screenHeight / heightMultiplier));
+
+            numX.Value = Math.Max(0m, Math.Min(_SelectionStart.X, mouseX) * widthMultiplier);
+            numY.Value = Math.Max(0m, Math.Min(_SelectionStart.Y, mouseY) * heightMultiplier);
+            numWidth.Value =
+                Math.Min(screenWidth - numX.Value, Math.Abs(_SelectionStart.X - mouseX) * widthMultiplier);
+            numHeight.Value =
+                Math.Min(screenHeight - numY.Value, Math.Abs(_SelectionStart.Y - mouseY) * heightMultiplier);
+        }
+
+        #endregion Image Click Logic
 
         private enum PreviewType
         {
