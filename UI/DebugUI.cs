@@ -28,7 +28,7 @@ namespace LiveSplit.VAS.UI
         {
             txtDebug.Invoke((MethodInvoker)delegate
             {
-                txtDebug.Text += str;
+                txtDebug.Text += str + "\r\n";
                 txtDebug.ScrollToCaret();
             });
         }
