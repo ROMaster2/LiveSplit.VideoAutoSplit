@@ -176,6 +176,14 @@ namespace LiveSplit.VAS.UI
             boxPreviewFeature.SelectedIndex = 0;
         }
 
+        private void boxPreviewType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            boxPreviewFeature.Enabled =
+            ckbShowComparison.Enabled = _ActivePreviewType == PreviewType.Features;
+
+            pictureBox.Cursor = _ActivePreviewType == PreviewType.FullFrame ? Cursors.Cross : Cursors.No;
+        }
+
         // Would be better if something like this was in Geometry.cs
         private Geometry GetScaledGeometry(Geometry refGeo)
         {
@@ -426,14 +434,6 @@ namespace LiveSplit.VAS.UI
         }
 
         #endregion Thumbnail Rendering
-
-        private void boxPreviewType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            boxPreviewFeature.Enabled =
-            ckbShowComparison.Enabled = _ActivePreviewType == PreviewType.Features;
-
-            pictureBox.Cursor = _ActivePreviewType == PreviewType.FullFrame ? Cursors.Cross : Cursors.No;
-        }
 
         #region Image Click Logic
 
