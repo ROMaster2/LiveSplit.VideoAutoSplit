@@ -492,6 +492,8 @@ namespace LiveSplit.VAS.UI
 
         #endregion Image Click Logic
 
+        #region Private Classes
+
         private enum PreviewType
         {
             FullFrame,
@@ -518,5 +520,6 @@ namespace LiveSplit.VAS.UI
             }
         }
 
+        #endregion Private Classes
     }
 }
