@@ -228,7 +228,6 @@ namespace LiveSplit.VAS.UI
                 {
                     minGeo = Geometry.Min(_VideoGeometry, GetScaledGeometry(_VideoGeometry));
                     mi = new MagickImage(scan.CurrentFrame.Bitmap);
-                    // @TODO: Add preview zones for crop(s).
                 }
                 else if (previewType == PreviewType.FrameCrop)
                 {
