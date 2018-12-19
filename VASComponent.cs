@@ -429,6 +429,7 @@ namespace LiveSplit.VAS
             }
             catch (Exception e)
             {
+                Log.Error("VASL Script failed to process frame.");
                 Log.Error(e);
             }
         }
