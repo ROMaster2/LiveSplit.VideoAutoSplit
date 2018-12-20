@@ -11,6 +11,9 @@ namespace LiveSplit.VAS.Models
     public struct CompiledFeatures
     {
         private const int INIT_PIXEL_LIMIT = 16777216;
+        // @TODO: Something about rectangles
+        private static readonly Geometry MIN_GEOMETRY = new Geometry(-8192, -8192, 1, 1);
+        private static readonly Geometry MAX_GEOMETRY = new Geometry(8192, 8192, 8192, 8192);
 
         private readonly bool _HasDupeCheck;
 
@@ -51,6 +54,7 @@ namespace LiveSplit.VAS.Models
                 wzCropGeo.RemoveAnchor(gameGeo);
                 wzCropGeo.ResizeTo(screen.CropGeometry, gameGeo);
                 wzCropGeo.Adjust(screen.CropGeometry.X, screen.CropGeometry.Y);
+                wzCropGeo = wzCropGeo.Clamp(MIN_GEOMETRY, MAX_GEOMETRY);
 
                 for (int i2 = 0; i2 < watchZone.Watches.Count; i2++)
                 {
