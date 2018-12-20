@@ -387,18 +387,7 @@ namespace LiveSplit.VAS
                 CustomSettingsState = values;
             }
 
-            // sigh...
-            if (ComponentUI.IsHandleCreated)
-            {
-                ComponentUI.Invoke((MethodInvoker)delegate
-                {
-                    ComponentUI.InitVASLSettings(settings, scriptLoaded);
-                });
-            }
-            else
-            {
-                ComponentUI.InitVASLSettings(settings, scriptLoaded);
-            }
+            ComponentUI.InitVASLSettings(settings, scriptLoaded);
         }
 
         public void SetVASLSettings(VASLSettings settings)

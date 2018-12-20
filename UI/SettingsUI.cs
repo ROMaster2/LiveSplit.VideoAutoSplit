@@ -50,6 +50,32 @@ namespace LiveSplit.VAS.UI
 
         override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
+            // sigh
+            try
+            {
+                InitCustomSettings(settings, scriptLoaded);
+                InitBasicSettings(settings);
+            }
+            catch (Exception e1)
+            {
+                try
+                {
+                    treeCustomSettings.Invoke((MethodInvoker)delegate
+                    {
+                        InitCustomSettings(settings, scriptLoaded);
+                        InitBasicSettings(settings);
+                    });
+                }
+                catch (Exception e2)
+                {
+                    Log.Error(e1, "Could not load VASL Settings.");
+                    Log.Error(e2, "");
+                }
+            }
+        }
+
+        private void InitCustomSettings(VASLSettings settings, bool scriptLoaded)
+        {
             treeCustomSettings.BeginUpdate();
             treeCustomSettings.Nodes.Clear();
 
@@ -97,7 +123,6 @@ namespace LiveSplit.VAS.UI
                 treeCustomSettings.Nodes[0].EnsureVisible();
 
             UpdateCustomSettingsVisibility();
-            InitBasicSettings(settings);
         }
 
         internal bool FillboxCaptureDevice()
