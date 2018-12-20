@@ -88,10 +88,7 @@ namespace LiveSplit.VAS.UI
         {
             for (int i = tlpFeatures.RowCount - 2; i > 0; i--)
             {
-                if (tlpFeatures.Controls.ContainsKey(i.ToString()))
-                {
-                    tlpFeatures.Controls[i].Dispose();
-                }
+                tlpFeatures.Controls[i].Dispose();
                 tlpFeatures.RowStyles.RemoveAt(i);
             }
             tlpFeatures.RowCount = 2;
