@@ -38,6 +38,8 @@ namespace LiveSplit.VAS
         public bool Restarting { get; set; } = false;
         public int OverloadCount = 0;
 
+        internal int InitCount = 0; // To stop wasting CPU when first starting.
+
         public event EventHandler<Scan> ScanFinished;
         public event EventHandler<DeltaOutput> NewResult;
 
@@ -257,7 +259,7 @@ namespace LiveSplit.VAS
                 CurrentIndex = 0;
                 OverloadCount = 0;
                 DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
-                initCount = 0;
+                InitCount = 0;
 
                 _VideoSource.NewFrame += _NewFrameEventHandler;
                 _VideoSource.VideoSourceError += _VideoSourceErrorEventHandler;
@@ -331,14 +333,12 @@ namespace LiveSplit.VAS
             }
         }
 
-        internal int initCount = 0; // To stop wasting CPU when first starting.
-
         public void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             var now = TimeStamp.CurrentDateTime.Time;
-            initCount++;
+            InitCount++;
             if (!IsScannerLocked &&
-                (initCount > 255 || initCount % 10 == 0) &&
+                (InitCount > 255 || InitCount % 10 == 0) &&
                 !CompiledFeatures.IsPaused(now) &&
                 ScanningCount < 12)
             {
