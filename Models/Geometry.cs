@@ -690,7 +690,7 @@ namespace LiveSplit.VAS.Models
         // Don't use this lol
         public override int GetHashCode()
         {
-            throw new Exception("How could this happen?");
+            throw new Exception("I said you weren't supposed to use this.");
         }
 
         public override bool Equals(object obj)
