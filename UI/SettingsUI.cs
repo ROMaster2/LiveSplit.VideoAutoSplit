@@ -50,58 +50,54 @@ namespace LiveSplit.VAS.UI
 
         override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
         {
-            if (this.IsHandleCreated)
-            this.Invoke((MethodInvoker)delegate
+            treeCustomSettings.BeginUpdate();
+            treeCustomSettings.Nodes.Clear();
+
+            var flat = new Dictionary<string, DropDownTreeNode>();
+
+            foreach (VASLSetting setting in settings.OrderedSettings)
             {
-                treeCustomSettings.BeginUpdate();
-                treeCustomSettings.Nodes.Clear();
+                var value = setting.Value;
+                if (CustomSettingsState.ContainsKey(setting.Id))
+                    value = CustomSettingsState[setting.Id];
 
-                var flat = new Dictionary<string, DropDownTreeNode>();
-
-                foreach (VASLSetting setting in settings.OrderedSettings)
+                var node = new DropDownTreeNode(setting.Label)
                 {
-                    var value = setting.Value;
-                    if (CustomSettingsState.ContainsKey(setting.Id))
-                        value = CustomSettingsState[setting.Id];
+                    Tag = setting,
+                    ToolTipText = setting.ToolTip
+                };
+                node.ComboBox.Text = value.ToString();
+                setting.Value = value;
 
-                    var node = new DropDownTreeNode(setting.Label)
-                    {
-                        Tag = setting,
-                        ToolTipText = setting.ToolTip
-                    };
-                    node.ComboBox.Text = value.ToString();
-                    setting.Value = value;
-
-                    if (setting.Parent == null)
-                    {
-                        treeCustomSettings.Nodes.Add(node);
-                    }
-                    else if (flat.ContainsKey(setting.Parent))
-                    {
-                        flat[setting.Parent].Nodes.Add(node);
-                    }
-
-                    flat.Add(setting.Id, node);
+                if (setting.Parent == null)
+                {
+                    treeCustomSettings.Nodes.Add(node);
+                }
+                else if (flat.ContainsKey(setting.Parent))
+                {
+                    flat[setting.Parent].Nodes.Add(node);
                 }
 
-                foreach (var item in flat)
+                flat.Add(setting.Id, node);
+            }
+
+            foreach (var item in flat)
+            {
+                if (!item.Value.Checked)
                 {
-                    if (!item.Value.Checked)
-                    {
-                        UpdateGrayedOut(item.Value);
-                    }
+                    UpdateGrayedOut(item.Value);
                 }
+            }
 
-                treeCustomSettings.ExpandAll();
-                treeCustomSettings.EndUpdate();
+            treeCustomSettings.ExpandAll();
+            treeCustomSettings.EndUpdate();
 
-                // Scroll up to the top
-                if (treeCustomSettings.Nodes.Count > 0)
-                    treeCustomSettings.Nodes[0].EnsureVisible();
+            // Scroll up to the top
+            if (treeCustomSettings.Nodes.Count > 0)
+                treeCustomSettings.Nodes[0].EnsureVisible();
 
-                UpdateCustomSettingsVisibility();
-                InitBasicSettings(settings);
-            });
+            UpdateCustomSettingsVisibility();
+            InitBasicSettings(settings);
         }
 
         internal bool FillboxCaptureDevice()
