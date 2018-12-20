@@ -336,7 +336,6 @@ namespace LiveSplit.VAS
         public void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             var now = TimeStamp.CurrentDateTime.Time;
-            var test = !CompiledFeatures.IsPaused(now);
             initCount++;
             if (!IsScannerLocked &&
                 (initCount > 255 || initCount % 10 == 0) &&
