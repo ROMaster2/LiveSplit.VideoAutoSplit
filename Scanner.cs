@@ -36,6 +36,7 @@ namespace LiveSplit.VAS
         public int ScanningCount = 0;
         public bool IsScanning { get { return ScanningCount > 0; } }
         public bool Restarting { get; set; } = false;
+        public int OverloadCount = 0;
 
         public event EventHandler<Scan> ScanFinished;
         public event EventHandler<DeltaOutput> NewResult;
@@ -217,6 +218,7 @@ namespace LiveSplit.VAS
                     if (_VideoSource.IsRunning) _VideoSource.WaitForStop();
                 }
                 CurrentIndex = 0;
+                OverloadCount = 0;
                 DeltaManager = null;
                 _VideoGeometry = Geometry.Blank;
                 _FrameHandlerThread?.Abort();
@@ -253,6 +255,7 @@ namespace LiveSplit.VAS
             {
                 Log.Info("Starting scanner...");
                 CurrentIndex = 0;
+                OverloadCount = 0;
                 DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
                 initCount = 0;
 
@@ -337,7 +340,7 @@ namespace LiveSplit.VAS
             if (!IsScannerLocked &&
                 (initCount > 255 || initCount % 10 == 0) &&
                 !CompiledFeatures.IsPaused(now) &&
-                ScanningCount < 20)
+                ScanningCount < 12)
             {
                 ScanningCount++;
 
@@ -352,10 +355,18 @@ namespace LiveSplit.VAS
 
                 Task.Factory.StartNew(() => NewRun(newScan, index));
             }
-            else if (ScanningCount >= 20)
+            else if (ScanningCount >= 12)
             {
-                // Todo: Make this do something more.
-                Log.Warning("Frame handler is overloaded!!!");
+                OverloadCount++;
+                if (OverloadCount > 50)
+                {
+                    Log.Warning("Frame handler is too overloaded, restarting scanner...");
+                    Restart();
+                }
+                else
+                {
+                    Log.Warning("Frame handler is overloaded!!!");
+                }
             }
         }
 
