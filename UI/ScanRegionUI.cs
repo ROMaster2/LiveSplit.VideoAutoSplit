@@ -341,7 +341,7 @@ namespace LiveSplit.VAS.UI
                     {
                         var baseMGeo = new MagickGeometry(64, 64, (int)Math.Round(wzGeo.Width), (int)Math.Round(wzGeo.Height));
 
-                        wzGeo.Update(-64, -64, 128, 128);
+                        wzGeo.Adjust(-64, -64, 128, 128);
 
                         minGeo = Geometry.Min(wzGeo, GetScaledGeometry(wzGeo));
                         if (!_VideoGeometry.Contains(wzGeo))

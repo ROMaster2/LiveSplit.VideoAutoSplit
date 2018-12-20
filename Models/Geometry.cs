@@ -674,7 +674,7 @@ namespace LiveSplit.VAS.Models
             return Min(gMax).Max(gMin);
         }
 
-        public void Update(double x = 0, double y = 0, double width = 0, double height = 0)
+        public void Adjust(double x = 0, double y = 0, double width = 0, double height = 0)
         {
             X += x;
             Y += y;
@@ -682,9 +682,9 @@ namespace LiveSplit.VAS.Models
             Height += height;
         }
 
-        public void Update(Geometry geo)
+        public void Adjust(Geometry geo)
         {
-            Update(geo.X, geo.Y, geo.Width, geo.Height);
+            Adjust(geo.X, geo.Y, geo.Width, geo.Height);
         }
 
         // Don't use this lol

@@ -137,7 +137,7 @@ namespace LiveSplit.VAS
                         height -= y;
                         var sGeo = new Geometry(x, y, width, height);
                         sGeo.ResizeTo(CropGeometry, _GameProfile.Screens[0].Geometry);
-                        sGeo.Update(CropGeometry.X, CropGeometry.Y);
+                        sGeo.Adjust(CropGeometry.X, CropGeometry.Y);
                         _TrueCropGeometry = sGeo;
                     }
                     else

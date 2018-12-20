@@ -50,7 +50,7 @@ namespace LiveSplit.VAS.Models
                 var wzCropGeo = watchZone.WithoutScale(gameGeo);
                 wzCropGeo.RemoveAnchor(gameGeo);
                 wzCropGeo.ResizeTo(screen.CropGeometry, gameGeo);
-                wzCropGeo.Update(screen.CropGeometry.X, screen.CropGeometry.Y);
+                wzCropGeo.Adjust(screen.CropGeometry.X, screen.CropGeometry.Y);
 
                 for (int i2 = 0; i2 < watchZone.Watches.Count; i2++)
                 {
