@@ -104,24 +104,24 @@ public class CompiledScript
             }
         }
 
-        public dynamic Call(LiveSplitState timer, ExpandoObject vars, string gameVersion,
-            dynamic settings, DeltaOutput d)
+        public dynamic Call(LiveSplitState timer, ExpandoObject vars, string gameVersion, dynamic settings, DeltaOutput d)
         {
-            dynamic ret;
+            dynamic ret = null;
             try
             {
                 ret = CompiledCode.Execute(timer, vars, d, settings);
             }
-            catch (NullReferenceException ex)
-            {
-                if (d?.OriginalIndex >= d?.HistorySize)
-                    throw new VASLRuntimeException(this, ex);
-                else
-                    ret = null;
-            }
             catch (Exception ex)
             {
-                throw new VASLRuntimeException(this, ex);
+                // Ignore NullReferenceExceptions until the history is filled.
+                if (ex is NullReferenceException && d.OriginalIndex <= d.HistorySize)
+                {
+                    Log.Verbose("NullReferenceException found in script before history is filled, ignoring.");
+                }
+                else
+                {
+                    Log.Error(new VASLRuntimeException(this, ex), "VASL Script Error");
+                }
             }
             return ret;
         }

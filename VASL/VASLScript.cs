@@ -79,7 +79,7 @@ namespace LiveSplit.VAS.VASL
         public void RunShutdown(LiveSplitState state)
         {
             Debug("Running shutdown");
-            RunMethod(Methods.shutdown, state, null);
+            RunMethod(Methods.shutdown, state, new DeltaOutput());
         }
 
 
@@ -194,7 +194,7 @@ namespace LiveSplit.VAS.VASL
         // Run method without counting on being connected to the game (startup/shutdown).
         private void RunNoProcessMethod(VASLMethod method, LiveSplitState state, bool isStartup = false)
         {
-            method.Call(state, Vars, GameVersion, isStartup ? Settings.Builder : (object)Settings.Reader, null);
+            method.Call(state, Vars, GameVersion, isStartup ? Settings.Builder : (object)Settings.Reader, new DeltaOutput());
         }
 
         private void Debug(string output, params object[] args)

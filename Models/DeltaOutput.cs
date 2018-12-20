@@ -7,7 +7,7 @@ using LiveSplit.VAS.Models;
 
 namespace LiveSplit.VAS.Models.Delta
 {
-    public class DeltaOutput
+    public struct DeltaOutput
     {
         private DeltaManager Manager;
 
