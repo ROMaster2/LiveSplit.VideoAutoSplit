@@ -283,13 +283,13 @@ namespace LiveSplit.VAS
         {
             if (!Restarting)
             {
-                Log.Info("Restarting scanner...");
                 Restarting = true;
+                Log.Info("Restarting scanner...");
                 Stop();
                 Thread.Sleep(1000);
                 Start();
-                Restarting = false;
                 Log.Info("Restart finished.");
+                Restarting = false;
             }
         }
 
