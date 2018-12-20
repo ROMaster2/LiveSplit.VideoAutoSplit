@@ -430,22 +430,12 @@ namespace LiveSplit.VAS
             }
         }
 
-        // TEMPORARY
-        private void ScannerTemp()
-        {
-            var videoDevices = new Accord.Video.DirectShow.FilterInfoCollection(Accord.Video.DirectShow.FilterCategory.VideoInputDevice);
-            var device = videoDevices.Find(x => x.ToString() == VideoDevice);
-            var m = device.MonikerString;
-            //Scanner.SetVideoSource(device?.ToString());
-        }
-
         private void TryStartScanner()
         {
             try
             {
                 if (!string.IsNullOrEmpty(VideoDevice))
                 {
-                    ScannerTemp();
                     Scanner.AsyncStart();
                 }
             }
