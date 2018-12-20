@@ -283,7 +283,6 @@ namespace LiveSplit.VAS
             {
                 Log.Info("Restarting scanner...");
                 Restarting = true;
-                if (IsScannerLocked) Utilities.LightSleep(() => IsScannerLocked, 2000);
                 Stop();
                 Thread.Sleep(1000);
                 Start();

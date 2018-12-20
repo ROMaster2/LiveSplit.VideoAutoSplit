@@ -9,9 +9,9 @@ namespace LiveSplit.VAS
     {
         public static double GetTransparencyRate(this ImageMagick.IMagickImage mi)
         {
-            if (!mi.HasAlpha) return 0;
+            if (!mi.HasAlpha) return 0d;
             var bytes = mi.Separate(ImageMagick.Channels.Alpha).First().GetPixels().GetValues();
-            return (255d - bytes.Average(x => (double)x)) / 255d;
+            return (byte.MaxValue - bytes.Average(x => (double)x)) / byte.MaxValue;
         }
 
         public static System.Windows.Point ToWindows(this System.Drawing.Point point)
@@ -19,37 +19,10 @@ namespace LiveSplit.VAS
             return new System.Windows.Point(point.X, point.Y);
         }
 
-        public static System.Drawing.Point ToDrawing(this System.Windows.Point point, int rounding = 0)
+        public static System.Drawing.Point ToDrawing(this System.Windows.Point point, RoundingType rounding = RoundingType.Round)
         {
-            const double rounder = 0.4999999999; // Difficult to be precise without posible error.
-            int x;
-            int y;
-
-            switch (rounding)
-            {
-                case 2: // Ceiling
-                    x = (int)Math.Ceiling(point.X);
-                    y = (int)Math.Ceiling(point.Y);
-                    break;
-                case 1: // Roundup
-                    x = (int)Math.Round(point.X + (Math.Sign(point.X) > 0 ? rounder : -rounder));
-                    y = (int)Math.Round(point.Y + (Math.Sign(point.Y) > 0 ? rounder : -rounder));
-                    break;
-                case 0: // Round
-                default:
-                    x = (int)Math.Round(point.X);
-                    y = (int)Math.Round(point.Y);
-                    break;
-                case -1: // Rounddown
-                    x = (int)Math.Round(point.X + (Math.Sign(point.X) < 0 ? rounder : -rounder));
-                    y = (int)Math.Round(point.Y + (Math.Sign(point.Y) < 0 ? rounder : -rounder));
-                    break;
-                case -2: // Floor
-                    x = (int)Math.Floor(point.X);
-                    y = (int)Math.Floor(point.Y);
-                    break;
-            }
-
+            var x = Round(point.X, rounding);
+            var y = Round(point.Y, rounding);
             return new System.Drawing.Point(x, y);
         }
 
@@ -58,42 +31,15 @@ namespace LiveSplit.VAS
             return new System.Windows.Size(size.Width, size.Height);
         }
 
-        public static System.Drawing.Size ToDrawing(this System.Windows.Size size, int rounding = 0)
+        public static System.Drawing.Size ToDrawing(this System.Windows.Size size, RoundingType rounding = RoundingType.Round)
         {
-            const double rounder = 0.4999999999; // Difficult to be precise without posible error.
-            int x;
-            int y;
-
-            switch (rounding)
-            {
-                case 2: // Ceiling
-                    x = (int)Math.Ceiling(size.Width);
-                    y = (int)Math.Ceiling(size.Height);
-                    break;
-                case 1: // Roundup
-                    x = (int)Math.Round(size.Width + (Math.Sign(size.Width) > 0 ? rounder : -rounder));
-                    y = (int)Math.Round(size.Height + (Math.Sign(size.Height) > 0 ? rounder : -rounder));
-                    break;
-                case 0: // Round
-                default:
-                    x = (int)Math.Round(size.Width);
-                    y = (int)Math.Round(size.Height);
-                    break;
-                case -1: // Rounddown
-                    x = (int)Math.Round(size.Width + (Math.Sign(size.Width) < 0 ? rounder : -rounder));
-                    y = (int)Math.Round(size.Height + (Math.Sign(size.Height) < 0 ? rounder : -rounder));
-                    break;
-                case -2: // Floor
-                    x = (int)Math.Floor(size.Width);
-                    y = (int)Math.Floor(size.Height);
-                    break;
-            }
-
-            return new System.Drawing.Size(x, y);
+            var width  = Round(size.Width,  rounding);
+            var height = Round(size.Height, rounding);
+            return new System.Drawing.Size(width, height);
         }
 
         // Population, not sample
-        private static double StdDev(this IEnumerable<double> values)
+        public static double StdDev(this IEnumerable<double> values)
         {
             double result = 0;
             int count = values.Count();
@@ -104,11 +50,6 @@ namespace LiveSplit.VAS
                 result = Math.Sqrt(sum / count);
             }
             return result;
-        }
-
-        public static System.Drawing.Bitmap DeepClone(this System.Drawing.Bitmap bitmap)
-        {
-            return new System.Drawing.Bitmap(bitmap);
         }
 
         public static T Clone<T>(this T controlToClone) where T : System.Windows.Forms.Control
@@ -127,6 +68,44 @@ namespace LiveSplit.VAS
             }
 
             return instance;
+        }
+
+        public static int Round(double num, RoundingType rounding = RoundingType.Round)
+        {
+            const double rounder = 0.4999999999; // Difficult to be precise without posible error.
+            int result;
+
+            switch (rounding)
+            {
+                case RoundingType.Ceiling:
+                    result = (int)Math.Ceiling(num);
+                    break;
+                case RoundingType.Up:
+                    result = (int)Math.Round(num + (Math.Sign(num) > 0 ? rounder : -rounder));
+                    break;
+                case RoundingType.Round:
+                    result = (int)Math.Round(num);
+                    break;
+                case RoundingType.Down:
+                    result = (int)Math.Round(num + (Math.Sign(num) < 0 ? rounder : -rounder));
+                    break;
+                case RoundingType.Floor:
+                    result = (int)Math.Floor(num);
+                    break;
+                default:
+                    throw new ArgumentException();
+            }
+
+            return result;
+        }
+
+        public enum RoundingType
+        {
+            Ceiling,
+            Up,
+            Round,
+            Down,
+            Floor
         }
     }
 }
