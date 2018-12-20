@@ -463,6 +463,7 @@ namespace LiveSplit.VAS
             }
             finally
             {
+                Scanner.Stop();
                 _GameProfile = null;
                 _Script = null;
                 ResetVASLSettings();

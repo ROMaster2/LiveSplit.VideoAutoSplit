@@ -219,16 +219,13 @@ namespace LiveSplit.VAS
                 CurrentIndex = 0;
                 DeltaManager = null;
                 _VideoGeometry = Geometry.Blank;
+                _FrameHandlerThread?.Abort();
+                IsScannerLocked = false;
                 Log.Info("Scanner stopped.");
             }
             catch (Exception e)
             {
                 Log.Error(e, "Scanner failed to stop. This isn't good...");
-            }
-
-            if (_FrameHandlerThread != null && _FrameHandlerThread.IsAlive && _FrameHandlerThread.ThreadState == ThreadState.Running)
-            {
-                _FrameHandlerThread.Abort();
             }
         }
 
