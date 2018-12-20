@@ -388,7 +388,7 @@ namespace LiveSplit.VAS
             }
 
             // sigh...
-            if (ComponentUI.InvokeRequired)
+            if (ComponentUI.IsHandleCreated)
             {
                 ComponentUI.Invoke((MethodInvoker)delegate
                 {
