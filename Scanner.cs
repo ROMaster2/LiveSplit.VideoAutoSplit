@@ -114,6 +114,7 @@ namespace LiveSplit.VAS
         }
 
         // Bad name.
+        // Not fully implemented yet.
         private Geometry _TrueCropGeometry = Geometry.Blank;
         public Geometry TrueCropGeometry
         {
@@ -249,33 +250,60 @@ namespace LiveSplit.VAS
             }
         }
 
+        // Sorry for the nersts mess.
         public void Start()
         {
-            UpdateCropGeometry();
-            Log.Info("Trying to start scanner.");
-            if (_GameProfile != null && IsVideoSourceValid() && !CompiledFeatures.IsBlank)
+            try
             {
-                Log.Info("Starting scanner...");
-                CurrentIndex = 0;
-                OverloadCount = 0;
-                DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
-                InitCount = 0;
-
-                _VideoSource.NewFrame += _NewFrameEventHandler;
-                _VideoSource.VideoSourceError += _VideoSourceErrorEventHandler;
-                Log.Info("Scanner hooked onto video source.");
-
-                var moniker = DeviceMoniker;
-                if (!string.IsNullOrWhiteSpace(moniker))
+                Log.Verbose("Initializing start.");
+                UpdateCropGeometry();
+                Log.Info("Trying to start scanner.");
+                if (_GameProfile != null && IsVideoSourceValid() && !CompiledFeatures.IsBlank)
                 {
-                    _VideoSource.Source = moniker;
-                    _VideoSource.Start();
-                    Log.Info("Scanner started.");
+                    Log.Info("Starting scanner...");
+                    CurrentIndex = 0;
+                    OverloadCount = 0;
+                    DeltaManager = new DeltaManager(CompiledFeatures, 256); // Todo: Unhardcode?
+                    InitCount = 0;
+
+                    Log.Verbose("Hooking events onto Accord.");
+                    _VideoSource.NewFrame += _NewFrameEventHandler;
+                    _VideoSource.VideoSourceError += _VideoSourceErrorEventHandler;
+                    Log.Info("Scanner hooked onto video source.");
+
+                    var moniker = DeviceMoniker;
+                    if (!string.IsNullOrWhiteSpace(moniker))
+                    {
+                        try
+                        {
+                            _VideoSource.Source = moniker;
+                            _VideoSource.Start();
+                            Log.Info("Scanner started.");
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, "Video source failed to start.");
+                        }
+                    }
+                    else
+                    {
+                        Log.Warning("How did you manage to change the selected device in a few milliseconds?");
+                    }
                 }
                 else
                 {
-                    Log.Warning("Scanner failed to start, somehow. Did you change settings in less than 5 milliseconds?");
+                    var str = "Scanner start failed because:";
+
+                    if (_GameProfile == null) str += " The game profile was empty.";
+                    if (!IsVideoSourceValid()) str += " The script was not loaded.";
+                    if (CompiledFeatures.IsBlank) str += " CompiledFeatures was blank.";
+
+                    Log.Verbose(str);
                 }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Unknown Scanner.Start() error, please show this to the component developers.");
             }
         }
 
@@ -286,10 +314,15 @@ namespace LiveSplit.VAS
                 Restarting = true;
                 Log.Info("Restarting scanner...");
                 Stop();
+                Log.Verbose("Stopped, sleeping for 1000ms.");
                 Thread.Sleep(1000);
                 Start();
                 Log.Info("Restart finished.");
                 Restarting = false;
+            }
+            else
+            {
+                Log.Verbose("THERE CAN BE ONLY ONE THREAD.");
             }
         }
 
@@ -303,6 +336,10 @@ namespace LiveSplit.VAS
                 CompiledFeatures = new CompiledFeatures(_GameProfile, CropGeometry);
                 IsScannerLocked = false;
                 Log.Info("Profile adjusted.");
+            }
+            else
+            {
+                Log.Verbose("Game Profile is not set or script is not loaded. UpdateCropGeometry() failed.");
             }
         }
 
