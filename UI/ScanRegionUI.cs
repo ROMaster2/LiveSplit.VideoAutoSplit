@@ -213,24 +213,27 @@ namespace LiveSplit.VAS.UI
             _ScreenOverlay = new MagickImage(SCREEN_COLOR, cropRect.Width, cropRect.Height);
             _WatchZoneOverlay = new MagickImage(MagickColors.Transparent, trueCropRect.Width, trueCropRect.Height);
 
-            foreach (var wz in _CompiledFeatures.CWatchZones)
+            if (!_CompiledFeatures.IsBlank)
             {
-                var wzg = wz.Geometry;
-                var wzmg = wzg.ToMagick();
-                using (var wzmi = new MagickImage(WATCHZONE_COLOR, wzmg.Width, wzmg.Height))
-                using (var wzmia = new MagickImage(MagickColors.Transparent, wzmg.Width, wzmg.Height))
+                foreach (var wz in _CompiledFeatures.CWatchZones)
                 {
-                    var xOffsetWZ = (int)Math.Round(wzg.X - trueCropGeo.X);
-                    var yOffsetWZ = (int)Math.Round(wzg.Y - trueCropGeo.Y);
-                    var xOffsetS = (int)Math.Round(wzg.X - cropGeo.X);
-                    var yOffsetS = (int)Math.Round(wzg.Y - cropGeo.Y);
-                    _WatchZoneOverlay.Composite(wzmi, xOffsetWZ, yOffsetWZ, CompositeOperator.Over);
-                    _ScreenOverlay.Composite(wzmia, xOffsetS, yOffsetS, CompositeOperator.Copy);
+                    var wzg = wz.Geometry;
+                    var wzmg = wzg.ToMagick();
+                    using (var wzmi = new MagickImage(WATCHZONE_COLOR, wzmg.Width, wzmg.Height))
+                    using (var wzmia = new MagickImage(MagickColors.Transparent, wzmg.Width, wzmg.Height))
+                    {
+                        var xOffsetWZ = (int)Math.Round(wzg.X - trueCropGeo.X);
+                        var yOffsetWZ = (int)Math.Round(wzg.Y - trueCropGeo.Y);
+                        var xOffsetS = (int)Math.Round(wzg.X - cropGeo.X);
+                        var yOffsetS = (int)Math.Round(wzg.Y - cropGeo.Y);
+                        _WatchZoneOverlay.Composite(wzmi, xOffsetWZ, yOffsetWZ, CompositeOperator.Over);
+                        _ScreenOverlay.Composite(wzmia, xOffsetS, yOffsetS, CompositeOperator.Copy);
+                    }
                 }
+                var xOffset = (int)Math.Round(trueCropGeo.X - cropGeo.X);
+                var yOffset = (int)Math.Round(trueCropGeo.Y - cropGeo.Y);
+                _ScreenOverlay.Composite(_WatchZoneOverlay, xOffset, yOffset, CompositeOperator.Over);
             }
-            var xOffset = (int)Math.Round(trueCropGeo.X - cropGeo.X);
-            var yOffset = (int)Math.Round(trueCropGeo.Y - cropGeo.Y);
-            _ScreenOverlay.Composite(_WatchZoneOverlay, xOffset, yOffset, CompositeOperator.Over);
         }
 
         #region Thumbnail Rendering

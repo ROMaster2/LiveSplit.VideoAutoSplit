@@ -249,7 +249,7 @@ namespace LiveSplit.VAS
         {
             UpdateCropGeometry();
             Log.Info("Trying to start scanner.");
-            if (_GameProfile != null && IsVideoSourceValid())
+            if (_GameProfile != null && IsVideoSourceValid() && !CompiledFeatures.IsBlank)
             {
                 Log.Info("Starting scanner...");
                 CurrentIndex = 0;
