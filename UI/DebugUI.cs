@@ -7,34 +7,54 @@ namespace LiveSplit.VAS.UI
 {
     public partial class DebugUI : AbstractUI
     {
+        private const int UPDATE_RATE = 500; // Milliseconds
+
+        private TextWriter _TextWriter;
+        private Timer _UpdateTimer;
+
         public DebugUI(VASComponent component) : base(component)
         {
             InitializeComponent();
+            _TextWriter = new StringWriter();
+
+            _UpdateTimer = new Timer() { Interval = UPDATE_RATE };
+            _UpdateTimer.Tick += (sender, args) => UpdatetxtDebug(sender, args);
+            _UpdateTimer.Enabled = false;
         }
 
         override public void Rerender()
         {
             txtDebug.Text = Log.ReadAll();
-
-            Log.LogUpdated += UpdatetxtDebug;
+            Log.LogUpdated += UpdateTextWriter;
+            _UpdateTimer.Enabled = true;
         }
 
         override public void Derender()
         {
-            Log.LogUpdated -= UpdatetxtDebug;
+            Log.LogUpdated -= UpdateTextWriter;
+            _UpdateTimer.Enabled = false;
         }
 
-        private void UpdatetxtDebug(object sender, string str)
+        private void UpdateTextWriter(object sender, string str)
         {
-            txtDebug.Invoke((MethodInvoker)delegate
+            _TextWriter.WriteLineAsync(str);
+        }
+
+        private void UpdatetxtDebug(object sender, EventArgs e)
+        {
+            var str = _TextWriter.ToString();
+
+            if (str.Length > 5)
             {
-                txtDebug.AppendText(str + "\r\n");
-            });
+                _TextWriter.FlushAsync();
+                txtDebug.AppendText(str);
+            }
         }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
             txtDebug.Clear();
+            _TextWriter.Flush();
             Log.Flush();
         }
 
