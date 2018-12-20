@@ -388,7 +388,7 @@ namespace LiveSplit.VAS
 
             try
             {
-                DeltaManager.AddResult(index, scan, scanEnd, deltas, benchmarks);
+                DeltaManager?.AddResult(index, scan, scanEnd, deltas, benchmarks);
                 NewResult(this, new DeltaOutput(DeltaManager, index, AverageFPS));
 
                 ScanningCount--;
