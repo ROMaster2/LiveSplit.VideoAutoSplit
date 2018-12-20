@@ -86,6 +86,7 @@
             this.lblHeaderActive.TabIndex = 31;
             this.lblHeaderActive.Text = "Active";
             this.lblHeaderActive.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblHeaderActive.Visible = false;
             // 
             // lblHeaderMinimum1
             // 
