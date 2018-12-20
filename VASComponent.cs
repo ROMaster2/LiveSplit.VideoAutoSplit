@@ -480,6 +480,7 @@ namespace LiveSplit.VAS
             FSWatcher?.Dispose();
             ComponentUI.Dispose();
             Log.Info("Closing...");
+            Log.Flush();
         }
 
         public override void Update(IInvalidator i, LiveSplitState s, float w, float h, LayoutMode m) { }
