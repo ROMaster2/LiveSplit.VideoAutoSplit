@@ -383,10 +383,11 @@ namespace LiveSplit.VAS
                     ScanningCount--;
                 }
             }
-            finally
-            {
-                var scanEnd = TimeStamp.CurrentDateTime.Time;
 
+            var scanEnd = TimeStamp.CurrentDateTime.Time;
+
+            try
+            {
                 DeltaManager.AddResult(index, scan, scanEnd, deltas, benchmarks);
                 NewResult(this, new DeltaOutput(DeltaManager, index, AverageFPS));
 
@@ -436,12 +437,16 @@ namespace LiveSplit.VAS
                     // Todo: If AverageWaitTime is too high, shrink some of the large images before comparing.
                     //       Maybe benchmark individual features though? Some ErrorMetrics are more intense than others.
                 }
-            }
 
-            if (index >= DeltaManager.History.Count && AverageFPS > 70d)
+                if (index >= DeltaManager.History.Count && AverageFPS > 70d)
+                {
+                    Log.Warning("Framerate is abnormally high, usually an indicator the video feed is not active.");
+                    Restart();
+                }
+            }
+            catch (Exception e)
             {
-                Log.Warning("Framerate is abnormally high, usually an indicator the video feed is not active.");
-                Restart();
+                Log.Error(e, "Unknown Scanner Error.");
             }
         }
 
