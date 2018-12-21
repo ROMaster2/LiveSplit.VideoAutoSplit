@@ -28,7 +28,6 @@ namespace LiveSplit.VAS.Models
         public ErrorMetric ErrorMetric = ErrorMetric.PeakSignalToNoiseRatio;
 
         public WatcherType WatcherType = WatcherType.Standard;
-        public bool DupeFrameCheck = false; // To remove
 
         public List<WatchImage> WatchImages = new List<WatchImage>();
 
