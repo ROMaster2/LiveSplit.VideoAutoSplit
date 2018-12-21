@@ -22,7 +22,10 @@ namespace LiveSplit.VAS.UI
         override public void Rerender()
         {
             if (_Component.IsScriptLoaded())
+            {
+                SetRows(true);
                 _Component.Script.ScriptUpdateFinished += UpdateRowsAsync;
+            }
         }
 
         override public void Derender()
@@ -31,26 +34,66 @@ namespace LiveSplit.VAS.UI
                 _Component.Script.ScriptUpdateFinished -= UpdateRowsAsync;
         }
 
+        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        {
+            // sigh
+            try
+            {
+                SetRows(scriptLoaded);
+            }
+            catch (Exception e1)
+            {
+                try
+                {
+                    tlpFeatures.Invoke((MethodInvoker)delegate
+                    {
+                        SetRows(scriptLoaded);
+                    });
+                }
+                catch (Exception e2)
+                {
+                    Log.Error(e1, "Could not load VASL Settings.");
+                    Log.Error(e2, "");
+                }
+            }
+        }
+
         // Because two rows exist for different purposes, the first for headers and last for layout balance,
         // indexing became terrible.
         // I didn't want it to be spaghetti but I am italian, so...
-        override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
+        internal void SetRows(bool scriptLoaded)
         {
             ClearRows();
             if (scriptLoaded)
             {
-                var features = _Component.GameProfile.WatchImages;
+                var cf = _Component.Scanner.CompiledFeatures;
+                var count = cf.CWatchImages.Count();
 
-                if (features.Count > 0)
+                if (count > 0)
                 {
-                    tlpFeatures.RowCount += features.Count;
-                    for (int i = 1; i < tlpFeatures.RowCount - 1; i++)
+                    tlpFeatures.RowCount += count;
+                    for (int i = 0; i < cf.CWatchZones.Length; i++)
                     {
-                        var feature = features[i - 1];
-                        var featureRow = new VariableRow(feature.FullName, 60); // Todo: Add getting framerate.
-                        tlpFeatures.RowStyles.Insert(i, new RowStyle(SizeType.Absolute, 21F));
-                        tlpFeatures.Controls.Add(featureRow, 0, i);
-                        // Todo: Add hook for manual enable/disable.
+                        var wz = cf.CWatchZones[i];
+
+                        for (int n = 0; n < wz.CWatches.Length; n++)
+                        {
+                            var w = wz.CWatches[n];
+
+                            for (int t = 0; t < w.CWatchImages.Length; t++)
+                            {
+                                var wi = w.CWatchImages[t];
+
+                                var name = wz.Name + "/" + w.Name + " - " + wi.Name;
+                                var fps = (int)Math.Ceiling(_Component.Scanner.AverageFPS);
+
+                                var featureRow = new VariableRow(name, fps);
+
+                                tlpFeatures.RowStyles.Insert(t, new RowStyle(SizeType.Absolute, 21F));
+                                tlpFeatures.Controls.Add(featureRow, 0, wi.Index + 1);
+                                // Todo: Add hook for manual enable/disable.
+                            }
+                        }
                     }
                 }
 
