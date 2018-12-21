@@ -415,7 +415,7 @@ namespace LiveSplit.VAS
             var benchmarks = new double[CompiledFeatures.FeatureCount];
             var now = scan.CurrentFrame.DateTime;
             var fileImageBase = scan.CurrentFrame.Bitmap;
-            var prevFileImageBase = !scan.HasPreviousFrame ? scan.PreviousFrame.Bitmap : null;
+            var prevFileImageBase = CompiledFeatures.UsesDupeCheck(now) ? scan.PreviousFrame.Bitmap : null;
 
             try
             {
