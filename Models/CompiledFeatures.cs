@@ -261,6 +261,34 @@ namespace LiveSplit.VAS.Models
                 return CWatchZones[i];
             }
         }
+
+        public IEnumerable<CWatcher> CWatchers
+        {
+            get
+            {
+                foreach (var wz in CWatchZones)
+                {
+                    foreach (var w in wz.CWatches)
+                    {
+                        yield return w;
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<CWatchImage> CWatchImages
+        {
+            get
+            {
+                foreach (var w in CWatchers)
+                {
+                    foreach (var wi in w.CWatchImages)
+                    {
+                        yield return wi;
+                    }
+                }
+            }
+        }
     }
 
     public struct CWatchZone
