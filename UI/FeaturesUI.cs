@@ -123,13 +123,12 @@ namespace LiveSplit.VAS.UI
                         tlpFeatures.Controls.Add(variableRow, 0, i + offset);
                     }
                 }
-
             }
         }
 
         private void ClearRows()
         {
-            for (int i = tlpFeatures.RowCount - 2; i > 0; i--)
+            for (int i = tlpFeatures.Controls.Count - 1; i > 0; i--)
             {
                 tlpFeatures.Controls[i].Dispose();
                 tlpFeatures.RowStyles.RemoveAt(i);
