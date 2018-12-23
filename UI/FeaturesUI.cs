@@ -64,9 +64,9 @@ namespace LiveSplit.VAS.UI
         internal void SetRows(bool scriptLoaded)
         {
             ClearRows();
-            if (scriptLoaded)
+            var cf = _Component.Scanner.CompiledFeatures;
+            if (scriptLoaded && !cf.IsBlank)
             {
-                var cf = _Component.Scanner.CompiledFeatures;
                 var count = cf.CWatchImages.Count();
 
                 if (count > 0)
