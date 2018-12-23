@@ -42,7 +42,7 @@ The same base screen reference must be used throughout making the profile. This 
 
 Raw, high quality gameplay footage is recommended when extracting the reference images .
 
-There's currently no interface to help structure a profile. At this time, if you would like help building one, [ask in #vas-profile channel in the Speedrun Tool Development Discord](https://discord.gg/N6wv8pW).
+There's currently no interface to help structure a profile. At this time, if you would like help building one, [ask in #video-autosplitter channel in the Speedrun Tool Development Discord](https://discord.gg/6HD5jtQ).
 
 ## Contributing
 
@@ -58,7 +58,7 @@ You should now be able to debug and compile the component with LiveSplit.
 
 ## Help
 
-Help and FAQs will be expanded on during beta. If you have problems with using the component, [request help in #vas-help channel in the Speedrun Tool Development Discord](https://discord.gg/N6wv8pW).
+Help and FAQs will be expanded on during beta. If you have problems with using the component, [request help in #video-autosplitter channel in the Speedrun Tool Development Discord](https://discord.gg/6HD5jtQ).
 
 ## License
 
