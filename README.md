@@ -60,7 +60,7 @@ You should now be able to debug and compile the component with LiveSplit.
 
 Help and FAQs will be expanded on during beta. If you have problems with using the component, [request help in #vas-help channel in the Speedrun Tool Development Discord](https://discord.gg/N6wv8pW).
 
-## Licenses
+## License
 
 This program and its source code are under The MIT License (MIT).
 
