@@ -12,7 +12,7 @@ namespace LiveSplit.VAS.VASL
 {
     public class VASLScript
     {
-        private string GameVersion = "";
+        private string GameVersion;
 
         private readonly bool UsesGameTime;
         private bool InitCompleted;
@@ -27,9 +27,11 @@ namespace LiveSplit.VAS.VASL
 
         public event EventHandler<DeltaOutput> ScriptUpdateFinished;
 
-        public VASLScript(string rawScript)
+        public VASLScript(string rawScript, string gameVersion)
         {
             Methods = ParseScript(rawScript);
+
+            GameVersion = gameVersion;
 
             Settings = new VASLSettings();
             Vars = new ExpandoObject();

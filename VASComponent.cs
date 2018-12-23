@@ -112,7 +112,7 @@ namespace LiveSplit.VAS
                     {
                         var gp = GameProfile; // Invoke getter
                         Log.Info("Loading VASL script within profile...");
-                        _Script = new VASLScript(gp.RawScript);
+                        _Script = new VASLScript(gp.RawScript, GameVersion);
                         Log.Info("VASL script successfully loaded!");
                         TryStartScanner();
                     }
@@ -139,6 +139,7 @@ namespace LiveSplit.VAS
                 {
                     _GameVersion = value;
                     GameVersionChanged?.Invoke(this, _GameVersion);
+                    _Script = null; // Testing
                 }
             }
         }
