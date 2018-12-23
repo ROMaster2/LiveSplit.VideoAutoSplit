@@ -15,13 +15,18 @@ namespace LiveSplit.VAS.VASL
         private string GameVersion;
 
         private readonly bool UsesGameTime;
+        private readonly bool UsesCustomGameTime;
+        private readonly bool UsesIsLoading;
         private bool InitCompleted;
 
         private VASLSettings Settings;
 
         private ITimerModel Timer;
+        private TimerPhase PreviousPhase;
+        private TimeSpan LastSplitOffset;
 
         private MethodList Methods;
+
 
         public ExpandoObject Vars { get; }
 
@@ -43,12 +48,24 @@ namespace LiveSplit.VAS.VASL
             if (!Methods.reset.IsEmpty)
                 Settings.AddBasicSetting("reset");
 
-            UsesGameTime = !Methods.isLoading.IsEmpty || !Methods.gameTime.IsEmpty;
+            UsesCustomGameTime = !Methods.gameTime.IsEmpty;
+            UsesIsLoading = !Methods.isLoading.IsEmpty;
+            UsesGameTime = UsesCustomGameTime || UsesIsLoading;
         }
 
-        public void UpdateGameVersion(string gameVersion)
+        private void Timer_OnUndoSplit(object sender, EventArgs e)
         {
-            throw new NotImplementedException("todo lol");
+            if (PreviousPhase == TimerPhase.Ended)
+            {
+                var state = ((ITimerModel)sender).CurrentState;
+                AdjustGameTime(state, LastSplitOffset);
+                LastSplitOffset = TimeSpan.Zero;
+            }
+        }
+
+        private void AdjustGameTime(LiveSplitState state, TimeSpan offsetTime)
+        {
+            state.SetGameTime(state.CurrentTime.GameTime + offsetTime);
         }
 
         // Update the script
@@ -57,6 +74,8 @@ namespace LiveSplit.VAS.VASL
             if (Timer == null)
             {
                 Timer = new TimerModel() { CurrentState = state };
+                PreviousPhase = state.CurrentPhase;
+                Timer.OnUndoSplit += Timer_OnUndoSplit;
             }
 
             if (!InitCompleted)
@@ -70,23 +89,13 @@ namespace LiveSplit.VAS.VASL
             ScriptUpdateFinished?.Invoke(this, d);
         }
 
-        // Run startup and return settings defined in VASL script.
         public VASLSettings RunStartup(LiveSplitState state)
         {
             Debug("Running startup");
-            RunNoProcessMethod(Methods.startup, state, true);                                                         
+            RunNoProcessMethod(Methods.startup, state, true);
             return Settings;
         }
 
-        public void RunShutdown(LiveSplitState state)
-        {
-            Debug("Running shutdown");
-            RunMethod(Methods.shutdown, state, new DeltaOutput());
-        }
-
-
-        // This is executed each time after connecting to the game (usually just once,
-        // unless an error occurs before the method finishes).
         private void DoInit(LiveSplitState state, DeltaOutput d)
         {
             Debug("Initializing");
@@ -97,94 +106,115 @@ namespace LiveSplit.VAS.VASL
             Debug("Init completed, running main methods");
         }
 
+        private void DoUpdate(LiveSplitState state, DeltaOutput d)
+        {
+            var updateState = RunMethod(Methods.update, state, d);
+
+            // If Update explicitly returns false, don't run anything else
+            if (updateState is bool && updateState == false)
+                return;
+
+            var offsetTime = TimeStamp.CurrentDateTime.Time - d.History[d.FrameIndex].FrameEnd;
+
+            // Enable regardless to keep track of offseting for now.
+            if (!state.IsGameTimeInitialized)
+                Timer.InitializeGameTime();
+
+            if (state.CurrentPhase == TimerPhase.Running || state.CurrentPhase == TimerPhase.Paused)
+            {
+                if (UsesGameTime)
+                {
+                    if (UsesIsLoading)
+                    {
+                        var isPausedState = RunMethod(Methods.isLoading, state, d);
+
+                        if (isPausedState is bool)
+                        {
+                            var prevPauseState = state.IsGameTimePaused;
+
+                            state.IsGameTimePaused = isPausedState;
+
+                            if (prevPauseState != isPausedState)
+                            {
+                                if (isPausedState)
+                                    state.GameTimePauseTime -= offsetTime;
+                                else
+                                    state.GameTimePauseTime += offsetTime;
+                            }
+                        }
+                    }
+
+                    if (UsesGameTime)
+                    {
+                        var gameTimeState = RunMethod(Methods.gameTime, state, d);
+
+                        if (gameTimeState is TimeSpan)
+                            state.SetGameTime(gameTimeState);
+                    }
+                }
+
+                if (Settings.GetBasicSettingValue("reset"))
+                {
+                    var resetState = RunMethod(Methods.reset, state, d);
+
+                    if (resetState is bool && resetState == true)
+                        Timer.Reset();
+                }
+                else if (Settings.GetBasicSettingValue("split"))
+                {
+                    var splitState = RunMethod(Methods.split, state, d);
+
+                    if (splitState is bool && splitState == true)
+                    {
+                        if (!UsesCustomGameTime)
+                            AdjustGameTime(state, offsetTime.Negate());
+
+                        Timer.Split();
+
+                        if (!UsesCustomGameTime)
+                        {
+                            if (state.CurrentPhase != TimerPhase.Ended)
+                                AdjustGameTime(state, offsetTime);
+                            else
+                                LastSplitOffset = offsetTime;
+                        }
+                    }
+                }
+                // @TODO: Add undo and skip;
+            }
+            else if (state.CurrentPhase == TimerPhase.NotRunning && Settings.GetBasicSettingValue("start"))
+            {
+                var startState = RunMethod(Methods.start, state, d);
+
+                if ((startState is bool && startState == true) || startState is TimeSpan)
+                {
+                    Timer.Start();
+
+                    if (!state.IsGameTimeInitialized)
+                        Timer.InitializeGameTime();
+
+                    LastSplitOffset = TimeSpan.Zero;
+
+                    TimeSpan startOffset = (startState is TimeSpan) ? startState : TimeSpan.Zero;
+
+                    if (!UsesCustomGameTime)
+                        AdjustGameTime(state, startOffset + offsetTime);
+                }
+            }
+
+            PreviousPhase = state.CurrentPhase;
+        }
+
         private void DoExit(LiveSplitState state)
         {
             Debug("Running exit");
             RunNoProcessMethod(Methods.exit, state);
         }
 
-        // This is executed repeatedly as long as the game is connected and initialized.
-        private void DoUpdate(LiveSplitState state, DeltaOutput d)
+        public void RunShutdown(LiveSplitState state)
         {
-            if (!(RunMethod(Methods.update, state, d) ?? true))
-            {
-                // If Update explicitly returns false, don't run anything else
-                return;
-            }
-
-            if (state.CurrentPhase == TimerPhase.Running || state.CurrentPhase == TimerPhase.Paused)
-            {
-                if (UsesGameTime)
-                {
-                    if (!state.IsGameTimeInitialized)
-                        Timer.InitializeGameTime();
-
-                    var isPaused = RunMethod(Methods.isLoading, state, d);
-                    if (isPaused != null)
-                    {
-                        var prevPauseState = state.IsGameTimePaused;
-
-                        state.IsGameTimePaused = isPaused;
-
-                        if (prevPauseState != isPaused)
-                        {
-                            var offsetTime = d.History[d.FrameIndex].ProcessDuration;
-
-                            if (isPaused)
-                                state.GameTimePauseTime -= offsetTime;
-                            else
-                                state.GameTimePauseTime += offsetTime;
-                        }
-                    }
-
-                    var gameTime = RunMethod(Methods.gameTime, state, d);
-                    if (gameTime != null)
-                        state.SetGameTime(gameTime);
-                }
-
-                if (RunMethod(Methods.reset, state, d) ?? false && Settings.GetBasicSettingValue("reset"))
-                {
-                    Timer.Reset();
-                }
-                else if (Settings.GetBasicSettingValue("split"))
-                {
-                    var offset = RunMethod(Methods.split, state, d);
-
-                    // The below will be added once LiveSplit supports offseting
-                    // Could add it now, but that would require a version update,
-                    // which I'm avoiding for now for user simplicity.
-                    /*
-                    if (offset != null)
-                    {
-                        if (offset is TimeSpan)
-                            Timer.Split(offset);
-                        else if (offset is bool && offset == true)
-                            if (dm.SplitIndex != null)
-                            {
-                                var now = Timer.CurrentState.CurrentTime.RealTime.Value;
-                                var diff = d.History[dm.FrameIndex].FrameEnd.Ticks - d.SplitTime.Value.Ticks;
-                                var test = now - diff;
-                                Timer.Split(d.SplitTime - Timer.CurrentState.CurrentTime.RealTime);
-                            }
-                            else
-                                Timer.Split(); // Legacy
-                    }
-                    */
-
-                    if (offset)
-                        Timer.Split();
-
-                    // Todo: Add undoSplit;
-                }
-            }
-            else if (state.CurrentPhase == TimerPhase.NotRunning)
-            {
-                if (RunMethod(Methods.start, state, d) ?? false)
-                {
-                    if (Settings.GetBasicSettingValue("start"))
-                        Timer.Start();
-                }
-            }
+            Debug("Running shutdown");
+            RunMethod(Methods.shutdown, state, new DeltaOutput());
         }
 
         private dynamic RunMethod(VASLMethod method, LiveSplitState state, DeltaOutput d)
