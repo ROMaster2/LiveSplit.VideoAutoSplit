@@ -160,7 +160,8 @@ namespace LiveSplit.VAS.VASL
                     if (resetState is bool && resetState == true)
                         Timer.Reset();
                 }
-                else if (Settings.GetBasicSettingValue("split"))
+
+                if (Settings.GetBasicSettingValue("split"))
                 {
                     var splitState = RunMethod(Methods.split, state, d);
 
