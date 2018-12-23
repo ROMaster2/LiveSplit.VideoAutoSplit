@@ -1,5 +1,7 @@
 # Video Auto Splitter
 
+The Video Auto Splitter for LiveSplit allows scripts to automatically split, start, reset, and detect loading based on visual events from a video feed. Currently in beta.
+
 ## How to use
 
 ### Requirements
@@ -8,7 +10,7 @@
 * An existing game profile.
   * If a profile for the game you want to use the video auto splitter for has not been made and you are willing to make one yourself, visit [Creating a Profile](#creating-a-profile).
 * A DirectShow output of the video feed.
-  * For OBS, this can be done with the [Virtual Cam plugin](https://obsproject.com/forum/resources/obs-virtualcam.539/). See [FAQs](#how-do-i-use-virtual-cam-for-obs) for how to install and use the plugin for this component.
+  * For OBS, this can be done with the [Virtual Cam plugin](https://obsproject.com/forum/resources/obs-virtualcam.539/). See [FAQs](#help) for how to install and use the plugin for this component.
   * XSplit also has a [Virtual Camera feature](https://www.youtube.com/watch?v=WxPJdUtEae8).
   * You can use the direct video feed from your capture device, but it may prevent your capturing software from recognizing it too.
 
@@ -30,21 +32,17 @@ Unfortunately, because of how component settings are saved, **the settings are t
 
 Creating a profile is very similar to creating a regular [Auto Splitter script](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md), but instead of monitoring memory values, it monitors regions of a video feed and compares it against an image, or in some cases, the previous frame, and returns a confidence value. The VAS file used to hold the game profiles contain three important parts: The structure, the script, and the images.
 
-###### Don't let the file extension confuse you, it's just a zip.
+###### Don't let the file extension confuse you, it's just a renamed zip.
 
 ### Finding static reference points
 
 Before *any* of that can be made, the references the component will told to watch for must be found. The difficulty in finding reliable references vary greatly between games. Generally, big references that change abruptly to and/or from a compared image are the most reliable.
 
-###### A video with examples should be here. Text makes it difficult to really explain the process.
-
 The same base screen reference must be used throughout making the profile. This is so users only need to align the screen with their video feed to have all the references automatically fit into place.
 
-Raw, high quality gameplay footage is recommended when extracting the reference images 
+Raw, high quality gameplay footage is recommended when extracting the reference images .
 
-### Structure File
-
-###### Note: A user interface will later be made to help with creating this file. For now, it's requires manually editing an XML file.
+There's currently no interface to help structure a profile. At this time, if you would like help building one, [ask in #vas-profile channel in the Speedrun Tool Development Discord](https://discord.gg/N6wv8pW).
 
 ## Contributing
 
@@ -58,3 +56,36 @@ Any and all help with development, be it with finding or squashing bugs or addin
 
 You should now be able to debug and compile the component with LiveSplit.
 
+## Help
+
+Help and FAQs will be expanded on during beta. If you have problems with using the component, [request help in #vas-help channel in the Speedrun Tool Development Discord](https://discord.gg/N6wv8pW).
+
+## Licenses
+
+This program and its source code are under The MIT License (MIT).
+
+The [Accord](http://accord-framework.net/) binaries included in releases are under the [GNU Lesser General Public License](http://accord-framework.net/license.txt).
+
+The [Magick.NET](https://github.com/dlemstra/Magick.NET) binaries included in releases are under Apache License 2.0.
+
+The MIT License (MIT)
+
+Copyright (c) 2018 ROMaster2
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
