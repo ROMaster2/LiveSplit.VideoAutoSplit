@@ -279,7 +279,7 @@ namespace LiveSplit.VAS.UI
         {
             using (var ofd = new OpenFileDialog()
             {
-                Filter = "VASL files (*.vasl)|*.vasl|ZIP files|*.zip|All files (*.*)|*.*",
+                Filter = "VAS files (*.vas)|*.vas|ZIP files|*.zip|All files (*.*)|*.*",
                 Title = "Load a Game Profile"
             })
             {
