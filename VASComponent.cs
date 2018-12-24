@@ -332,16 +332,40 @@ namespace LiveSplit.VAS
                                 value = SettingsHelper.ParseDouble(element);
                                 break;
                             case "byte":
+                                byte rByte;
+                                value = Byte.TryParse(element.InnerText, out rByte) ? rByte : 0;
+                                break;
                             case "sbyte":
+                                sbyte rSByte;
+                                value = SByte.TryParse(element.InnerText, out rSByte) ? rSByte : 0;
+                                break;
                             case "short":
+                                short rShort;
+                                value = Int16.TryParse(element.InnerText, out rShort) ? rShort : 0;
+                                break;
                             case "ushort":
+                                ushort rUShort;
+                                value = UInt16.TryParse(element.InnerText, out rUShort) ? rUShort : 0;
+                                break;
                             case "int":
-                            case "uint":
-                            case "long":
-                            case "ulong":
                                 value = SettingsHelper.ParseInt(element);
                                 break;
+                            case "uint":
+                                uint rUInt;
+                                value = UInt32.TryParse(element.InnerText, out rUInt) ? rUInt : 0;
+                                break;
+                            case "long":
+                                long rLong;
+                                value = Int64.TryParse(element.InnerText, out rLong) ? rLong : 0;
+                                break;
+                            case "ulong":
+                                ulong rULong;
+                                value = UInt64.TryParse(element.InnerText, out rULong) ? rULong : 0;
+                                break;
                             case "char":
+                                char rChar;
+                                value = Char.TryParse(element.InnerText, out rChar) ? rChar : '_';
+                                break;
                             case "string":
                                 value = SettingsHelper.ParseString(element);
                                 break;
