@@ -310,10 +310,7 @@ namespace LiveSplit.VAS
             {
                 foreach (XmlElement element in customSettingsNode.ChildNodes)
                 {
-                    if (element.Name != "Setting")
-                    {
-                        continue;
-                    }
+                    if (!String.Equals(element.Name, "Setting")) continue;
 
                     string id = element.Attributes["id"]?.Value;
                     //string type = element.Attributes["type"].Value;
