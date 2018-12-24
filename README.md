@@ -30,23 +30,23 @@ Unfortunately, because of how component settings are saved, **the settings are t
 
 ## Creating a Profile
 
-Creating a profile is very similar to creating a regular [Auto Splitter script](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md), but instead of monitoring memory values, it monitors regions of a video feed and compares it against an image, or in some cases, the previous frame, and returns a confidence value. The VAS file used to hold the game profiles contain three important parts: The structure, the script, and the images.
+Creating a profile is very similar to creating a regular [Auto Splitter script](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md), but instead of monitoring memory values, it monitors regions of a video feed and compares it against an image, or in some cases, the previous frame, and returns a confidence value. The `vas` file type is used to hold the game profiles contain three important parts: The structure, the script, and the images.
 
 ###### Don't let the file extension confuse you, it's just a renamed zip.
 
 ### Finding static reference points
 
-Before *any* of that can be made, the references the component will told to watch for must be found. The difficulty in finding reliable references vary greatly between games. Generally, big references that change abruptly to and/or from a compared image are the most reliable.
+Before *any* of that can be made, the references the component will told to watch for must be found. The difficulty in finding reliable references varies greatly between games. Generally, big references that change abruptly to and/or from a compared image are the most reliable.
 
-The same base screen reference must be used throughout making the profile. This is so users only need to align the screen with their video feed to have all the references automatically fit into place.
+The same base screen reference must be used throughout making the profile. This is so users only need to align the screen with their video feed to have all the references automatically fit into place. Raw, high quality gameplay footage is recommended when extracting the reference images.
 
-Raw, high quality gameplay footage is recommended when extracting the reference images .
+There's currently no interface to help structure a profile. At this time, if you would like help building one, [ask in the #video-autosplitter channel in the Speedrun Tool Development Discord](https://discord.gg/6HD5jtQ).
 
-There's currently no interface to help structure a profile. At this time, if you would like help building one, [ask in #video-autosplitter channel in the Speedrun Tool Development Discord](https://discord.gg/6HD5jtQ).
+The instructions for creating a profile will be expanded on during beta.
 
 ## Contributing
 
-Any and all help with development, be it with finding or squashing bugs or adding new features, would be awesome.
+Any and all help with development, be it with finding or squashing bugs or adding new features, would be greatly appreciated.
 
 ### How to Compile
 
@@ -58,7 +58,20 @@ You should now be able to debug and compile the component with LiveSplit.
 
 ## Help
 
-Help and FAQs will be expanded on during beta. If you have problems with using the component, [request help in #video-autosplitter channel in the Speedrun Tool Development Discord](https://discord.gg/6HD5jtQ).
+Help and FAQs will be expanded on during beta. If you have problems with using the component, [request help in the #video-autosplitter channel in the Speedrun Tool Development Discord](https://discord.gg/6HD5jtQ).
+
+### How do I use Virtual Cam for OBS?
+
+* Download the plugin [here](https://obsproject.com/forum/resources/obs-virtualcam.539/) and run the installer.
+* Follow the installation as usual.
+* Once installed, there's two ways it can be used:
+  * Make a virtual cam for the entire stream. This uses very little CPU but might require you to adjust both your stream layout in OBS and the scan region in the component. This can be enabled in OBS under `Tools > Virtual Cam`.
+  * Make a virtual cam for only the game output. This uses more CPU but is much easier to manage in the component. This can be enabled by adding a `VirtualCam` filter to the Source of the game capture in OBS.
+* Click on the start button. The default settings are fine to use. I recommend checking `AutoStart` so the virtual cam automatically starts with OBS.
+
+### My video feed looks crooked
+
+I've yet to find the root cause of this, but it's not the component's fault. If enough people run into this problem, I know who to contact help find the cause.
 
 ## License
 
