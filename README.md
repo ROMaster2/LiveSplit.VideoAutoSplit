@@ -16,15 +16,15 @@ The Video Auto Splitter for LiveSplit allows scripts to automatically split, sta
 
 ### Installation
 
-1) Download the [latest version](https://github.com/ROMaster2/LiveSplit.VideoAutoSplit/releases) of the component.
-2) Find your LiveSplit folder and extract the contents into the Components folder. If you are updating from a previous version, replace the existing files.
-3) Start LiveSplit.
-4) Add the component to your layout. The component will be available in Layout Settings under Control.
-5) Open the component's settings.
-6) Click on the Browse... button and locate the game profile you wish to use.
-7) Select the video capture. You will most likely want to use OBS-Camera or XSplitBroadcaster, if they're available.
-8) Verify the video capture by selecting the "Scan Region" tab. If it doesn't include the feed you're expecting, try another video capture. If none of the options have the feed, visit [Help](#help) to diagnose the problem.
-9) Set the capture area of the feed. Your video feed will likely not be one-to-one with the profile and has to be cropped to fit it. Use the preview type 'Feature' with the preview feature dropbox to help with aligning.
+1. Download the [latest version](https://github.com/ROMaster2/LiveSplit.VideoAutoSplit/releases) of the component.
+2. Find your LiveSplit folder and extract the contents into the Components folder. If you are updating from a previous version, replace the existing files.
+3. Start LiveSplit.
+4. Add the component to your layout. The component will be available in Layout Settings under Control.
+5. Open the component's settings.
+6. Click on the Browse... button and locate the game profile you wish to use.
+7. Select the video capture. You will most likely want to use OBS-Camera or XSplitBroadcaster, if they're available.
+8. Verify the video capture by selecting the "Scan Region" tab. If it doesn't include the feed you're expecting, try another video capture. If none of the options have the feed, visit [Help](#help) to diagnose the problem.
+9. Set the capture area of the feed. Your video feed will most likely not be one-to-one with the profile and has to be cropped to fit it. The blue boxes show the areas being watched for by the profile. Use the preview type 'Feature' with preview feature to check if the feed is aligned properly.
 
 Unfortunately, because of how component settings are saved, **the settings are tied to the layout file**. This will be changed at a later date.
 
@@ -50,9 +50,9 @@ Any and all help with development, be it with finding or squashing bugs or addin
 
 ### How to Compile
 
- 1. Create a clone of LiveSplit following [its instructions](https://github.com/LiveSplit/LiveSplit#contributing).
- 2. In the `/LiveSplit/Components` folder of the above, create a clone of the VAS component: `git clone https://github.com/ROMaster2/LiveSplit.VideoAutoSplit.git`
- 3. Inside Visual Studio, right click the `Components/Control` folder, hover over Add, and select "Existing Project...". Go through the folders to `/LiveSplit/Components/LiveSplit.ScriptableAutoSplit` and select `LiveSplit.VideoAutoSplit.csproj`.
+1. Create a clone of LiveSplit following [its instructions](https://github.com/LiveSplit/LiveSplit#contributing).
+2. In the `/LiveSplit/Components` folder of the above, create a clone of the VAS component: `git clone https://github.com/ROMaster2/LiveSplit.VideoAutoSplit.git`
+3. Inside Visual Studio, right click the `Components/Control` folder, hover over Add, and select "Existing Project...". Go through the folders to `/LiveSplit/Components/LiveSplit.ScriptableAutoSplit` and select `LiveSplit.VideoAutoSplit.csproj`.
 
 You should now be able to debug and compile the component with LiveSplit.
 
