@@ -6,11 +6,11 @@ The Video Auto Splitter for LiveSplit allows scripts to automatically split, sta
 
 ### Requirements
 
-* [LiveSplit](http://livesplit.org/)
+* [LiveSplit 1.7.6](http://livesplit.org/) or later.
 * An existing game profile.
   * If a profile for the game you want to use the video auto splitter for has not been made and you are willing to make one yourself, visit [Creating a Profile](#creating-a-profile).
 * A DirectShow output of the video feed.
-  * For OBS, this can be done with the [Virtual Cam plugin](https://obsproject.com/forum/resources/obs-virtualcam.539/). See [FAQs](#help) for how to install and use the plugin for this component.
+  * For OBS, this can be done with the [Virtual Cam plugin](https://obsproject.com/forum/resources/obs-virtualcam.539/). You don't need a webcam for this, the plugin creates a fake one. See [FAQs](#help) for how to install and use the plugin for this component.
   * XSplit also has a [Virtual Camera feature](https://www.youtube.com/watch?v=WxPJdUtEae8).
   * You can use the direct video feed from your capture device, but it may prevent your capturing software from recognizing it too.
 
@@ -19,10 +19,10 @@ The Video Auto Splitter for LiveSplit allows scripts to automatically split, sta
 1. Download the [latest version](https://github.com/ROMaster2/LiveSplit.VideoAutoSplit/releases) of the component.
 2. Find your LiveSplit folder and extract the contents into the Components folder. If you are updating from a previous version, replace the existing files.
 3. Start LiveSplit.
-4. Add the component to your layout. The component will be available in Layout Settings under Control.
+4. In LiveSplit's layout editor, click the big + button, hover over `Control`, and add the `Video Auto Splitter` component.
 5. Open the component's settings.
 6. Click on the Browse... button and locate the game profile you wish to use.
-7. Select the video capture. You will most likely want to use OBS-Camera or XSplitBroadcaster, if they're available.
+7. Select the video capture. You will most likely want to use OBS-Camera or XSplitBroadcaster. If not, see [How do I use Virtual Cam for OBS?](#how-do-i-use-virtual-cam-for-obs) for help.
 8. Verify the video capture by selecting the "Scan Region" tab. If it doesn't include the feed you're expecting, try another video capture. If none of the options have the feed, visit [Help](#help) to diagnose the problem.
 9. Set the capture area of the feed. Your video feed will most likely not be one-to-one with the profile and has to be cropped to fit it. The blue boxes show the areas being watched for by the profile. Use the preview type 'Feature' with preview feature to check if the feed is aligned properly.
 
