@@ -45,7 +45,11 @@ namespace LiveSplit.VAS.Models.Delta
         {
             get
             {
-                return Manager == null;
+                try
+                {
+                    return Manager == null;
+                }
+                catch { return true; }
             }
         }
 
