@@ -64,7 +64,7 @@ public class CompiledScript
     {{
         Log.Info(s);
     }}
-    public dynamic Execute(LiveSplitState timer, dynamic vars, dynamic features, dynamic settings)
+    public dynamic Execute(LiveSplitState timer, dynamic vars, dynamic features, dynamic settings, int frameIndex)
     {{
         { userCodeStartMarker }
 	    { code }
@@ -107,9 +107,11 @@ public class CompiledScript
         public dynamic Call(LiveSplitState timer, ExpandoObject vars, string gameVersion, dynamic settings, DeltaOutput d)
         {
             dynamic ret = null;
+            var frameIndex = -1;
+            if (!d.IsBlank) frameIndex = d.FrameIndex;
             try
             {
-                ret = CompiledCode.Execute(timer, vars, d, settings);
+                ret = CompiledCode.Execute(timer, vars, d, settings, d.FrameIndex);
             }
             catch (Exception ex)
             {
