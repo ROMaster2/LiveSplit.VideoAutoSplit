@@ -164,8 +164,12 @@ namespace LiveSplit.VAS.UI
                 for (int i = deltaCount + 1; i < tlpFeatures.RowCount - 1; i++)
                 {
                     var variableRow = (VariableRow)tlpFeatures.Controls[i];
-                    var value = vars[variableRow.Name.Substring(5)];
-                    variableRow.Invoke((MethodInvoker)delegate { variableRow.Update(value); });
+                    var varsKey = variableRow.Name.Substring(5);
+                    if (vars.ContainsKey(varsKey))
+                    {
+                        var value = vars[varsKey];
+                        variableRow.Invoke((MethodInvoker)delegate { variableRow.Update(value); });
+                    }
                 }
             });
         }
