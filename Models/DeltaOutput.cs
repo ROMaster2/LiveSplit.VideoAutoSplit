@@ -9,13 +9,15 @@ namespace LiveSplit.VAS.Models.Delta
 {
     public struct DeltaOutput
     {
+        public static readonly DeltaOutput Blank = new DeltaOutput(null, -1, 60);
+
         private DeltaManager Manager;
 
         public DeltaHistory History => Manager.History;
         public int HistorySize => History.Count;
 
-        public int OriginalIndex { get; }
-        public int FrameIndex { get; }
+        public int OriginalIndex { get; internal set; }
+        public int FrameIndex { get; internal set; }
         public double FrameRate { get; }
 
         private int[] _FeatureIndexes;
@@ -41,6 +43,14 @@ namespace LiveSplit.VAS.Models.Delta
             FrameRate = frameRate;
 
             _FeatureIndexes = null;
+        }
+
+        public bool IsBlank
+        {
+            get
+            {
+                return Manager == null;
+            }
         }
 
         // Name is questionable
@@ -374,6 +384,16 @@ namespace LiveSplit.VAS.Models.Delta
             }
         }
 
+        public DeltaOutput this[int number, params string[] strings]
+        {
+            get
+            {
+                OriginalIndex = number;
+                FrameIndex = number % Manager.History.Count;
+                return this[strings];
+            }
+        }
+
         // Great naming. No one will ever get them mixed up.
         public double maxMin(int milliseconds = 0)
         {
@@ -396,5 +416,6 @@ namespace LiveSplit.VAS.Models.Delta
         }
 
         #endregion VASL Syntax
+
     }
 }
