@@ -218,7 +218,7 @@ namespace LiveSplit.VAS
                     if (_VideoSource.IsRunning) _VideoSource.SignalToStop();
                     _VideoSource.NewFrame -= _NewFrameEventHandler;
                     _VideoSource.VideoSourceError -= _VideoSourceErrorEventHandler;
-                    if (_VideoSource.IsRunning) _VideoSource.WaitForStop();
+                    if (_VideoSource.IsRunning) _VideoSource.Stop();
                 }
                 CurrentIndex = 0;
                 OverloadCount = 0;
