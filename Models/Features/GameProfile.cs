@@ -43,7 +43,8 @@ namespace LiveSplit.VAS.Models
 
         public void ReSyncRelationships()
         {
-            if (Screens.Count > 0) {
+            if (Screens.Count > 0)
+            {
                 foreach (var s in Screens)
                 {
                     s.GameProfile = this;

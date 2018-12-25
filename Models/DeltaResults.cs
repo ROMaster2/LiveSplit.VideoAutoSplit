@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LiveSplit.Model;
-using LiveSplit.VAS.Models;
 
 namespace LiveSplit.VAS.Models.Delta
 {
