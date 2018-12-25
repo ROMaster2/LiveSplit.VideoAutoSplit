@@ -14,9 +14,12 @@ namespace LiveSplit.VAS.UI
 {
     public partial class FeaturesUI : AbstractUI
     {
+        private bool _Updating;
+
         public FeaturesUI(VASComponent component) : base(component)
         {
             InitializeComponent();
+            _Updating = false;
         }
 
         override public void Rerender()
@@ -32,6 +35,7 @@ namespace LiveSplit.VAS.UI
         {
             if (_Component.IsScriptLoaded())
                 _Component.Script.ScriptUpdateFinished -= UpdateRowsAsync;
+            _Updating = false;
         }
 
         override internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
