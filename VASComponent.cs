@@ -441,7 +441,7 @@ namespace LiveSplit.VAS
             Log.Info("Cleaning up profile...");
             try
             {
-                FSWatcher.EnableRaisingEvents = false;
+                //FSWatcher.EnableRaisingEvents = false;
                 if (_Script != null)
                 {
                     Script.RunShutdown(State);
