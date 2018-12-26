@@ -5,7 +5,7 @@ namespace LiveSplit.VAS.Models.Delta
 {
     public struct DeltaOutput
     {
-        public static readonly DeltaOutput Blank = new DeltaOutput(null, -1, 60);
+        public static readonly DeltaOutput Blank = new DeltaOutput();
 
         private DeltaManager Manager;
 
