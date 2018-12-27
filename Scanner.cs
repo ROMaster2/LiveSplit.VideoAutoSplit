@@ -532,6 +532,8 @@ namespace LiveSplit.VAS
             AverageFPS = 3000d / Math.Round(sumFPS / count * 3000d);
             RecentMaxFPS = 1 / minFPS;
             RecentMinFPS = 1 / maxFPS;
+            MinFPS = Math.Min(MinFPS, RecentMinFPS);
+            MaxFPS = Math.Max(MaxFPS, RecentMaxFPS);
             AverageScanTime = sumScanTime / count;
             MinScanTime = minScanTime;
             MaxScanTime = maxScanTime;
