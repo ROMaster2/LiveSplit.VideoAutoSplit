@@ -51,15 +51,10 @@ namespace LiveSplit.VAS
 
         public static void Verbose(string message)
         {
-            try
+            if (VerboseEnabled)
             {
-                if (VerboseEnabled)
-                {
-                    Trace.TraceInformation(STANDARD_FORMAT, PREFIX, message);
-                    Write(message);
-                }
+                Info(message);
             }
-            catch { }
         }
 
         public static void Info(string message)
