@@ -232,20 +232,40 @@ namespace LiveSplit.VAS
             Log.Info("Stopping scanner...");
             try
             {
-                IsScannerLocked = true;
+                Log.Verbose("Stopping Frame Handler thread...");
                 _FrameHandlerThread?.Abort();
+                Log.Verbose("Frame Handler thread stopped.");
+
                 if (_VideoSource != null)
                 {
-                    if (IsVideoSourceRunning()) _VideoSource.SignalToStop();
+                    Log.Verbose("Signalling video source to stop...");
+                    _VideoSource.SignalToStop();
+                    Log.Verbose("Signalled video source to stop.");
                     _VideoSource.NewFrame -= _NewFrameEventHandler;
                     _VideoSource.VideoSourceError -= _VideoSourceErrorEventHandler;
                 }
+                else
+                {
+                    Log.Verbose("Video source was never set, ignoring.");
+                }
+
+                Log.Verbose("Resetting scanner variables...");
                 CurrentIndex = 0;
                 OverloadCount = 0;
+                MinFPS = double.Epsilon;
+                MaxFPS = double.MaxValue;
                 DeltaManager = null;
                 _VideoGeometry = Geometry.Blank;
-                IsScannerLocked = false;
-                _VideoSource?.Stop();
+                _TrueCropGeometry = Geometry.Blank;
+                Log.Verbose("Scanner variables reset.");
+
+                if (_VideoSource != null)
+                {
+                    Log.Verbose("Frame Handler thread stopped. Signalling video source to stop...");
+                    _VideoSource.Stop();
+                    Log.Verbose("Signalled video source to stop.");
+                }
+
                 Log.Info("Scanner stopped.");
             }
             catch (Exception e)
