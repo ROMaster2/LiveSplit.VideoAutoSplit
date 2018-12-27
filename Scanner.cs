@@ -156,10 +156,10 @@ namespace LiveSplit.VAS
         public double ManuallySetFPS { get; set; } = -1;
 
         public double AverageFPS      { get; private set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
-        public double RecentMinFPS    { get; private set; } = double.Epsilon;
-        public double RecentMaxFPS    { get; private set; } = double.MaxValue;
-        public double MinFPS          { get; private set; } = double.Epsilon;
-        public double MaxFPS          { get; private set; } = double.MaxValue;
+        public double RecentMinFPS    { get; private set; } = double.MaxValue;
+        public double RecentMaxFPS    { get; private set; } = double.Epsilon;
+        public double MinFPS          { get; private set; } = double.MaxValue;
+        public double MaxFPS          { get; private set; } = double.Epsilon;
         public double AverageScanTime { get; private set; } = 0;
         public double MinScanTime     { get; private set; } = 0;
         public double MaxScanTime     { get; private set; } = 0;
@@ -252,8 +252,8 @@ namespace LiveSplit.VAS
                 Log.Verbose("Resetting scanner variables...");
                 CurrentIndex = 0;
                 OverloadCount = 0;
-                MinFPS = double.Epsilon;
-                MaxFPS = double.MaxValue;
+                MinFPS = double.MaxValue;
+                MaxFPS = double.Epsilon;
                 DeltaManager = null;
                 _VideoGeometry = Geometry.Blank;
                 _TrueCropGeometry = Geometry.Blank;
@@ -506,9 +506,9 @@ namespace LiveSplit.VAS
         private void RefreshBenchmarks()
         {
             int count = 0;
-            double sumFPS      = 0d, minFPS      = 9999d, maxFPS      = 0d,
-                   sumScanTime = 0d, minScanTime = 9999d, maxScanTime = 0d,
-                   sumWaitTime = 0d, minWaitTime = 9999d, maxWaitTime = 0d;
+            double sumFPS      = double.Epsilon, minFPS      = double.MaxValue, maxFPS      = double.Epsilon,
+                   sumScanTime = double.Epsilon, minScanTime = double.MaxValue, maxScanTime = double.Epsilon,
+                   sumWaitTime = double.Epsilon, minWaitTime = double.MaxValue, maxWaitTime = double.Epsilon;
             foreach (var d in DeltaManager.History)
             {
                 if (!d.IsBlank)
