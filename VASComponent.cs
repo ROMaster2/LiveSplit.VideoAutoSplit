@@ -192,7 +192,7 @@ namespace LiveSplit.VAS
             Scanner = new Scanner(this);
 
             FSWatcher = new FileSystemWatcher();
-            FSWatcher.Changed +=  (sender, args) => {
+            FSWatcher.Changed += (sender, args) => {
                 ProfileCleanup();
                 ProfileChanged?.Invoke(this, GameProfile);
             };
