@@ -153,16 +153,36 @@ namespace LiveSplit.VAS
             }
         }
 
-        // Good/bad idea?
-        public double AverageFPS      { get; internal set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
-        public double MinFPS          { get; internal set; } = 60;
-        public double MaxFPS          { get; internal set; } = 60;
-        public double AverageScanTime { get; internal set; } = double.NaN;
-        public double MinScanTime     { get; internal set; } = double.NaN;
-        public double MaxScanTime     { get; internal set; } = double.NaN;
-        public double AverageWaitTime { get; internal set; } = double.NaN;
-        public double MinWaitTime     { get; internal set; } = double.NaN;
-        public double MaxWaitTime     { get; internal set; } = double.NaN;
+        public double ManuallySetFPS { get; set; } = -1;
+
+        public double AverageFPS      { get; private set; } = 60; // Assume 60 so that the start of the VASL script doesn't go haywire.
+        public double RecentMinFPS    { get; private set; } = double.Epsilon;
+        public double RecentMaxFPS    { get; private set; } = double.MaxValue;
+        public double MinFPS          { get; private set; } = double.Epsilon;
+        public double MaxFPS          { get; private set; } = double.MaxValue;
+        public double AverageScanTime { get; private set; } = 0;
+        public double MinScanTime     { get; private set; } = 0;
+        public double MaxScanTime     { get; private set; } = 0;
+        public double AverageWaitTime { get; private set; } = 0;
+        public double MinWaitTime     { get; private set; } = 0;
+        public double MaxWaitTime     { get; private set; } = 0;
+
+        public double CurrentFPS
+        {
+            get
+            {
+                const double MULTIPLIER_RANGE = 0.05;
+                const double LOWER_MULTIPLIER = 1 - MULTIPLIER_RANGE;
+                const double UPPER_MULTIPLIER = 1 / LOWER_MULTIPLIER;
+
+                if (ManuallySetFPS > 1
+                    && ManuallySetFPS > AverageFPS * LOWER_MULTIPLIER
+                    && ManuallySetFPS < AverageFPS * UPPER_MULTIPLIER)
+                    return ManuallySetFPS;
+                else
+                    return AverageFPS;
+            }
+        }
 
         public bool IsVideoSourceValid()
         {
@@ -437,7 +457,7 @@ namespace LiveSplit.VAS
             try
             {
                 DeltaManager?.AddResult(index, scan, scanEnd, deltas, benchmarks);
-                NewResult(this, new DeltaOutput(DeltaManager, index, AverageFPS));
+                NewResult(this, new DeltaOutput(DeltaManager, index, CurrentFPS));
 
                 ScanningCount--;
 
@@ -448,42 +468,7 @@ namespace LiveSplit.VAS
                 // It's on its own thread so running it here should be okay.
                 if (index % Math.Ceiling(AverageFPS) == 0)
                 {
-                    int count = 0;
-                    double sumFPS = 0d, minFPS = 9999d, maxFPS = 0d,
-                        sumScanTime = 0d, minScanTime = 9999d, maxScanTime = 0d,
-                        sumWaitTime = 0d, minWaitTime = 9999d, maxWaitTime = 0d;
-                    foreach (var d in DeltaManager.History)
-                    {
-                        if (!d.IsBlank)
-                        {
-                            count++;
-                            var fd = d.FrameDuration.TotalSeconds;
-                            sumFPS += fd;
-                            minFPS = Math.Min(minFPS, fd);
-                            maxFPS = Math.Max(maxFPS, fd);
-                            var sd = d.ScanDuration.TotalSeconds;
-                            sumScanTime += sd;
-                            minScanTime = Math.Min(minScanTime, sd);
-                            maxScanTime = Math.Max(maxScanTime, sd);
-                            var wd = d.WaitDuration.TotalSeconds;
-                            sumWaitTime += wd;
-                            minWaitTime = Math.Min(minWaitTime, wd);
-                            maxWaitTime = Math.Max(maxWaitTime, wd);
-                        }
-                    }
-                    count = Math.Max(count, 1); // Somehow we get NaNs...
-                    AverageFPS = 3000d / Math.Round(sumFPS / count * 3000d);
-                    MaxFPS = 1 / minFPS;
-                    MinFPS = 1 / maxFPS;
-                    AverageScanTime = sumScanTime / count;
-                    MinScanTime = minScanTime;
-                    MaxScanTime = maxScanTime;
-                    AverageWaitTime = sumWaitTime / count;
-                    MinWaitTime = minWaitTime;
-                    MaxWaitTime = maxWaitTime;
-
-                    // Todo: If AverageWaitTime is too high, shrink some of the large images before comparing.
-                    //       Maybe benchmark individual features though? Some ErrorMetrics are more intense than others.
+                    RefreshBenchmarks();
                 }
 
                 if (index >= DeltaManager.History.Count && AverageFPS > 70d)
@@ -496,6 +481,46 @@ namespace LiveSplit.VAS
             {
                 Log.Error(e, "Unknown Scanner Error.");
             }
+        }
+
+        private void RefreshBenchmarks()
+        {
+            int count = 0;
+            double sumFPS      = 0d, minFPS      = 9999d, maxFPS      = 0d,
+                   sumScanTime = 0d, minScanTime = 9999d, maxScanTime = 0d,
+                   sumWaitTime = 0d, minWaitTime = 9999d, maxWaitTime = 0d;
+            foreach (var d in DeltaManager.History)
+            {
+                if (!d.IsBlank)
+                {
+                    count++;
+                    var fd = d.FrameDuration.TotalSeconds;
+                    sumFPS += fd;
+                    minFPS = Math.Min(minFPS, fd);
+                    maxFPS = Math.Max(maxFPS, fd);
+                    var sd = d.ScanDuration.TotalSeconds;
+                    sumScanTime += sd;
+                    minScanTime = Math.Min(minScanTime, sd);
+                    maxScanTime = Math.Max(maxScanTime, sd);
+                    var wd = d.WaitDuration.TotalSeconds;
+                    sumWaitTime += wd;
+                    minWaitTime = Math.Min(minWaitTime, wd);
+                    maxWaitTime = Math.Max(maxWaitTime, wd);
+                }
+            }
+            count = Math.Max(count, 1); // Somehow we get NaNs...
+            AverageFPS = 3000d / Math.Round(sumFPS / count * 3000d);
+            RecentMaxFPS = 1 / minFPS;
+            RecentMinFPS = 1 / maxFPS;
+            AverageScanTime = sumScanTime / count;
+            MinScanTime = minScanTime;
+            MaxScanTime = maxScanTime;
+            AverageWaitTime = sumWaitTime / count;
+            MinWaitTime = minWaitTime;
+            MaxWaitTime = maxWaitTime;
+
+            // Todo: If AverageWaitTime is too high, shrink some of the large images before comparing.
+            //       Maybe benchmark individual features though? Some ErrorMetrics are more intense than others.
         }
 
         private static void CropScan(
