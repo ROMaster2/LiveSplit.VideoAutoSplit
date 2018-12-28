@@ -46,7 +46,7 @@ namespace LiveSplit.VAS.UI
 
             if (str.Length > 5)
             {
-                _TextWriter.FlushAsync();
+                _TextWriter.Flush();
                 txtDebug.AppendText(str);
             }
         }
