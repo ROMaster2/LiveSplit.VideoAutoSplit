@@ -673,7 +673,11 @@ namespace LiveSplit.VAS
             CWatcher cWatcher,
             CWatchImage cWatchImage)
         {
-            deltas[cWatchImage.Index] = fileImageCompare.Compare(deltaImage, cWatcher.ErrorMetric);
+            var metricResult = fileImageCompare.Compare(deltaImage, cWatcher.ErrorMetric);
+            deltas[cWatchImage.Index] = cWatcher.ErrorMetric.Standardize(
+                cWatchImage.MetricUpperBound,
+                metricResult,
+                cWatchImage.TransparencyRate);
         }
 
         private static void SetBenchmark(ref double[] benchmarks, TimeStamp timeStamp, CWatchImage cWatchImage)

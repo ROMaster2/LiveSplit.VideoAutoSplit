@@ -107,5 +107,61 @@ namespace LiveSplit.VAS
             Down,
             Floor
         }
+
+        public static double UpperBound(this ImageMagick.ErrorMetric errorMetric, int pixelCount, int channels, int bitDepth = 255)
+        {
+            switch (errorMetric)
+            {
+                case ImageMagick.ErrorMetric.PeakSignalToNoiseRatio: return double.PositiveInfinity;
+                case ImageMagick.ErrorMetric.MeanErrorPerPixel: return pixelCount * channels * bitDepth;
+                case ImageMagick.ErrorMetric.Absolute: return pixelCount;
+                case ImageMagick.ErrorMetric.StructuralDissimilarity: return 0.5;
+                default: return 1d;
+            }
+        }
+
+        public static double Standardize(
+            this ImageMagick.ErrorMetric errorMetric,
+            double upperBound,
+            double value,
+            double transparencyRate = 0d)
+        {
+            const double STANDARD_UPPER_BOUND = 100d;
+            // Would add PEAK_CROSS_POINT and such but it'd bloat the code.
+
+            double result;
+
+            switch (errorMetric)
+            {
+                case ImageMagick.ErrorMetric.PeakSignalToNoiseRatio:
+                    //result = value > 1d ? (double.IsPositiveInfinity(value) ? 1d : (1d - 1d / value) * 0.9375 + 0.0625)
+                    //    : value * 0.0625;
+                    result = value > 1d ? (1d - 1d / value) * 0.9375 + 0.0625 : value * 0.0625;
+                    break;
+                case ImageMagick.ErrorMetric.MeanErrorPerPixel:
+                case ImageMagick.ErrorMetric.Absolute:
+                    result = value / upperBound;
+                    break;
+                case ImageMagick.ErrorMetric.StructuralDissimilarity:
+                    result = value * 2;
+                    break;
+                default:
+                    result = value;
+                    break;
+            }
+
+            if (transparencyRate > 0d)
+            {
+                if (transparencyRate < 1d)
+                {
+                    result = (result - transparencyRate) / (1 - transparencyRate);
+                }
+                else
+                    return double.NaN;
+            }
+
+            return Math.Max(0d, Math.Min(STANDARD_UPPER_BOUND, result * STANDARD_UPPER_BOUND));
+        }
+
     }
 }

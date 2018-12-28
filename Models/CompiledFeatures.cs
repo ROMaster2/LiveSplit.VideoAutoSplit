@@ -76,10 +76,14 @@ namespace LiveSplit.VAS.Models
                             //PreciseResize(ref mi, watchZone.Geometry, gameGeo, screen.CropGeometry, watcher.ColorSpace);
                             if (watcher.Equalize) mi.Equalize();
 
-                            CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
+                            PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
+
+                            var metricUpperBound = watcher.ErrorMetric.UpperBound(PixelCount, mi.ChannelCount);
+
+                            CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi, metricUpperBound);
 
                             AddIndexName(nameDictionary, indexCount, watchZone.Name, watcher.Name, watchImage.FileName);
-                            PixelCount += (int)Math.Round(wzCropGeo.Width) * (int)Math.Round(wzCropGeo.Height); // Todo: Un-hardcode the rounding
+
                             indexCount++;
                         }
 
@@ -450,9 +454,10 @@ namespace LiveSplit.VAS.Models
         public IMagickImage AlphaChannel { get; }
         public bool HasAlpha { get; }
         public double TransparencyRate { get; }
+        public double MetricUpperBound { get; }
 
         // Standard
-        public CWatchImage(string name, int index, IMagickImage magickImage)
+        public CWatchImage(string name, int index, IMagickImage magickImage, double metricUpperBound)
         {
             Name = name;
             Index = index;
@@ -460,6 +465,7 @@ namespace LiveSplit.VAS.Models
             HasAlpha = MagickImage.HasAlpha;
             TransparencyRate = MagickImage.GetTransparencyRate();
             AlphaChannel = null;
+            MetricUpperBound = metricUpperBound;
 
             _PauseTicks = DateTime.MinValue.Ticks;
             
@@ -487,6 +493,7 @@ namespace LiveSplit.VAS.Models
             AlphaChannel = null;
             HasAlpha = false;
             TransparencyRate = 0;
+            MetricUpperBound = 1;
 
             _PauseTicks = DateTime.MinValue.Ticks;
         }
