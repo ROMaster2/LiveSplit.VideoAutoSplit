@@ -145,8 +145,12 @@ namespace LiveSplit.VAS
                 case ImageMagick.ErrorMetric.StructuralDissimilarity:
                     result = value * 2;
                     break;
-                default:
+                case ImageMagick.ErrorMetric.StructuralSimilarity:
+                case ImageMagick.ErrorMetric.NormalizedCrossCorrelation:
                     result = value;
+                    break;
+                default:
+                    result = 1d - value;
                     break;
             }
 
