@@ -106,11 +106,10 @@ public class CompiledScript
         public dynamic Call(LiveSplitState timer, ExpandoObject vars, string gameVersion, dynamic settings, DeltaOutput d)
         {
             dynamic ret = null;
-            var frameIndex = -1;
-            if (!d.IsBlank) frameIndex = d.FrameIndex;
+            var frameIndex = d.IsBlank ? -1 : d.FrameIndex;
             try
             {
-                ret = CompiledCode.Execute(timer, vars, d, settings, d.FrameIndex);
+                ret = CompiledCode.Execute(timer, vars, d, settings, frameIndex);
             }
             catch (Exception ex)
             {
