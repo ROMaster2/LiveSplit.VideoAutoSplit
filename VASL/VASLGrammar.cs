@@ -3,7 +3,7 @@ using Irony.Parsing;
 
 namespace LiveSplit.VAS.VASL
 {
-    [Language("VASL", "0.1", "Video Auto Split Language grammar")]
+    [Language("VASL", "0.5.1.0", "Video Auto Split Language grammar")]
     public class VASLGrammar : Grammar
     {
         public VASLGrammar() : base(true)
