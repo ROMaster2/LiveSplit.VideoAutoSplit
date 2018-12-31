@@ -17,6 +17,8 @@ namespace LiveSplit.VAS
         public static bool VerboseEnabled { get; set; } = false;
 #endif
 
+        public static bool WriteToFileEnabled { get; set; } = true;
+
         public static event EventHandler<string> LogUpdated;
 
         static Log()
@@ -35,14 +37,25 @@ namespace LiveSplit.VAS
             var str = "[" + DateTime.Now.ToString("hh:mm:ss.fff") + "] " + message;
             _TextWriter.WriteLine(str);
             LogUpdated?.Invoke(null, str);
+            if (WriteToFileEnabled) WriteToFile(str);
+        }
+
+        private static void WriteToFile(string message)
+        {
+            try
+            {
+                using (var fs = new FileStream(@"VASErrorLog.txt", FileMode.Append, FileAccess.Write))
+                using (var sw = new StreamWriter(fs))
+                {
+                    sw.WriteLineAsync(message);
+                }
+            }
+            catch { }
         }
 
         public static void Verbose(string message)
         {
-            if (VerboseEnabled)
-            {
-                Info(message);
-            }
+            if (VerboseEnabled) Info(message);
         }
 
         public static void Info(string message)
