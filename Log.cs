@@ -28,16 +28,13 @@ namespace LiveSplit.VAS
             Trace.Listeners.Add(listener);
         }
 
-        public static string ReadAll()
-        {
-            return _TextWriter.ToString();
-        }
+        public static string ReadAll() => _TextWriter.ToString();
 
         private static void Write(string message)
         {
             var str = "[" + DateTime.Now.ToString("hh:mm:ss.fff") + "] " + message;
             _TextWriter.WriteLine(str);
-            if (LogUpdated != null) LogUpdated(null, str);
+            LogUpdated?.Invoke(null, str);
         }
 
         public static void Verbose(string message)
