@@ -114,11 +114,7 @@ public class CompiledScript
             catch (Exception ex)
             {
                 // Ignore NullReferenceExceptions until the history is filled.
-                if (ex is NullReferenceException && d.OriginalIndex <= d.HistorySize)
-                {
-                    Log.Verbose("NullReferenceException found in script before history is filled, ignoring.");
-                }
-                else
+                if (!(ex is NullReferenceException) || d.OriginalIndex > d.HistorySize)
                 {
                     Log.Error(new VASLRuntimeException(this, ex), "VASL Script Error");
                 }
