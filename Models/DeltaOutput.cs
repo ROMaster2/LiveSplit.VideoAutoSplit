@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LiveSplit.VAS.Models.Delta
@@ -369,17 +370,15 @@ namespace LiveSplit.VAS.Models.Delta
         {
             get
             {
-                int[] numbers = new int[strings.Length];
+                List<int> numbers = new List<int>();
                 for (int n = 0; n < strings.Length; n++)
                 {
-                    int i;
+                    IEnumerable<int> i;
                     if (!Manager.CompiledFeatures.IndexNames.TryGetValue(strings[n], out i))
                         throw new ArgumentException("This name does not exist.");
-                    if (i < 0)
-                        throw new ArgumentException("This name is shared between more than one feature. Identify it more specifically.");
-                    numbers[n] = i;
+                    numbers.AddRange(i);
                 }
-                FeatureIndexes = numbers;
+                FeatureIndexes = numbers.Distinct().ToArray();
                 return this;
             }
         }

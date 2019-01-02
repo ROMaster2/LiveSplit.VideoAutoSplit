@@ -20,7 +20,7 @@ namespace LiveSplit.VAS.Models
         public int FeatureCount { get; }
         public int PixelLimit { get; }
         public int PixelCount { get; }
-        public IReadOnlyDictionary<string, int> IndexNames { get; }
+        public IReadOnlyDictionary<string, IEnumerable<int>> IndexNames { get; }
 
         public CompiledFeatures(GameProfile gameProfile, Geometry cropGeometry, int pixelLimit = INIT_PIXEL_LIMIT)
         {
@@ -29,7 +29,7 @@ namespace LiveSplit.VAS.Models
             PixelLimit = pixelLimit; // Todo: Implement resizing when (total) PixelCount exceeds PixelLimit. It won't be easy.
             PixelCount = 0;
 
-            var nameDictionary = new Dictionary<string, int>();
+            var nameDictionary = new Dictionary<string, List<int>>();
 
             var cWatchZones = new CWatchZone[gameProfile.WatchZones.Count];
             var indexCount = 0;
@@ -108,43 +108,38 @@ namespace LiveSplit.VAS.Models
                 cWatchZones[i1] = new CWatchZone(watchZone.Name, wzCropGeo, CWatches);
             }
 
-            IndexNames = nameDictionary;
+            var nameDicArray = new Dictionary<string, IEnumerable<int>>();
+            foreach (var entry in nameDictionary)
+                nameDicArray.Add(entry.Key, entry.Value.Distinct().OrderBy(x => x));
+
+            IndexNames = nameDicArray;
             FeatureCount = indexCount;
             CWatchZones = cWatchZones;
         }
 
-        private static void AddIndexName(IDictionary<string, int> dictionary, int index, string name1, string name2, string name3)
+        private static void AddIndexName(IDictionary<string, List<int>> dictionary, int index, string name1, string name2, string name3)
         {
             var strings = new List<string>
             {
-                name1,
-                name1 + "/" + name2,
-                name2,
-                name1 + "/" + name2 + "/" + name3,
-                name1 + "/" + name3,
+                name3,
                 name2 + "/" + name3,
-                name3
+                name1 + "/" + name3,
+                name1 + "/" + name2 + "/" + name3,
+                name2,
+                name1 + "/" + name2,
+                name1,
             };
             foreach (var s in strings)
             {
                 if (dictionary.ContainsKey(s))
                 {
-                    dictionary[s] = -1;
+                    dictionary[s].Add(index);
                 }
                 else
                 {
-                    dictionary.Add(new KeyValuePair<string, int>(s, index));
+                    var newList = new List<int>() { index };
+                    dictionary.Add(new KeyValuePair<string, List<int>>(s, newList));
                 }
-            }
-        }
-
-        private void ValidateIndexNames()
-        {
-            var indexes = IndexNames.Values;
-            for (int i = 0; i < FeatureCount; i++)
-            {
-                if (!indexes.Contains(i))
-                    Log.Warning("Feature #" + i.ToString() + "'s name was not indexed.");
             }
         }
 
