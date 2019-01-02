@@ -9,12 +9,12 @@ namespace LiveSplit.VAS.Models.Delta
 
         private DeltaManager Manager;
 
-        public DeltaHistory History => Manager.History;
-        public int HistorySize => History.Count;
+        internal DeltaHistory History => Manager.History;
+        internal int HistorySize => History.Count;
 
-        public int OriginalIndex { get; internal set; }
-        public int FrameIndex { get; internal set; }
-        public double FrameRate { get; }
+        internal int OriginalIndex { get; private set; }
+        internal int FrameIndex { get; private set; }
+        internal double FrameRate { get; }
 
         private int[] _FeatureIndexes;
         private int[] FeatureIndexes
@@ -41,7 +41,7 @@ namespace LiveSplit.VAS.Models.Delta
             _FeatureIndexes = null;
         }
 
-        public bool IsBlank
+        internal bool IsBlank
         {
             get
             {
@@ -183,25 +183,25 @@ namespace LiveSplit.VAS.Models.Delta
             return result;
         }
 
-        public double[] MinMany(int startMilliseconds, int endMilliseconds)
+        private double[] MinMany(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
             return GetDeltaRange((x) => { return x.Min(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
-        public double[] MinManyInverse(int startMilliseconds, int endMilliseconds)
+        private double[] MinManyInverse(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
             return GetDeltaRangeInverse((x) => { return x.Min(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
-        public double[] MaxMany(int startMilliseconds, int endMilliseconds)
+        private double[] MaxMany(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
             return GetDeltaRange((x) => { return x.Max(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
-        public double[] MaxManyInverse(int startMilliseconds, int endMilliseconds)
+        private double[] MaxManyInverse(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
             return GetDeltaRangeInverse((x) => { return x.Max(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
