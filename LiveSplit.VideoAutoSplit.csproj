@@ -67,6 +67,12 @@
     <Compile Include="Log.cs" />
     <Compile Include="Models\DeltaHistory.cs" />
     <Compile Include="Models\DeltaOutput.cs" />
+    <Compile Include="UI\MainVASSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\MainVASSettings.Designer.cs">
+      <DependentUpon>MainVASSettings.cs</DependentUpon>
+    </Compile>
     <Compile Include="VASComponent.cs" />
     <Compile Include="Factory.cs" />
     <Compile Include="Models\CompiledFeatures.cs" />
@@ -139,6 +145,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ComponentUI.resx">
       <DependentUpon>ComponentUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\MainVASSettings.resx">
+      <DependentUpon>MainVASSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\SettingsUI.resx">
       <DependentUpon>SettingsUI.cs</DependentUpon>

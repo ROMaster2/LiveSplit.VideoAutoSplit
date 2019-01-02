@@ -130,10 +130,10 @@ namespace LiveSplit.VAS.UI
         }
 
         // Validated triggers when the user manually changes the value, rather than anytime it changes.
-        private void numX_Validated(object sender, EventArgs e)      => UpdateCropGeometry();
-        private void numY_Validated(object sender, EventArgs e)      => UpdateCropGeometry();
-        private void numWidth_Validated(object sender, EventArgs e)  => UpdateCropGeometry();
-        private void numHeight_Validated(object sender, EventArgs e) => UpdateCropGeometry();
+        private void numX_ValueChanged(object sender, EventArgs e) => UpdateCropGeometry();
+        private void numY_ValueChanged(object sender, EventArgs e) => UpdateCropGeometry();
+        private void numWidth_ValueChanged(object sender, EventArgs e) => UpdateCropGeometry();
+        private void numHeight_ValueChanged(object sender, EventArgs e) => UpdateCropGeometry();
 
         private void btnReset_Click(object sender, EventArgs e) => ResetNumValues();
 

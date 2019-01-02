@@ -15,24 +15,28 @@ namespace LiveSplit.VAS.UI
         internal FeaturesUI   FeaturesUI   { get; }
         internal DebugUI      DebugUI      { get; }
 
-        internal ComponentUI(VASComponent component)
+        public MainVASSettings SettingsWindow;
+
+        public ComponentUI(VASComponent component)
         {
             InitializeComponent();
 
             Component = component;
 
+            // The tabs are still created in this window so that the entire codebase doesn't have to be rewritten
             SettingsUI   = new SettingsUI(Component);
             ScanRegionUI = new ScanRegionUI(Component);
             FeaturesUI   = new FeaturesUI(Component);
             DebugUI      = new DebugUI(Component);
-            SetChildControlSettings(SettingsUI, tabSettings, "Settings");
-            SetChildControlSettings(ScanRegionUI, tabScanRegion, "ScanRegion");
-            SetChildControlSettings(FeaturesUI, tabFeatures, "Features");
-            SetChildControlSettings(DebugUI, tabDebug, "Debug");
 
-            tabScanRegion.SuspendLayout();
-            tabFeatures.SuspendLayout();
-            tabDebug.SuspendLayout();
+            SettingsWindow = new MainVASSettings();
+
+            SettingsWindow.AddTab(SettingsUI, SettingsWindow.tabSettings, "Settings");
+            SettingsWindow.AddTab(ScanRegionUI, SettingsWindow.tabScanRegion, "ScanRegion");
+            SettingsWindow.AddTab(FeaturesUI, SettingsWindow.tabFeatures, "Features");
+            SettingsWindow.AddTab(DebugUI, SettingsWindow.tabDebug, "Debug");
+
+            this.Dock = DockStyle.Fill;
         }
 
         internal void InitVASLSettings(VASLSettings settings, bool scriptLoaded)
@@ -43,21 +47,16 @@ namespace LiveSplit.VAS.UI
             DebugUI.InitVASLSettings(settings, scriptLoaded);
         }
 
-        private void SetChildControlSettings(UserControl userControl, TabPage tab, string name)
-        {
-            tab.Controls.Add(userControl);
-            userControl.Dock = DockStyle.Fill;
-            userControl.Name = name;
-        }
+        
 
         // Some of the interfaces are very 'active', so they should only be enabled when the user is actually using one.
         #region Renderers
 
         private void ComponentUI_Load(object sender, EventArgs e)
         {
-            var grandParent = (TabControl)Parent.Parent;
-            grandParent.Selecting += Parent_Selecting;
-            grandParent.HandleDestroyed += Parent_HandleDestroyed;
+            var mainSettings = SettingsWindow.tabControlCore;
+            mainSettings.Selecting += Parent_Selecting;
+            mainSettings.HandleDestroyed += Parent_HandleDestroyed;
             Render();
         }
 
@@ -67,19 +66,18 @@ namespace LiveSplit.VAS.UI
 
         private void Render(bool forceDerender = false)
         {
-            RenderUI(SettingsUI, forceDerender);
-            RenderUI(ScanRegionUI, forceDerender);
-            RenderUI(FeaturesUI, forceDerender);
-            RenderUI(DebugUI, forceDerender);
+            if (SettingsWindow.Visible)
+            {
+                RenderUI(SettingsUI, forceDerender);
+                RenderUI(ScanRegionUI, forceDerender);
+                RenderUI(FeaturesUI, forceDerender);
+                RenderUI(DebugUI, forceDerender);
+            }
         }
 
-        // Bad naming consistancy
         private void RenderUI(AbstractUI ui, bool forceDerender)
         {
-            var grandParent = (TabControl)Parent.Parent;
-            var parent = (TabPage)Parent;
-
-            if (grandParent.SelectedTab == parent && tabControlCore.SelectedTab == ui.Parent && !forceDerender)
+            if (SettingsWindow.tabControlCore.SelectedTab == ui.Parent && !forceDerender)
             {
                 ui.ResumeLayout(false);
                 ui.Rerender();
@@ -92,5 +90,10 @@ namespace LiveSplit.VAS.UI
         }
 
         #endregion Renderers
+
+        private void btnSettings_Click(object sender, EventArgs e)
+        {
+            SettingsWindow.Show();
+        }
     }
 }
