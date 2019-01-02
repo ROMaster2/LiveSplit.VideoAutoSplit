@@ -366,6 +366,20 @@ namespace LiveSplit.VAS.Models.Delta
             }
         }
 
+        // Small performance booster since this is used far more often
+        public DeltaOutput this[string str]
+        {
+            get
+            {
+                IEnumerable<int> i;
+                if (!Manager.CompiledFeatures.IndexNames.TryGetValue(str, out i))
+                    throw new ArgumentException("This name does not exist.");
+
+                FeatureIndexes = i.ToArray();
+                return this;
+            }
+        }
+
         public DeltaOutput this[params string[] strings]
         {
             get
