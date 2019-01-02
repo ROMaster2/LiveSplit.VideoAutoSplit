@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace LiveSplit.VAS.Models
 {
-    public struct CompiledFeatures
+    public class CompiledFeatures
     {
         private const int INIT_PIXEL_LIMIT = 16777216;
         // @TODO: Something about rectangles
@@ -196,16 +196,6 @@ namespace LiveSplit.VAS.Models
             }
         }
 
-        public readonly static CompiledFeatures Blank = new CompiledFeatures();
-
-        public bool IsBlank
-        {
-            get
-            {
-                return this.Equals(Blank);
-            }
-        }
-
         // Temporary hack, will fix later.
         public void PauseFeature(int index, DateTime untilTime)
         {
@@ -293,7 +283,7 @@ namespace LiveSplit.VAS.Models
         }
     }
 
-    public struct CWatchZone
+    public class CWatchZone
     {
         private bool _HasDupeCheck;
 
@@ -355,7 +345,7 @@ namespace LiveSplit.VAS.Models
         }
     }
 
-    public struct CWatcher
+    public class CWatcher
     {
         public string Name { get; }
         public WatcherType WatcherType { get; }
@@ -442,7 +432,7 @@ namespace LiveSplit.VAS.Models
         }
     }
 
-    public struct CWatchImage
+    public class CWatchImage
     {
         private static readonly MagickColor _AlphaReplacement = MagickColors.Black;
 
@@ -501,7 +491,6 @@ namespace LiveSplit.VAS.Models
         public bool IsPaused(DateTime dateTime)
         {
             var now = dateTime.Ticks;
-            var test = _PauseTicks;
             return _PauseTicks >= 0L ? _PauseTicks > now : -_PauseTicks < now;
         }
 

@@ -148,7 +148,7 @@ namespace LiveSplit.VAS.UI
         private void FillboxPreviewFeature()
         {
             boxPreviewFeature.Items.Add("<None>");
-            if (!_CompiledFeatures.IsBlank)
+            if (_CompiledFeatures != null)
             {
                 foreach (var wz in _CompiledFeatures.CWatchZones)
                 {
@@ -204,7 +204,7 @@ namespace LiveSplit.VAS.UI
             _ScreenOverlay = new MagickImage(SCREEN_COLOR, cropRect.Width, cropRect.Height);
             _WatchZoneOverlay = new MagickImage(MagickColors.Transparent, trueCropRect.Width, trueCropRect.Height);
 
-            if (!_CompiledFeatures.IsBlank)
+            if (_CompiledFeatures != null)
             {
                 foreach (var wz in _CompiledFeatures.CWatchZones)
                 {

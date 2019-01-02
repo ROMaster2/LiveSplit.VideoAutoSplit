@@ -70,7 +70,7 @@ namespace LiveSplit.VAS.UI
             _Updating = true;
             ClearRows();
             var cf = _Component.Scanner.CompiledFeatures;
-            if (scriptLoaded && !cf.IsBlank)
+            if (scriptLoaded && cf != null)
             {
                 // Get the defined vars from the raw script.
                 // The vars aren't added to the ExpandoObject until they're invoked. This gets around that.

@@ -298,7 +298,7 @@ namespace LiveSplit.VAS
                 Log.Verbose("Initializing start.");
                 UpdateCropGeometry();
                 Log.Info("Trying to start scanner.");
-                if (_GameProfile != null && IsVideoSourceValid() && !CompiledFeatures.IsBlank)
+                if (_GameProfile != null && IsVideoSourceValid() && CompiledFeatures != null)
                 {
                     Log.Info("Starting scanner...");
                     CurrentIndex = 0;
@@ -336,7 +336,7 @@ namespace LiveSplit.VAS
 
                     if (_GameProfile == null) str += " The game profile was empty.";
                     if (!IsVideoSourceValid()) str += " The script was not loaded.";
-                    if (CompiledFeatures.IsBlank) str += " CompiledFeatures was blank.";
+                    if (CompiledFeatures == null) str += " CompiledFeatures was blank.";
 
                     Log.Verbose(str);
                 }
