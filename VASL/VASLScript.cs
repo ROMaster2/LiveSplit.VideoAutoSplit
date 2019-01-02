@@ -166,18 +166,27 @@ namespace LiveSplit.VAS.VASL
                     var splitState = RunMethod(Methods.split, state, d);
 
                     if (splitState is bool && splitState == true)
+                        splitState = TimeSpan.Zero;
+
+                    if (splitState is TimeSpan)
                     {
+                        AdjustGameTime(state, splitState.Negate());
                         if (!UsesCustomGameTime)
                             AdjustGameTime(state, offsetTime.Negate());
 
                         Timer.Split();
 
-                        if (!UsesCustomGameTime)
+                        if (state.CurrentPhase != TimerPhase.Ended)
                         {
-                            if (state.CurrentPhase != TimerPhase.Ended)
+                            AdjustGameTime(state, splitState);
+                            if (!UsesCustomGameTime)
                                 AdjustGameTime(state, offsetTime);
-                            else
-                                LastSplitOffset = offsetTime;
+                        }
+                        else
+                        {
+                            LastSplitOffset = splitState;
+                            if (!UsesCustomGameTime)
+                                LastSplitOffset += offsetTime;
                         }
                     }
                 }
@@ -198,8 +207,9 @@ namespace LiveSplit.VAS.VASL
 
                     TimeSpan startOffset = (startState is TimeSpan) ? startState : TimeSpan.Zero;
 
+                    AdjustGameTime(state, startOffset);
                     if (!UsesCustomGameTime)
-                        AdjustGameTime(state, startOffset + offsetTime);
+                        AdjustGameTime(state, offsetTime);
                 }
             }
 
