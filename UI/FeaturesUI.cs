@@ -246,9 +246,9 @@ namespace LiveSplit.VAS.UI
                         textBlock.Minimum = valueQueue.Min().ToString(stringFormat);
                     }
                 }
-                catch (Exception e)
+                catch
                 {
-                    Log.Verbose("Label exception for FeatureUI, ignoring. " + e.Message);
+                    //Log.Verbose("Label exception for FeatureUI, ignoring. " + e.Message);
                 }
             }
 
