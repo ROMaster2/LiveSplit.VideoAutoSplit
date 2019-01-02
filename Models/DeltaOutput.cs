@@ -17,8 +17,8 @@ namespace LiveSplit.VAS.Models.Delta
         internal int FrameIndex { get; private set; }
         internal double FrameRate { get; }
 
-        private int[] _FeatureIndexes;
-        private int[] FeatureIndexes
+        private IEnumerable<int> _FeatureIndexes;
+        private IEnumerable<int> FeatureIndexes
         {
             get
             {
@@ -100,109 +100,110 @@ namespace LiveSplit.VAS.Models.Delta
                 endOffset = FrameOffset(startMilliseconds + duration);
         }
 
-        private double[] GetDeltaRange(int startMilliseconds, int duration, params int[] indexes)
+        private IEnumerable<double> GetDeltaRange(int startMilliseconds, int duration, IEnumerable<int> indexes = null)
         {
             int startOffset;
             int endOffset;
             FrameOffsets(startMilliseconds, duration, out startOffset, out endOffset);
 
-            var featureIndexes = indexes.Length == 0 ? FeatureIndexes : indexes;
-
-            var result = new double[(endOffset - startOffset) * featureIndexes.Length];
-
-            if (result.Length == 0)
-                return new double[] { double.NaN };
-
-            for (int i = 0; i < endOffset - startOffset; i++)
-            {
-                var frameIndex = IndexFromOffset(i + startOffset);
-                for (int n = 0; n < featureIndexes.Length; n++)
-                {
-                    var t = n + i * featureIndexes.Length;
-                    result[t] = Manager.History[frameIndex, featureIndexes[n]]; // Todo: Handle NaN.
-                }
-            }
-
-            return result;
-        }
-
-        private double[] GetDeltaRange(Func<double[], double> func, int startMilliseconds, int duration, params int[] indexes)
-        {
-            int startOffset;
-            int endOffset;
-            FrameOffsets(startMilliseconds, duration, out startOffset, out endOffset);
-
-            var featureIndexes = indexes.Length == 0 ? FeatureIndexes : indexes;
-            var featureArray = new double[featureIndexes.Length];
+            var featureIndexes = indexes?.Count() == 0 ? FeatureIndexes : indexes ?? FeatureIndexes;
+            var featureCount = featureIndexes.Count();
 
             var offsetDiff = endOffset - startOffset;
 
-            if (offsetDiff <= 0)
-                return new double[] { double.NaN };
-
-            var result = new double[offsetDiff];
-
-            for (int i = 0; i < offsetDiff; i++)
+            if (offsetDiff > 0)
             {
-                var frameIndex = IndexFromOffset(i + startOffset);
-                for (int n = 0; n < featureIndexes.Length; n++)
+                for (int i = 0; i < endOffset - startOffset; i++)
                 {
-                    featureArray[n] = Manager.History[frameIndex, featureIndexes[n]]; // Todo: Handle NaN.
+                    var frameIndex = IndexFromOffset(i + startOffset);
+                    for (int n = 0; n < featureCount; n++)
+                    {
+                        var t = n + i * featureCount;
+                        yield return Manager.History[frameIndex, featureIndexes.ElementAt(n)]; // Todo: Handle NaN.
+                    }
                 }
-                result[i] = func(featureArray);
             }
-
-            return result;
+            else
+                yield return double.NaN;
         }
 
-        private double[] GetDeltaRangeInverse(Func<double[], double> func, int startMilliseconds, int duration, params int[] indexes)
+        private IEnumerable<double> GetDeltaRange(Func<IEnumerable<double>, double> func, int startMilliseconds, int duration, IEnumerable<int> indexes)
         {
             int startOffset;
             int endOffset;
             FrameOffsets(startMilliseconds, duration, out startOffset, out endOffset);
 
-            var featureIndexes = indexes.Length == 0 ? FeatureIndexes : indexes;
-            var result = new double[featureIndexes.Length];
+            var featureIndexes = indexes.Count() == 0 ? FeatureIndexes : indexes;
+            var featureCount = featureIndexes.Count();
 
             var offsetDiff = endOffset - startOffset;
 
-            if (offsetDiff <= 0)
-                return new double[] { double.NaN };
-
-            var indexArray = new double[offsetDiff];
-
-            for (int i = 0; i < featureIndexes.Length; i++)
+            if (offsetDiff > 0)
             {
-                for (int n = 0; n < offsetDiff; n++)
-                {
-                    var frameIndex = IndexFromOffset(n + startOffset);
-                    indexArray[n] = Manager.History[frameIndex, featureIndexes[i]];
-                }
-                result[i] = func(indexArray);
-            }
+                var featureArray = new double[featureCount];
 
-            return result;
+                for (int i = 0; i < offsetDiff; i++)
+                {
+                    var frameIndex = IndexFromOffset(i + startOffset);
+                    for (int n = 0; n < featureCount; n++)
+                    {
+                        featureArray[n] = Manager.History[frameIndex, featureIndexes.ElementAt(n)]; // Todo: Handle NaN.
+                    }
+                    yield return func(featureArray);
+                }
+            }
+            else
+                yield return double.NaN;
         }
 
-        private double[] MinMany(int startMilliseconds, int endMilliseconds)
+        private IEnumerable<double> GetDeltaRangeInverse(Func<IEnumerable<double>, double> func, int startMilliseconds, int duration, IEnumerable<int> indexes)
+        {
+            int startOffset;
+            int endOffset;
+            FrameOffsets(startMilliseconds, duration, out startOffset, out endOffset);
+
+            var featureIndexes = indexes.Count() == 0 ? FeatureIndexes : indexes;
+            var featureCount = featureIndexes.Count();
+
+            var offsetDiff = endOffset - startOffset;
+
+            if (offsetDiff > 0)
+            {
+                var indexArray = new double[offsetDiff];
+
+                for (int i = 0; i < featureCount; i++)
+                {
+                    for (int n = 0; n < offsetDiff; n++)
+                    {
+                        var frameIndex = IndexFromOffset(n + startOffset);
+                        indexArray[n] = Manager.History[frameIndex, featureIndexes.ElementAt(i)];
+                    }
+                    yield return func(indexArray);
+                }
+            }
+            else
+                yield return double.NaN;
+        }
+
+        private IEnumerable<double> MinMany(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
             return GetDeltaRange((x) => { return x.Min(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
-        private double[] MinManyInverse(int startMilliseconds, int endMilliseconds)
+        private IEnumerable<double> MinManyInverse(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
             return GetDeltaRangeInverse((x) => { return x.Min(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
-        private double[] MaxMany(int startMilliseconds, int endMilliseconds)
+        private IEnumerable<double> MaxMany(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
             return GetDeltaRange((x) => { return x.Max(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
         }
 
-        private double[] MaxManyInverse(int startMilliseconds, int endMilliseconds)
+        private IEnumerable<double> MaxManyInverse(int startMilliseconds, int endMilliseconds)
         {
             var featureIndexes = FeatureIndexes;
             return GetDeltaRangeInverse((x) => { return x.Max(); }, startMilliseconds, endMilliseconds - startMilliseconds, featureIndexes);
@@ -214,7 +215,7 @@ namespace LiveSplit.VAS.Models.Delta
         {
             get
             {
-                return Manager.History[FrameIndex, FeatureIndexes[0]];
+                return Manager.History[FrameIndex, FeatureIndexes.First()];
             }
         }
 
@@ -224,7 +225,7 @@ namespace LiveSplit.VAS.Models.Delta
                 milliseconds = Manager.DefaultOffset;
 
             var prevFrameIndex = IndexFromOffset(FrameOffset(milliseconds));
-            return Manager.History[prevFrameIndex, FeatureIndexes[0]];
+            return Manager.History[prevFrameIndex, FeatureIndexes.First()];
         }
 
         // For the below, actual timestamps will be used once splitting can be offset'd.
@@ -324,7 +325,7 @@ namespace LiveSplit.VAS.Models.Delta
 
         public double delta(int startMilliseconds, int endMilliseconds) // Single index only
         {
-            var featureIndex = FeatureIndexes[0];
+            var featureIndex = FeatureIndexes.First();
 
             double start;
             if (startMilliseconds <= 0)
@@ -341,7 +342,7 @@ namespace LiveSplit.VAS.Models.Delta
         // Incomplete
         public double dupeDelta(int milliseconds = 0) // Single index only
         {
-            var featureIndex = FeatureIndexes[0];
+            var featureIndex = FeatureIndexes.First();
 
             return this[featureIndex].min(milliseconds) / this[featureIndex].max(milliseconds, milliseconds * 2);
         }
@@ -375,7 +376,7 @@ namespace LiveSplit.VAS.Models.Delta
                 if (!Manager.CompiledFeatures.IndexNames.TryGetValue(str, out i))
                     throw new ArgumentException("This name does not exist.");
 
-                FeatureIndexes = i.ToArray();
+                FeatureIndexes = i;
                 return this;
             }
         }
@@ -392,7 +393,7 @@ namespace LiveSplit.VAS.Models.Delta
                         throw new ArgumentException("This name does not exist.");
                     numbers.AddRange(i);
                 }
-                FeatureIndexes = numbers.Distinct().ToArray();
+                FeatureIndexes = numbers.Distinct();
                 return this;
             }
         }
