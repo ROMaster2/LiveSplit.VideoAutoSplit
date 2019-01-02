@@ -23,21 +23,34 @@ namespace LiveSplit.VAS
 
         static Log()
         {
-            if (!EventLog.SourceExists("VideoAutoSplit"))
-                EventLog.CreateEventSource("VideoAutoSplit", "Application");
-            var listener = new EventLogTraceListener("VideoAutoSplit");
-            listener.Filter = new EventTypeFilter(SourceLevels.Warning);
-            Trace.Listeners.Add(listener);
+            try
+            {
+                if (!EventLog.SourceExists("VideoAutoSplit"))
+                    EventLog.CreateEventSource("VideoAutoSplit", "Application");
+            }
+            catch { }
+
+            try
+            {
+                var listener = new EventLogTraceListener("VideoAutoSplit");
+                listener.Filter = new EventTypeFilter(SourceLevels.Warning);
+                Trace.Listeners.Add(listener);
+            }
+            catch { }
         }
 
         public static string ReadAll() => _TextWriter.ToString();
 
         private static void Write(string message)
         {
-            var str = "[" + DateTime.Now.ToString("hh:mm:ss.fff") + "] " + message;
-            _TextWriter.WriteLine(str);
-            LogUpdated?.Invoke(null, str);
-            if (WriteToFileEnabled) WriteToFile(str);
+            try
+            {
+                var str = "[" + DateTime.Now.ToString("hh:mm:ss.fff") + "] " + message;
+                _TextWriter.WriteLine(str);
+                LogUpdated?.Invoke(null, str);
+                if (WriteToFileEnabled) WriteToFile(str);
+            }
+            catch { }
         }
 
         private static void WriteToFile(string message)
@@ -60,29 +73,45 @@ namespace LiveSplit.VAS
 
         public static void Info(string message)
         {
-            Trace.TraceInformation(STANDARD_FORMAT, PREFIX, message);
-            Write(message);
+            try
+            {
+                Trace.TraceInformation(STANDARD_FORMAT, PREFIX, message);
+                Write(message);
+            }
+            catch { }
         }
 
         public static void Warning(string message)
         {
-            Trace.TraceWarning(STANDARD_FORMAT, PREFIX, message);
-            Write(message);
+            try
+            {
+                Trace.TraceWarning(STANDARD_FORMAT, PREFIX, message);
+                Write(message);
+            }
+            catch { }
         }
 
         public static void Error(Exception ex, string description)
         {
-            Trace.TraceError(STANDARD_FORMAT, PREFIX, description);
-            Write(description);
-            Trace.TraceError("{0}\n\n{1}", ex.Message, ex.StackTrace);
-            Write(ex.Message);
-            Write(ex.StackTrace);
+            try
+            {
+                Trace.TraceError(STANDARD_FORMAT, PREFIX, description);
+                Write(description);
+                Trace.TraceError("{0}\n\n{1}", ex.Message, ex.StackTrace);
+                Write(ex.Message);
+                Write(ex.StackTrace);
+            }
+            catch { }
         }
 
         public static void Flush()
         {
-            _TextWriter.Flush();
-            _TextWriter = new StringWriter();
+            try
+            {
+                _TextWriter.Flush();
+                _TextWriter = new StringWriter();
+            }
+            catch { }
         }
     }
 }
