@@ -65,12 +65,12 @@ namespace LiveSplit.VAS.UI
         private void Parent_Selecting(object sender, TabControlCancelEventArgs e) => DrawUI();
         private void Parent_HandleDestroyed(object sender, EventArgs e) => DrawUI(true);
 
-        private void DrawUI(bool forceDerender = false)
+        private void DrawUI(bool IsDerenderRequest = false)
         {
-            Render(SettingsUI, forceDerender);
-            Render(ScanRegionUI, forceDerender);
-            Render(FeaturesUI, forceDerender);
-            Render(DebugUI, forceDerender);
+            Render(SettingsUI, IsDerenderRequest);
+            Render(ScanRegionUI, IsDerenderRequest);
+            Render(FeaturesUI, IsDerenderRequest);
+            Render(DebugUI, IsDerenderRequest);
         }
         
         private void Render(AbstractUI ui, bool IsDerenderRequest)
