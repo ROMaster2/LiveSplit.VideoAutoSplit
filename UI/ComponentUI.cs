@@ -73,12 +73,12 @@ namespace LiveSplit.VAS.UI
             Render(DebugUI, forceDerender);
         }
         
-        private void Render(AbstractUI ui, bool isDerenderRequest)
+        private void Render(AbstractUI ui, bool IsDerenderRequest)
         {
             var grandParent = (TabControl)Parent.Parent;
             var parent = (TabPage)Parent;
 
-            if (!isDerenderRequest && grandParent.SelectedTab == parent && tabControlCore.SelectedTab == ui.Parent)
+            if (!IsDerenderRequest && grandParent.SelectedTab == parent && tabControlCore.SelectedTab == ui.Parent)
             {
                 ui.ResumeLayout(false);
                 ui.Rerender();
