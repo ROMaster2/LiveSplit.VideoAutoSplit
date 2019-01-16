@@ -528,7 +528,7 @@ namespace LiveSplit.VAS
                     maxWaitTime = Math.Max(maxWaitTime, wd);
                 }
             }
-            count = Math.Max(count, 1); // Somehow we get NaNs...
+            count = Math.Max(count, 1); // Make sure count > 0. count is 0 when History is blank.
             AverageFPS = 3000d / Math.Round(sumFPS / count * 3000d);
             RecentMaxFPS = 1 / minFPS;
             RecentMinFPS = 1 / maxFPS;
