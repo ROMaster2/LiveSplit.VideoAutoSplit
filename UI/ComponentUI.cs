@@ -58,28 +58,27 @@ namespace LiveSplit.VAS.UI
             var grandParent = (TabControl)Parent.Parent;
             grandParent.Selecting += Parent_Selecting;
             grandParent.HandleDestroyed += Parent_HandleDestroyed;
-            Render();
+            DrawUI();
         }
 
-        private void tabControlCore_Selecting(object sender, TabControlCancelEventArgs e) => Render();
-        private void Parent_Selecting(object sender, TabControlCancelEventArgs e) => Render();
-        private void Parent_HandleDestroyed(object sender, EventArgs e) => Render(true);
+        private void tabControlCore_Selecting(object sender, TabControlCancelEventArgs e) => DrawUI();
+        private void Parent_Selecting(object sender, TabControlCancelEventArgs e) => DrawUI();
+        private void Parent_HandleDestroyed(object sender, EventArgs e) => DrawUI(true);
 
-        private void Render(bool forceDerender = false)
+        private void DrawUI(bool IsDerenderRequest = false)
         {
-            RenderUI(SettingsUI, forceDerender);
-            RenderUI(ScanRegionUI, forceDerender);
-            RenderUI(FeaturesUI, forceDerender);
-            RenderUI(DebugUI, forceDerender);
+            Render(SettingsUI, IsDerenderRequest);
+            Render(ScanRegionUI, IsDerenderRequest);
+            Render(FeaturesUI, IsDerenderRequest);
+            Render(DebugUI, IsDerenderRequest);
         }
-
-        // Bad naming consistancy
-        private void RenderUI(AbstractUI ui, bool forceDerender)
+        
+        private void Render(AbstractUI ui, bool IsDerenderRequest)
         {
             var grandParent = (TabControl)Parent.Parent;
             var parent = (TabPage)Parent;
 
-            if (grandParent.SelectedTab == parent && tabControlCore.SelectedTab == ui.Parent && !forceDerender)
+            if (!IsDerenderRequest && grandParent.SelectedTab == parent && tabControlCore.SelectedTab == ui.Parent)
             {
                 ui.ResumeLayout(false);
                 ui.Rerender();

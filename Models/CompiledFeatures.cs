@@ -375,19 +375,9 @@ namespace LiveSplit.VAS.Models
             IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
         }
 
-        public CWatcher(CWatchImage[] cWatchImages, Watcher watcher)
-        {
-            Name = watcher.Name;
-            WatcherType = watcher.WatcherType;
-            ColorSpace = watcher.ColorSpace;
-            Channel = watcher.Channel;
-            Equalize = watcher.Equalize;
-            ErrorMetric = watcher.ErrorMetric;
-            CWatchImages = cWatchImages;
-
-            IsStandard = WatcherType.Equals(WatcherType.Standard);
-            IsDuplicateFrame = WatcherType.Equals(WatcherType.DuplicateFrame);
-        }
+        public CWatcher(CWatchImage[] cWatchImages, Watcher watcher) :
+            this(cWatchImages, watcher.Name, watcher.WatcherType, watcher.ColorSpace, 
+                watcher.Channel, watcher.Equalize, watcher.ErrorMetric) { }
 
         public bool IsPaused(DateTime dateTime)
         {
@@ -447,8 +437,8 @@ namespace LiveSplit.VAS.Models
             Name = name;
             Index = index;
             MagickImage = magickImage;
-            HasAlpha = MagickImage.HasAlpha;
-            TransparencyRate = MagickImage.GetTransparencyRate();
+            HasAlpha = MagickImage != null && MagickImage.HasAlpha;
+            TransparencyRate = MagickImage != null ? MagickImage.GetTransparencyRate() : 0;
             AlphaChannel = null;
             MetricUpperBound = metricUpperBound;
 
@@ -470,18 +460,8 @@ namespace LiveSplit.VAS.Models
         }
 
         // Dummy for Dupe Frame checking
-        public CWatchImage(string name, int index)
-        {
-            Name = name;
-            Index = index;
-            MagickImage = null;
-            AlphaChannel = null;
-            HasAlpha = false;
-            TransparencyRate = 0;
-            MetricUpperBound = 1;
-
-            _PauseTicks = DateTime.MinValue.Ticks;
-        }
+        public CWatchImage(string name, int index) :
+            this(name, index, null, 1) { }
 
         public bool IsPaused(DateTime dateTime)
         {
