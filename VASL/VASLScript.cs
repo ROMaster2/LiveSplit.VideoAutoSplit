@@ -144,7 +144,7 @@ namespace LiveSplit.VAS.VASL
                         }
                     }
 
-                    if (UsesGameTime)
+                    if (UsesCustomGameTime)
                     {
                         var gameTimeState = RunMethod(Methods.gameTime, state, d);
 
