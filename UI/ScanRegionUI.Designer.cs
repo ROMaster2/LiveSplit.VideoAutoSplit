@@ -122,7 +122,6 @@
             this.lblDelta.Name = "lblDelta";
             this.lblDelta.Size = new System.Drawing.Size(100, 16);
             this.lblDelta.TabIndex = 228;
-            this.lblDelta.Text = "12.3456%";
             this.lblDelta.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // ckbShowComparison
