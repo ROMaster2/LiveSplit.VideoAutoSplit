@@ -433,8 +433,8 @@ namespace LiveSplit.VAS.UI
             if (_ActivePreviewType == PreviewType.FullFrame)
             {
                 var vGeo = _VideoGeometry;
-                var widthMultiplier = (decimal)vGeo.Width / pictureBox.Width;
-                var heightMultiplier = (decimal)vGeo.Height / pictureBox.Height;
+                var widthMultiplier = pictureBox.Width <= 0 ? 1 : (decimal)vGeo.Width / pictureBox.Width;
+                var heightMultiplier = pictureBox.Height <= 0 ? 1 : (decimal)vGeo.Height / pictureBox.Height;
                 numX.Value = _SelectionStart.X * widthMultiplier;
                 numY.Value = _SelectionStart.Y * heightMultiplier;
                 numWidth.Value = 0m;
