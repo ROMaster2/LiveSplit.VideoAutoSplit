@@ -466,8 +466,8 @@ namespace LiveSplit.VAS.UI
             var vGeo = _VideoGeometry;
             decimal screenWidth = (decimal)vGeo.Width;
             decimal screenHeight = (decimal)vGeo.Height;
-            decimal widthMultiplier = screenWidth / pictureBox.Width;
-            decimal heightMultiplier = screenHeight / pictureBox.Height;
+            decimal widthMultiplier =   pictureBox.Width <= 0 ? 1 : screenWidth / pictureBox.Width;
+            decimal heightMultiplier = pictureBox.Height <= 0 ? 1 : screenHeight / pictureBox.Height;
 
             int mouseX = Math.Min(Math.Max(0, newPoint.X), (int)Math.Round(screenWidth / widthMultiplier));
             int mouseY = Math.Min(Math.Max(0, newPoint.Y), (int)Math.Round(screenHeight / heightMultiplier));
