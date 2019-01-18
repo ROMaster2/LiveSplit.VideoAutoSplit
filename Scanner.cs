@@ -486,7 +486,7 @@ namespace LiveSplit.VAS
 
                 ScanningCount--;
 
-                if (ScanFinished != null) ScanFinished(this, scan);
+                ScanFinished?.Invoke(this, scan);
 
                 //scan.Dispose();
 
@@ -496,7 +496,7 @@ namespace LiveSplit.VAS
                     RefreshBenchmarks();
                 }
 
-                if (index >= DeltaManager.History.Count && AverageFPS > 70d)
+                if (index >= 32 && AverageFPS > 64 && !Restarting)
                 {
                     Log.Warning("Framerate is abnormally high, usually an indicator the video feed is not active.");
                     Restart();
