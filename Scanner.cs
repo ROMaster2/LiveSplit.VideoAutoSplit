@@ -232,15 +232,19 @@ namespace LiveSplit.VAS
             Log.Info("Stopping scanner...");
             try
             {
-                Log.Verbose("Stopping Frame Handler thread...");
-                _FrameHandlerThread?.Abort();
-                Log.Verbose("Frame Handler thread stopped.");
+                if (_FrameHandlerThread != null)
+                {
+                    Log.Verbose("Stopping Frame Handler thread...");
+                    _FrameHandlerThread.Abort();
+                    Log.Verbose("Frame Handler thread stopped.");
+                }
+                else
+                {
+                    Log.Verbose("Frame Handler thread never existed, ignoring.");
+                }
 
                 if (_VideoSource != null)
                 {
-                    Log.Verbose("Signalling video source to stop...");
-                    _VideoSource.SignalToStop();
-                    Log.Verbose("Signalled video source to stop.");
                     _VideoSource.NewFrame -= _NewFrameEventHandler;
                     _VideoSource.VideoSourceError -= _VideoSourceErrorEventHandler;
                 }
@@ -258,13 +262,6 @@ namespace LiveSplit.VAS
                 _VideoGeometry = Geometry.Blank;
                 _TrueCropGeometry = Geometry.Blank;
                 Log.Verbose("Scanner variables reset.");
-
-                if (_VideoSource != null)
-                {
-                    Log.Verbose("Frame Handler thread stopped. Signalling video source to stop...");
-                    _VideoSource.Stop();
-                    Log.Verbose("Signalled video source to stop.");
-                }
 
                 Log.Info("Scanner stopped.");
             }
@@ -286,7 +283,15 @@ namespace LiveSplit.VAS
             }
             else
             {
-                Restart();
+                if (!Restarting)
+                {
+                    Log.Info("Scanner already running.");
+                    Restart();
+                }
+                else
+                {
+                    Log.Warning("'Kay, this does not look good here, um...");
+                }
             }
         }
 
@@ -356,7 +361,7 @@ namespace LiveSplit.VAS
                 Stop();
                 Log.Verbose("Stopped, sleeping for 1000ms.");
                 Thread.Sleep(1000);
-                Start();
+                AsyncStart();
                 Log.Info("Restart finished.");
                 Restarting = false;
             }
