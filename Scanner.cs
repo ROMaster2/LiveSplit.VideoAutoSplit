@@ -421,7 +421,6 @@ namespace LiveSplit.VAS
             InitCount++;
             if (!IsScannerLocked &&
                 (InitCount > 255 || InitCount % 10 == 0) &&
-                !CompiledFeatures.IsPaused(now) &&
                 ScanningCount < 12)
             {
                 ScanningCount++;
