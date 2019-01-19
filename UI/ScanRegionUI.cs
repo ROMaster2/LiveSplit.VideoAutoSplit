@@ -40,6 +40,15 @@ namespace LiveSplit.VAS.UI
         private Point _SelectionStart = new Point(0, 0);
         private bool _Selecting = false;
 
+        private PreviewType _ActivePreviewType
+        {
+            get
+            {
+                var str = ((string)boxPreviewType.SelectedItem).Replace(" ", "");
+                return (PreviewType)Enum.Parse(typeof(PreviewType), str);
+            }
+        }
+
         public Geometry NumGeometry
         {
             get
@@ -73,15 +82,6 @@ namespace LiveSplit.VAS.UI
                 numY.Value      = (decimal)value.Y;
                 numWidth.Value  = (decimal)value.Width;
                 numHeight.Value = (decimal)value.Height;
-            }
-        }
-
-        private PreviewType _ActivePreviewType
-        {
-            get
-            {
-                var str = ((string)boxPreviewType.SelectedItem).Replace(" ", "");
-                return (PreviewType)Enum.Parse(typeof(PreviewType), str);
             }
         }
 
