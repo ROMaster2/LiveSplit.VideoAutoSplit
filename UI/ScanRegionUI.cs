@@ -430,7 +430,7 @@ namespace LiveSplit.VAS.UI
 
         private void pictureBox_MouseDown(object sender, MouseEventArgs e)
         {
-            if (_ActivePreviewType == PreviewType.FullFrame)
+            if (_ActivePreviewType == PreviewType.FullFrame && !_Selecting)
             {
                 var vGeo = _VideoGeometry;
                 var widthMultiplier = (decimal)vGeo.Width / pictureBox.Width;
@@ -453,7 +453,7 @@ namespace LiveSplit.VAS.UI
 
         private void pictureBox_MouseUp(object sender, MouseEventArgs e)
         {
-            if (_ActivePreviewType == PreviewType.FullFrame)
+            if (_ActivePreviewType == PreviewType.FullFrame && _Selecting)
             {
                 Click_Resize_Preview(e.Location);
                 _Selecting = false;
