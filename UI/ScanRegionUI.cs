@@ -433,12 +433,14 @@ namespace LiveSplit.VAS.UI
             if (_ActivePreviewType == PreviewType.FullFrame && !_Selecting)
             {
                 var vGeo = _VideoGeometry;
-                var widthMultiplier = (decimal)vGeo.Width / pictureBox.Width;
-                var heightMultiplier = (decimal)vGeo.Height / pictureBox.Height;
-                numX.Value = _SelectionStart.X * widthMultiplier;
-                numY.Value = _SelectionStart.Y * heightMultiplier;
-                numWidth.Value = 0m;
-                numHeight.Value = 0m;
+                var widthMultiplier = vGeo.Width / pictureBox.Width;
+                var heightMultiplier = vGeo.Height / pictureBox.Height;
+
+                NumGeometry = new Geometry(
+                    _SelectionStart.X * widthMultiplier,
+                    _SelectionStart.Y * heightMultiplier,
+                    0,
+                    0);
 
                 _Selecting = true;
 
@@ -464,20 +466,19 @@ namespace LiveSplit.VAS.UI
         private void Click_Resize_Preview(Point newPoint)
         {
             var vGeo = _VideoGeometry;
-            decimal screenWidth = (decimal)vGeo.Width;
-            decimal screenHeight = (decimal)vGeo.Height;
-            decimal widthMultiplier = screenWidth / pictureBox.Width;
-            decimal heightMultiplier = screenHeight / pictureBox.Height;
+            var screenWidth = vGeo.Width;
+            var screenHeight = vGeo.Height;
+            var widthMultiplier = screenWidth / pictureBox.Width;
+            var heightMultiplier = screenHeight / pictureBox.Height;
 
             int mouseX = Math.Min(Math.Max(0, newPoint.X), (int)Math.Round(screenWidth / widthMultiplier));
             int mouseY = Math.Min(Math.Max(0, newPoint.Y), (int)Math.Round(screenHeight / heightMultiplier));
 
-            numX.Value = Math.Max(0m, Math.Min(_SelectionStart.X, mouseX) * widthMultiplier);
-            numY.Value = Math.Max(0m, Math.Min(_SelectionStart.Y, mouseY) * heightMultiplier);
-            numWidth.Value =
-                Math.Min(screenWidth - numX.Value, Math.Abs(_SelectionStart.X - mouseX) * widthMultiplier);
-            numHeight.Value =
-                Math.Min(screenHeight - numY.Value, Math.Abs(_SelectionStart.Y - mouseY) * heightMultiplier);
+            NumGeometry = new Geometry(
+                Math.Max(0, Math.Min(_SelectionStart.X, mouseX) * widthMultiplier),
+                Math.Max(0, Math.Min(_SelectionStart.Y, mouseY) * heightMultiplier),
+                Math.Min(screenWidth - NumGeometry.X, Math.Abs(_SelectionStart.X - mouseX) * widthMultiplier),
+                Math.Min(screenHeight - NumGeometry.Y, Math.Abs(_SelectionStart.Y - mouseY) * heightMultiplier));
         }
 
         #endregion Image Click Logic
