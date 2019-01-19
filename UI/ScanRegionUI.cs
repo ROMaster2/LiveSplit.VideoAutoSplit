@@ -430,8 +430,8 @@ namespace LiveSplit.VAS.UI
             if (_ActivePreviewType == PreviewType.FullFrame && !_Selecting)
             {
                 var vGeo = _VideoGeometry;
-                var widthMultiplier = vGeo.Width / pictureBox.Width;
-                var heightMultiplier = vGeo.Height / pictureBox.Height;
+                var widthMultiplier = vGeo.Width / Math.Max(1, pictureBox.Width);
+                var heightMultiplier = vGeo.Height / Math.Max(1, pictureBox.Height);
 
                 NumGeometry = new Geometry(
                     _SelectionStart.X * widthMultiplier,
@@ -465,8 +465,8 @@ namespace LiveSplit.VAS.UI
             var vGeo = _VideoGeometry;
             var screenWidth = vGeo.Width;
             var screenHeight = vGeo.Height;
-            var widthMultiplier = screenWidth / pictureBox.Width;
-            var heightMultiplier = screenHeight / pictureBox.Height;
+            var widthMultiplier = screenWidth / Math.Max(1, pictureBox.Width);
+            var heightMultiplier = screenHeight / Math.Max(1, pictureBox.Height);
 
             int mouseX = Math.Min(Math.Max(0, newPoint.X), (int)Math.Round(screenWidth / widthMultiplier));
             int mouseY = Math.Min(Math.Max(0, newPoint.Y), (int)Math.Round(screenHeight / heightMultiplier));
