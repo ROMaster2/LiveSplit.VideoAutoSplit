@@ -53,35 +53,32 @@ namespace LiveSplit.VAS.UI
         {
             get
             {
-                Geometry vGeo = _VideoGeometry;
-                Geometry maxGeometry;
-                Geometry minGeometry;
-                if (vGeo.IsBlank)
-                {
-                    maxGeometry = new Geometry(8192, 8192, 8192, 8192);
-                    //minGeometry = new Geometry(-8192, -8192, 4, 4);
-                    minGeometry = new Geometry(0, 0, 4, 4);
-                }
-                else
-                {
-                    //maxGeometry = new Geometry(vGeo.Width, vGeo.Height, vGeo.Width * 2, vGeo.Height * 2);
-                    //minGeometry = new Geometry(-vGeo.Width, -vGeo.Height, 4, 4);
-                    maxGeometry = new Geometry(vGeo.Width - 4, vGeo.Height - 4, vGeo.Width, vGeo.Height);
-                    minGeometry = new Geometry(0, 0, 4, 4);
-                }
-
                 return new Geometry(
                     (double)numX.Value,
                     (double)numY.Value,
                     (double)numWidth.Value,
-                    (double)numHeight.Value).Clamp(maxGeometry, minGeometry);
+                    (double)numHeight.Value);
             }
             set
             {
-                numX.Value      = (decimal)value.X;
-                numY.Value      = (decimal)value.Y;
-                numWidth.Value  = (decimal)value.Width;
-                numHeight.Value = (decimal)value.Height;
+                Geometry vGeo = _VideoGeometry;
+                Geometry maxGeo;
+                Geometry minGeo;
+                if (vGeo.HasSize)
+                {
+                    maxGeo = new Geometry(vGeo.Width, vGeo.Height, vGeo.Width * 2, vGeo.Height * 2);
+                    minGeo = new Geometry(-vGeo.Width, -vGeo.Height, 4, 4);
+                }
+                else
+                {
+                    maxGeo = new Geometry(8192, 8192, 8192, 8192);
+                    minGeo = new Geometry(-8192, -8192, 4, 4);
+                }
+
+                numX.Value      = (decimal)Math.Min(Math.Max(value.X, minGeo.X), maxGeo.X);
+                numY.Value      = (decimal)Math.Min(Math.Max(value.Y, minGeo.Y), maxGeo.Y);
+                numWidth.Value  = (decimal)Math.Min(Math.Max(value.Width, minGeo.Width), maxGeo.Width);
+                numHeight.Value = (decimal)Math.Min(Math.Max(value.Height, minGeo.Height), maxGeo.Height);
             }
         }
 
