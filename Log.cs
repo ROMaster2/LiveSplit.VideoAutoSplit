@@ -11,11 +11,7 @@ namespace LiveSplit.VAS
 
         private static TextWriter _TextWriter = new StringWriter();
 
-#if DEBUG
         public static bool VerboseEnabled { get; set; } = true;
-#else
-        public static bool VerboseEnabled { get; set; } = false;
-#endif
 
         public static bool WriteToFileEnabled { get; set; } = true;
 
