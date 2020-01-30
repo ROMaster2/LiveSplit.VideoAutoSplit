@@ -245,6 +245,7 @@ namespace LiveSplit.VAS
 
                 if (_VideoSource != null)
                 {
+                    _VideoSource.SignalToStop();
                     _VideoSource.NewFrame -= _NewFrameEventHandler;
                     _VideoSource.VideoSourceError -= _VideoSourceErrorEventHandler;
                 }
