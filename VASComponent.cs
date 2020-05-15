@@ -85,6 +85,9 @@ namespace LiveSplit.VAS
 
                             Log.Info("Game profile successfully loaded!");
 
+                            // Fixes a recursion problem that decided to show up.
+                            _Script = new VASLScript(_GameProfile.RawScript, GameVersion);
+
                             // Todo: Log this separately. Just don't want to atm.
                             VASLSettings settings = Script.RunStartup(State);
                             SetVASLSettings(settings);
