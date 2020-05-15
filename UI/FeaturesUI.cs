@@ -192,7 +192,7 @@ namespace LiveSplit.VAS.UI
                 }
             }
 
-            if (!_Updating)
+            if (!_Updating && !tlpFeatures.IsDisposed)
             {
                 tlpFeatures.Invoke((MethodInvoker)delegate
                 {
