@@ -244,7 +244,7 @@ namespace LiveSplit.VAS.UI
                 boxPreviewFeature.Invoke((MethodInvoker)delegate
                 {
                     previewType = _ActivePreviewType;
-                    if (boxPreviewFeature.SelectedIndex > 0)
+                    if (!boxPreviewFeature.IsDisposed && boxPreviewFeature.SelectedIndex > 0)
                         feature = (PreviewFeature)boxPreviewFeature.SelectedItem;
                 });
             }
