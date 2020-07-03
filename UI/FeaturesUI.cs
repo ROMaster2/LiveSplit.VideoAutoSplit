@@ -224,7 +224,10 @@ namespace LiveSplit.VAS.UI
 
             if (double.IsNaN(numValue))
             {
-                textBlock.Value = value.ToString();
+                if (value != null)
+                {
+                    textBlock.Value = value.ToString();
+                }
             }
             else
             {
