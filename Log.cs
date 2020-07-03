@@ -23,16 +23,15 @@ namespace LiveSplit.VAS
             {
                 if (!EventLog.SourceExists("VideoAutoSplit"))
                     EventLog.CreateEventSource("VideoAutoSplit", "Application");
-            }
-            catch { }
 
-            try
-            {
                 var listener = new EventLogTraceListener("VideoAutoSplit");
                 listener.Filter = new EventTypeFilter(SourceLevels.Warning);
                 Trace.Listeners.Add(listener);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
         }
 
         public static string ReadAll() => _TextWriter.ToString();
